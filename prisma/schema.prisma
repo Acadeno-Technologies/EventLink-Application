@@ -1,0 +1,218 @@
+// ACADENO EventLink Database Schema
+// Conforms to Section 5 of ACADENO Technical Specification
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  super_admin
+  event_manager
+  staff
+}
+
+enum UserStatus {
+  active
+  invited
+  disabled
+}
+
+enum EventStatus {
+  draft
+  active
+  closed
+  archived
+}
+
+enum RegistrationStatus {
+  pending
+  confirmed
+  cancelled
+}
+
+enum PaymentStatus {
+  not_required
+  pending
+  paid
+  failed
+}
+
+enum AttendanceStatus {
+  not_marked
+  present
+  absent
+}
+
+enum Plan {
+  trial
+  standard
+  enterprise
+}
+
+model Organization {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String
+  slug          String    @unique
+  logo_url      String?
+  custom_domain String?   @unique
+  plan          Plan      @default(trial)
+  created_at    DateTime  @default(now()) @db.Timestamptz
+  users         User[]
+  events        Event[]
+  audit_logs    AuditLog[]
+
+  @@map("organizations")
+}
+
+model User {
+  id            String       @id @default(uuid()) @db.Uuid
+  org_id        String       @db.Uuid
+  organization  Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  name          String
+  email         String       @unique
+  password_hash String?
+  role          Role         @default(staff)
+  status        UserStatus   @default(invited)
+  last_login_at DateTime?    @db.Timestamptz
+  created_at    DateTime     @default(now()) @db.Timestamptz
+  created_events Event[]     @relation("EventCreator")
+  audit_logs    AuditLog[]
+
+  @@map("users")
+}
+
+model Event {
+  id                    String         @id @default(uuid()) @db.Uuid
+  org_id                String         @db.Uuid
+  organization          Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  name                  String
+  slug                  String
+  short_description     String
+  banner_url            String?
+  venue                 String?
+  start_date            DateTime       @db.Date
+  end_date              DateTime       @db.Date
+  start_time            String?
+  end_time              String?
+  status                EventStatus    @default(draft)
+  registration_opens_at DateTime?      @db.Timestamptz
+  registration_closes_at DateTime?     @db.Timestamptz
+  max_registrations     Int?
+  require_payment       Boolean        @default(false)
+  payment_amount        Decimal?       @db.Decimal(10, 2)
+  created_by            String         @db.Uuid
+  creator               User           @relation("EventCreator", fields: [created_by], references: [id])
+  created_at            DateTime       @default(now()) @db.Timestamptz
+  updated_at            DateTime       @updatedAt @db.Timestamptz
+  
+  form                  EventForm?
+  theme                 EventTheme?
+  registrations         Registration[]
+
+  @@unique([org_id, slug])
+  @@map("events")
+}
+
+model EventForm {
+  id         String   @id @default(uuid()) @db.Uuid
+  event_id   String   @unique @db.Uuid
+  event      Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  schema     Json     // Dynamic form fields array: [{id, type, label, required, options...}]
+  version    Int      @default(1)
+  updated_at DateTime @updatedAt @db.Timestamptz
+
+  @@map("event_forms")
+}
+
+model EventTheme {
+  id         String   @id @default(uuid()) @db.Uuid
+  event_id   String   @unique @db.Uuid
+  event      Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  template   String   @default("workshop")
+  colors     Json     // {primary, secondary, background, text, button}
+  typography Json     // {fontFamily, headingSize, bodySize}
+  layout     String   @default("centered")
+  logo_url   String?
+  banner_url String?
+  
+  @@map("event_themes")
+}
+
+model Registration {
+  id                String             @id @default(uuid()) @db.Uuid
+  event_id          String             @db.Uuid
+  event             Event              @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  registration_code String             @unique
+  responses         Json               // {field_id: value}
+  status            RegistrationStatus @default(pending)
+  payment_status    PaymentStatus      @default(not_required)
+  attendance_status AttendanceStatus   @default(not_marked)
+  source            String?            // utm/whatsapp/qr_scan/direct
+  ip_address        String?
+  submitted_at      DateTime           @default(now()) @db.Timestamptz
+  documents         RegistrationDocument[]
+  notifications     NotificationLog[]
+  payments          Payment[]
+
+  @@map("registrations")
+}
+
+model Payment {
+  id                  String        @id @default(uuid()) @db.Uuid
+  registration_id     String        @db.Uuid
+  registration        Registration  @relation(fields: [registration_id], references: [id], onDelete: Cascade)
+  amount              Decimal       @db.Decimal(10, 2)
+  currency            String        @default("INR")
+  provider            String        @default("razorpay")
+  provider_payment_id String?
+  status              String        @default("created") // created, paid, failed, refunded
+  created_at          DateTime      @default(now()) @db.Timestamptz
+
+  @@map("payments")
+}
+
+model RegistrationDocument {
+  id              String       @id @default(uuid()) @db.Uuid
+  registration_id String       @db.Uuid
+  registration    Registration @relation(fields: [registration_id], references: [id], onDelete: Cascade)
+  field_id        String
+  file_url        String
+  file_name       String?
+  mime_type       String?
+  size_bytes      Int?
+  uploaded_at     DateTime     @default(now()) @db.Timestamptz
+
+  @@map("registration_documents")
+}
+
+model NotificationLog {
+  id              String       @id @default(uuid()) @db.Uuid
+  registration_id String       @db.Uuid
+  registration    Registration @relation(fields: [registration_id], references: [id], onDelete: Cascade)
+  channel         String       // email, whatsapp, sms
+  status          String       // queued, sent, failed
+  sent_at         DateTime?    @db.Timestamptz
+
+  @@map("notifications_log")
+}
+
+model AuditLog {
+  id            String       @id @default(uuid()) @db.Uuid
+  org_id        String       @db.Uuid
+  organization  Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  user_id       String       @db.Uuid
+  user          User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  action        String       // event.published, registration.exported, user.invited
+  entity_type   String
+  entity_id     String
+  metadata      Json?
+  created_at    DateTime     @default(now()) @db.Timestamptz
+
+  @@map("audit_logs")
+}
