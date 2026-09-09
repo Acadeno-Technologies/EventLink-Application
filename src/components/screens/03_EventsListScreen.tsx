@@ -19,7 +19,9 @@ import {
   ArrowUpDown,
   Sparkles,
   XCircle,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 
 export const EventsListScreen: React.FC = () => {
@@ -39,6 +41,7 @@ export const EventsListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'name' | 'registrations'>('date_desc');
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
 
   const filteredEvents = events.filter((evt) => {
     const matchesTab = activeTab === 'all' || evt.status === activeTab;
@@ -262,9 +265,7 @@ export const EventsListScreen: React.FC = () => {
                           <button
                             onClick={() => {
                               setMenuOpenId(null);
-                              if (confirm(`Are you sure you want to delete "${evt.name}"?`)) {
-                                deleteEvent(evt.id);
-                              }
+                              setEventToDelete(evt);
                             }}
                             className="w-full text-left px-3.5 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 font-semibold cursor-pointer"
                           >
@@ -290,27 +291,32 @@ export const EventsListScreen: React.FC = () => {
 
               {/* Card Body */}
               <div className="p-4 space-y-3">
-                <div className="space-y-1.5 text-xs text-slate-500">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    <span>{evt.start_date} {evt.start_time ? `• ${evt.start_time}` : ''}</span>
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                    <span>{new Date(evt.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                    <span className="truncate">{evt.venue || 'Virtual / Online'}</span>
+                  <div className="flex items-center gap-1.5 font-semibold text-slate-700">
+                    <Users className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>{regCount} {regCount === 1 ? 'Registration' : 'Registrations'}</span>
                   </div>
                 </div>
 
-                {/* Capacity Progress Bar */}
-                <div className="pt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="font-semibold text-slate-600">Registrations</span>
-                    <span className="font-bold text-blue-600">{regCount} / {maxCap}</span>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 line-clamp-1">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate">{evt.venue}</span>
+                </div>
+
+                {/* Progress bar to max capacity */}
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                    <span>Capacity: {regCount}/{maxCap}</span>
+                    <span>{capPercent}% filled</span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full transition-all duration-500 ${
-                        capPercent > 90 ? 'bg-rose-500' : capPercent > 60 ? 'bg-[#FF7A00]' : 'bg-blue-600'
+                        capPercent >= 90 ? 'bg-rose-500' : capPercent >= 60 ? 'bg-amber-500' : 'bg-blue-600'
                       }`}
                       style={{ width: `${capPercent}%` }}
                     />
@@ -318,35 +324,36 @@ export const EventsListScreen: React.FC = () => {
                 </div>
               </div>
 
-              {/* Card Footer Actions */}
-              <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
-                {evt.status === 'draft' ? (
+              {/* Card Actions Footer */}
+              <div className="px-4 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+                <button
+                  onClick={() => handleOpenOverview(evt)}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
+                >
+                  <span>Manage</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+
+                <div className="flex items-center gap-1">
                   <button
-                    onClick={() => editExistingEventInWizard(evt.id, 1)}
-                    className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                    onClick={() => handleOpenLink(evt)}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                    title="Open public registration page"
                   >
-                    <span>Continue Setup</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ExternalLink className="w-4 h-4" />
                   </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleOpenLink(evt)}
-                      className="flex-1 py-2 px-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200 transition-colors flex items-center justify-center gap-1"
-                    >
-                      <ExternalLink className="w-3 h-3 text-slate-500" />
-                      <span>Open Link</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => handleOpenRegistrations(evt)}
-                      className="flex-1 py-2 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition-colors flex items-center justify-center gap-1"
-                    >
-                      <Users className="w-3 h-3 text-blue-600" />
-                      <span>Registrations</span>
-                    </button>
-                  </>
-                )}
+
+                  <button
+                    onClick={() => {
+                      setSelectedEventId(evt.id);
+                      setScreen('11_registrations');
+                    }}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                    title="View registrations table"
+                  >
+                    <Users className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           );
@@ -385,6 +392,61 @@ export const EventsListScreen: React.FC = () => {
           </button>
         </div>
       ) : null}
+
+      {/* ========================================================================= */}
+      {/* CUSTOM DELETE EVENT POPUP MODAL                                           */}
+      {/* ========================================================================= */}
+      {eventToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden relative p-6 space-y-5 animate-in zoom-in-95">
+            
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0 shadow-xs">
+                <Trash2 className="w-6 h-6" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900 font-display">
+                  Delete Event?
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Are you sure you want to permanently delete <span className="font-bold text-slate-800">"{eventToDelete.name}"</span> and all its registrations?
+                </p>
+              </div>
+            </div>
+
+            {/* Warning Notice */}
+            <div className="p-3 bg-rose-50/70 border border-rose-200/80 rounded-xl text-[11px] text-rose-700 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+              <span>This action cannot be undone and will purge all attendee tickets.</span>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setEventToDelete(null)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteEvent(eventToDelete.id);
+                  setEventToDelete(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Yes, Delete Event</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </AdminLayout>
   );
 };
