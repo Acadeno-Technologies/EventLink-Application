@@ -210,6 +210,53 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [selectedRegistrationId]);
 
+  // Read URL search params on mount or change (?event=slug or ?code=regCode)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const eventParam = params.get('event') || params.get('e') || params.get('event_id');
+      const codeParam = params.get('code') || params.get('ticket') || params.get('reg');
+      const screenParam = params.get('screen') as ScreenId | null;
+
+      if (codeParam) {
+        const foundReg = registrations.find(r => 
+          r.registration_code.toLowerCase() === codeParam.toLowerCase() || 
+          r.id.toLowerCase() === codeParam.toLowerCase()
+        );
+        if (foundReg) {
+          setSelectedRegistrationId(foundReg.id);
+          setSelectedEventId(foundReg.event_id);
+          setCurrentScreen('16_registration_success');
+          return;
+        }
+      }
+
+      if (eventParam) {
+        const foundEvt = events.find(e => 
+          e.slug.toLowerCase() === eventParam.toLowerCase() || 
+          e.id === eventParam || 
+          e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase()
+        );
+        if (foundEvt) {
+          setSelectedEventId(foundEvt.id);
+          if (foundEvt.status === 'closed') {
+            setCurrentScreen('17_registration_closed');
+          } else {
+            setCurrentScreen('15_public_registration');
+          }
+          return;
+        }
+      }
+
+      if (screenParam) {
+        setCurrentScreen(screenParam);
+      }
+    } catch (err) {
+      console.error('URL params routing error:', err);
+    }
+  }, [events, registrations]);
+
   // Selected event & registrations helper
   const selectedEvent = events.find(e => e.id === selectedEventId) || (events.length > 0 ? events[0] : undefined);
   const selectedRegistration = registrations.find(r => r.id === selectedRegistrationId) || (registrations.length > 0 ? registrations[0] : undefined);

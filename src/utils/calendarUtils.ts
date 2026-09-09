@@ -25,7 +25,7 @@ export function generateIcsFile(event: CalendarEventData): void {
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `UID:${Date.now()}@acadeno.com`,
+    `UID:${Date.now()}@acadeno.in`,
     `DTSTAMP:${nowStamp}`,
     `DTSTART:${startStamp}`,
     `DTEND:${endStamp}`,

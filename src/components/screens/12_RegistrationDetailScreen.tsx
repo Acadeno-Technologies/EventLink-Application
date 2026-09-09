@@ -154,23 +154,30 @@ Your registration for *${eventName}* is confirmed!
 ${passUrl}
 
 Please present this pass at the entrance for instant check-in.
-Thank you!`;
+
+For assistance, contact: arathy@acadeno.in
+Best regards,
+Arathy — ACADENO Event Operations`;
 
   const emailSubject = `Official Event Pass: ${eventName} (Ticket #${reg.registration_code})`;
   const emailBody = `Dear ${reg.name},
 
-Thank you for registering for ${eventName}!
+Thank you for registering for "${eventName}"!
 
-Here are your registration pass details:
+Here are your official registration pass details:
 • Registration Code: ${reg.registration_code}
 • Date: ${eventDate}
 • Venue: ${eventVenue}
 • Live Ticket Pass URL: ${passUrl}
 
-Please show this pass or your QR code at the registration desk.
+Please show this pass or your QR code at the registration desk for check-in.
+
+If you have any questions or need support, reply directly to this email or reach out to arathy@acadeno.in.
 
 Best regards,
-ACADENO Event Operations Team`;
+Arathy
+ACADENO Technologies Pvt. Ltd.
+arathy@acadeno.in`;
 
   const handleOpenWhatsApp = () => {
     if (!cleanPhoneForWa || cleanPhoneForWa.length < 5) {

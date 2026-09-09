@@ -66,7 +66,7 @@ export const StaffManagementScreen: React.FC = () => {
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(inviteEmail.trim())) {
-      showToast('Please enter a valid email address format (e.g. staff@acadeno.com).');
+      showToast('Please enter a valid email address format (e.g. staff@acadeno.in).');
       return;
     }
 
@@ -278,7 +278,7 @@ export const StaffManagementScreen: React.FC = () => {
                   required
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="meera@acadeno.com"
+                  placeholder="meera@acadeno.in"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
                 />
               </div>

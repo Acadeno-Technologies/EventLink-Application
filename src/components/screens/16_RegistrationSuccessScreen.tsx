@@ -25,7 +25,7 @@ export const RegistrationSuccessScreen: React.FC = () => {
     event_id: selectedEvent?.id || 'evt-01',
     registration_code: 'PF-2026-00001',
     name: 'Arathy',
-    email: 'arathy@acadeno.com',
+    email: 'arathy@acadeno.in',
     phone: '+91 98765 43210',
     created_at: new Date().toISOString(),
     status: 'confirmed' as const,

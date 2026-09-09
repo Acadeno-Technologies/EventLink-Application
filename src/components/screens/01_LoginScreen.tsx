@@ -38,7 +38,7 @@ export const LoginScreen: React.FC = () => {
 
     const cleanEmail = email.trim();
     if (!validateEmailFormat(cleanEmail)) {
-      setLoginError('Please enter a valid email address (e.g. admin@acadeno.com).');
+      setLoginError('Please enter a valid email address (e.g. arathy@acadeno.in).');
       return;
     }
 
@@ -259,7 +259,7 @@ export const LoginScreen: React.FC = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@acadeno.com"
+                    placeholder="arathy@acadeno.in"
                     className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-[#F8FAFD] border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium"
                   />
                 </div>

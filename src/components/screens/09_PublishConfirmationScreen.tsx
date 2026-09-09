@@ -21,8 +21,10 @@ export const PublishConfirmationScreen: React.FC = () => {
   const [qrUrl, setQrUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
   const eventSlug = selectedEvent?.slug || (selectedEvent?.name ? selectedEvent.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'new-event');
-  const publicUrl = `https://acadeno.com/e/${eventSlug}`;
+  const publicUrl = `${origin}/?event=${eventSlug}`;
+  const canonicalUrl = `https://acadeno.com/e/${eventSlug}`;
 
   useEffect(() => {
     generateQrDataUrl(publicUrl, { width: 320 }).then(setQrUrl);
@@ -31,7 +33,7 @@ export const PublishConfirmationScreen: React.FC = () => {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicUrl);
     setCopied(true);
-    showToast('Public link copied to clipboard!');
+    showToast('Working registration link copied to clipboard!');
     setTimeout(() => setCopied(false), 2500);
   };
 
@@ -43,13 +45,13 @@ export const PublishConfirmationScreen: React.FC = () => {
   };
 
   const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(`Register now for "${selectedEvent?.name}": ${publicUrl}`);
+    const text = encodeURIComponent(`Register now for "${selectedEvent?.name}":\n${publicUrl}`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
   const handleEmailShare = () => {
     const subject = encodeURIComponent(`Registration Link: ${selectedEvent?.name}`);
-    const body = encodeURIComponent(`Hi,\n\nYou can register for ${selectedEvent?.name} at the following link:\n${publicUrl}\n\nVenue: ${selectedEvent?.venue || 'Virtual'}\nDate: ${selectedEvent?.start_date}\n\nBest regards,\nACADENO Technologies`);
+    const body = encodeURIComponent(`Hi,\n\nYou are invited to register for "${selectedEvent?.name}".\n\n👉 Event Registration Link:\n${publicUrl}\n\n📅 Date: ${selectedEvent?.start_date}\n📍 Venue: ${selectedEvent?.venue || 'Acadeno Technologies'}\n\nFor any questions or help, reach out at arathy@acadeno.in\n\nBest regards,\nArathy\nACADENO Technologies Pvt. Ltd.\narathy@acadeno.in`);
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
   };
 
@@ -81,7 +83,7 @@ export const PublishConfirmationScreen: React.FC = () => {
         {/* Public URL Box */}
         <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3 text-left">
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase font-bold text-slate-400">Canonical Short URL</div>
+            <div className="text-[10px] uppercase font-bold text-slate-400">Live Registration Link</div>
             <div className="text-xs font-mono font-bold text-indigo-600 truncate">{publicUrl}</div>
           </div>
           <button
