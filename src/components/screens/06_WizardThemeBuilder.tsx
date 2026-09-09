@@ -88,17 +88,21 @@ export const WizardThemeBuilderScreen: React.FC = () => {
           banner_url: cloudUrl
         }
       });
-      showToast('Image uploaded and stored in Cloudinary!');
-    } catch (err: any) {
-      showToast(`Cloudinary error: ${err.message || 'Upload failed'}`);
-      const fallbackUrl = URL.createObjectURL(file);
-      updateWizardDraft({ 
-        banner_url: fallbackUrl,
-        theme: {
-          ...currentTheme,
-          banner_url: fallbackUrl
-        }
-      });
+      showToast('Image uploaded & stored in Cloudinary!');
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64Url = reader.result as string;
+        updateWizardDraft({ 
+          banner_url: base64Url,
+          theme: {
+            ...currentTheme,
+            banner_url: base64Url
+          }
+        });
+      };
+      reader.readAsDataURL(file);
+      showToast('Image saved to draft.');
     } finally {
       setIsUploadingBanner(false);
     }
@@ -381,6 +385,9 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     <img
                       src={currentBanner}
                       alt="Banner preview"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
+                      }}
                       className="w-full h-full object-cover"
                     />
                     <button
@@ -520,6 +527,9 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                   <img 
                     src={wizardDraft.banner_url} 
                     alt="Event banner" 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
+                    }}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />

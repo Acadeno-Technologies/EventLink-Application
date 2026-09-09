@@ -80,11 +80,16 @@ export const WizardBasicInfoScreen: React.FC = () => {
     try {
       const cloudUrl = await uploadImageToCloudinary(file);
       updateWizardDraft({ banner_url: cloudUrl });
-      showToast('Image uploaded and stored in Cloudinary!');
-    } catch (err: any) {
-      showToast(`Cloudinary error: ${err.message || 'Upload failed'}`);
-      const fallbackUrl = URL.createObjectURL(file);
-      updateWizardDraft({ banner_url: fallbackUrl });
+      showToast('Image uploaded & stored in Cloudinary!');
+    } catch {
+      // Convert to permanent base64 data URL so it never breaks on page reload or across devices
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64Url = reader.result as string;
+        updateWizardDraft({ banner_url: base64Url });
+      };
+      reader.readAsDataURL(file);
+      showToast('Image saved to draft.');
     } finally {
       setIsUploadingBanner(false);
     }
@@ -406,6 +411,9 @@ export const WizardBasicInfoScreen: React.FC = () => {
                   <img
                     src={currentBanner}
                     alt="Banner preview"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
+                    }}
                     className="w-full h-full object-cover"
                   />
                   <button

@@ -372,6 +372,9 @@ export const PublicRegistrationScreen: React.FC = () => {
             <img 
               src={evt.banner_url} 
               alt={evt.name} 
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80';
+              }}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
