@@ -287,6 +287,18 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 fontFamily: currentTheme.typography.fontFamily,
               }}
             >
+              {/* Optional Event Banner */}
+              {wizardDraft.banner_url && (
+                <div className="w-full h-28 relative overflow-hidden bg-slate-950">
+                  <img 
+                    src={wizardDraft.banner_url} 
+                    alt="Event banner" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                </div>
+              )}
+
               {/* Event Header Banner */}
               <div 
                 className="p-5 text-white relative"

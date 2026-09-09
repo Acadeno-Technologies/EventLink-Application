@@ -366,6 +366,18 @@ export const PublicRegistrationScreen: React.FC = () => {
       {/* Main Ticket-style Container */}
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200/80 transition-all">
         
+        {/* Optional Uploaded Event Banner (Cloudinary / Image URL) */}
+        {evt.banner_url && (
+          <div className="w-full h-44 sm:h-52 relative overflow-hidden bg-slate-900 border-b border-white/10">
+            <img 
+              src={evt.banner_url} 
+              alt={evt.name} 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
+          </div>
+        )}
+
         {/* Event Header Banner */}
         <div 
           className="p-6 sm:p-8 text-white relative overflow-hidden"
