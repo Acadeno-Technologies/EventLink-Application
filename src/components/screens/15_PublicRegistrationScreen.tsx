@@ -8,6 +8,8 @@ import {
   Sparkles, 
   ShieldCheck, 
   ArrowRight, 
+  ArrowLeft,
+  LayoutDashboard,
   AlertCircle,
   Upload,
   Bot,
@@ -22,7 +24,8 @@ export const PublicRegistrationScreen: React.FC = () => {
     eventRegistrations, 
     submitRegistration, 
     setScreen, 
-    setSelectedRegistrationId 
+    setSelectedRegistrationId,
+    currentUser
   } = useEventStore();
 
   const [formData, setFormData] = useState<Record<string, any>>({
@@ -358,6 +361,29 @@ export const PublicRegistrationScreen: React.FC = () => {
         fontFamily: theme.typography.fontFamily || 'Plus Jakarta Sans',
       }}
     >
+      {/* Admin / Organizer Escape Button (Floating Top-Left) */}
+      <div className="fixed top-4 left-4 z-50">
+        {currentUser ? (
+          <button
+            onClick={() => setScreen('02_dashboard')}
+            className="bg-[#0B1B3A]/90 hover:bg-[#1769FF] text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-lg border border-white/20 flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md"
+            title="Return to Admin Dashboard"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Admin Dashboard</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setScreen('01_login')}
+            className="bg-white/90 hover:bg-white text-slate-700 hover:text-blue-600 text-xs font-bold py-2 px-3.5 rounded-xl shadow-md border border-slate-200/90 flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md"
+            title="Sign in as Organizer"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+            <span>Admin Login</span>
+          </button>
+        )}
+      </div>
+
       {/* Brand Header */}
       <div className="mb-6 flex flex-col items-center">
         <AcadenoLogo size="lg" />
@@ -669,10 +695,32 @@ export const PublicRegistrationScreen: React.FC = () => {
               )}
             </button>
 
-            <div className="text-center pt-2">
-              <span className="text-[10px] text-slate-400">
-                Powered by ACADENO Technologies • EventLink Platform
-              </span>
+            <div className="text-center pt-2 space-y-1">
+              <div>
+                <span className="text-[10px] text-slate-400">
+                  Powered by ACADENO Technologies • EventLink Platform
+                </span>
+              </div>
+              <div>
+                {currentUser ? (
+                  <button
+                    type="button"
+                    onClick={() => setScreen('02_dashboard')}
+                    className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    <span>Return to Admin Dashboard</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setScreen('01_login')}
+                    className="text-[11px] font-semibold text-slate-400 hover:text-blue-600 hover:underline transition-colors cursor-pointer"
+                  >
+                    Organizer Portal Sign In
+                  </button>
+                )}
+              </div>
             </div>
 
           </form>
