@@ -85,7 +85,18 @@ const STORAGE_KEY_PREFIX = 'acadeno_fresh_empty_v1_';
 
 export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentScreen, setCurrentScreen] = useState<ScreenId>(() => {
-    return (localStorage.getItem(`${STORAGE_KEY_PREFIX}screen`) as ScreenId) || '02_dashboard';
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('event') || params.get('e') || params.get('event_id')) {
+        return '15_public_registration';
+      }
+      if (params.get('code') || params.get('ticket') || params.get('reg')) {
+        return '16_registration_success';
+      }
+      const screenParam = params.get('screen') as ScreenId | null;
+      if (screenParam) return screenParam;
+    }
+    return (localStorage.getItem(`${STORAGE_KEY_PREFIX}screen`) as ScreenId) || '01_login';
   });
 
   const [currentRole, setCurrentRole] = useState<UserRole>(() => {
@@ -220,33 +231,99 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const screenParam = params.get('screen') as ScreenId | null;
 
       if (codeParam) {
-        const foundReg = registrations.find(r => 
+        let foundReg = registrations.find(r => 
           r.registration_code.toLowerCase() === codeParam.toLowerCase() || 
           r.id.toLowerCase() === codeParam.toLowerCase()
         );
-        if (foundReg) {
-          setSelectedRegistrationId(foundReg.id);
-          setSelectedEventId(foundReg.event_id);
-          setCurrentScreen('16_registration_success');
-          return;
+
+        if (!foundReg) {
+          const newReg: Registration = {
+            id: `reg-${codeParam}`,
+            event_id: selectedEventId || 'evt-demo',
+            registration_code: codeParam.toUpperCase(),
+            name: 'Participant Pass',
+            email: 'attendee@acadeno.in',
+            phone: '+91 98765 43210',
+            submitted_at: new Date().toISOString(),
+            status: 'confirmed',
+            payment_status: 'not_required',
+            attendance_status: 'not_marked',
+            source: 'qr_scan',
+            responses: {}
+          };
+          foundReg = newReg;
+          setRegistrations(prev => [newReg, ...prev]);
         }
+
+        setSelectedRegistrationId(foundReg.id);
+        setSelectedEventId(foundReg.event_id);
+        setCurrentScreen('16_registration_success');
+        return;
       }
 
       if (eventParam) {
-        const foundEvt = events.find(e => 
+        let foundEvt = events.find(e => 
           e.slug.toLowerCase() === eventParam.toLowerCase() || 
           e.id === eventParam || 
           e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase()
         );
-        if (foundEvt) {
-          setSelectedEventId(foundEvt.id);
-          if (foundEvt.status === 'closed') {
-            setCurrentScreen('17_registration_closed');
-          } else {
-            setCurrentScreen('15_public_registration');
-          }
-          return;
+
+        // If event is not yet in local storage (e.g. mobile phone scanning from new browser), dynamically instantiate it!
+        if (!foundEvt) {
+          const cleanTitle = eventParam
+            .replace(/[-_]+/g, ' ')
+            .replace(/\b\w/g, char => char.toUpperCase());
+
+          const newEvt: Event = {
+            id: `evt-${eventParam}`,
+            org_id: organization.id,
+            name: cleanTitle,
+            slug: eventParam.toLowerCase(),
+            short_description: `Registration for ${cleanTitle} at ACADENO Technologies.`,
+            banner_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80',
+            venue: 'ACADENO Technologies, CSEZ Unit, Kochi',
+            start_date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
+            end_date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
+            start_time: '10:00 AM',
+            end_time: '1:00 PM',
+            status: 'active',
+            created_by: 'arathy@acadeno.in',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            views_count: 1,
+            form_schema: [
+              { id: 'f_name', type: 'text', label: 'Full Name', required: true, order: 1, placeholder: 'Enter full name' },
+              { id: 'f_email', type: 'email', label: 'Email Address', required: true, order: 2, placeholder: 'name@gmail.com' },
+              { id: 'f_phone', type: 'phone', label: 'Mobile Number', required: true, order: 3, placeholder: '+91 98765 43210' },
+              { id: 'f_dept', type: 'text', label: 'College / Organization', required: false, order: 4, placeholder: 'e.g. College / Company' }
+            ],
+            theme: themePresets.workshop,
+            settings: {
+              registration_opens_at: new Date().toISOString(),
+              registration_closes_at: '',
+              max_registrations: 250,
+              require_payment: false,
+              after_registration: 'ticket',
+              send_email_confirmation: true,
+              send_whatsapp_confirmation: true,
+              send_sms_confirmation: false,
+              allow_excel_export: true,
+              require_consent: true,
+              consent_text: 'I agree to receive event notifications from ACADENO under India DPDP Act 2023 regulations.'
+            }
+          };
+
+          foundEvt = newEvt;
+          setEvents(prev => [newEvt, ...prev.filter(x => x.id !== newEvt.id)]);
         }
+
+        setSelectedEventId(foundEvt.id);
+        if (foundEvt.status === 'closed') {
+          setCurrentScreen('17_registration_closed');
+        } else {
+          setCurrentScreen('15_public_registration');
+        }
+        return;
       }
 
       if (screenParam) {
