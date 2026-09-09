@@ -28,7 +28,8 @@ import {
   Trash2,
   Settings,
   Cloud,
-  X
+  X,
+  Smartphone
 } from 'lucide-react';
 
 export const WizardThemeBuilderScreen: React.FC = () => {
@@ -36,7 +37,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
     wizardDraft, 
     updateWizardDraft, 
     setWizardStep, 
-    setScreen,
+    setScreen, 
     showToast 
   } = useEventStore();
 
@@ -64,7 +65,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
     }
     setStoredCloudinaryConfig(cloudNameInput.trim(), uploadPresetInput.trim());
     setIsCloudinaryModalOpen(false);
-    showToast('Cloudinary credentials saved! You can now upload images directly.');
+    showToast('Cloudinary credentials saved! Direct image uploads are active.');
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,7 +89,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
           banner_url: cloudUrl
         }
       });
-      showToast('Image uploaded & stored in Cloudinary!');
+      showToast('Banner uploaded & stored in Cloudinary CDN!');
     } catch {
       const reader = new FileReader();
       reader.onload = () => {
@@ -102,20 +103,20 @@ export const WizardThemeBuilderScreen: React.FC = () => {
         });
       };
       reader.readAsDataURL(file);
-      showToast('Image saved to draft.');
+      showToast('Image saved locally to draft.');
     } finally {
       setIsUploadingBanner(false);
     }
   };
 
   const presets: { id: ThemeTemplate; label: string; desc: string; previewColor: string }[] = [
-    { id: 'workshop', label: 'Workshop (Blue & Amber)', desc: 'Professional, high-contrast, technical events', previewColor: '#1e3a8a' },
-    { id: 'corporate', label: 'Corporate (Slate Dark)', desc: 'Executive seminars, boardroom talks, enterprise', previewColor: '#0f172a' },
-    { id: 'festival', label: 'Festival (Fuchsia & Gold)', desc: 'Cultural celebrations, Onam, college fests', previewColor: '#c026d3' },
-    { id: 'minimal', label: 'Minimal (Monochrome)', desc: 'Clean, modern, aesthetic gallery & design meets', previewColor: '#18181b' },
-    { id: 'conference', label: 'Conference (Indigo & Cyan)', desc: 'Tech summits, multi-track symposiums', previewColor: '#4338ca' },
-    { id: 'education', label: 'Education (Emerald Green)', desc: 'Academic courses, training workshops', previewColor: '#047857' },
-    { id: 'custom', label: 'Custom Palette (Night Mode)', desc: 'Tailored dark mode with neon accents', previewColor: '#6366f1' },
+    { id: 'workshop', label: 'Workshop (Blue & Amber)', desc: 'Professional, high-contrast, technical events', previewColor: '#1769FF' },
+    { id: 'corporate', label: 'Corporate (Slate Dark)', desc: 'Executive seminars, boardroom talks, enterprise', previewColor: '#0F172A' },
+    { id: 'festival', label: 'Festival (Fuchsia & Gold)', desc: 'Cultural celebrations, Onam, college fests', previewColor: '#C026D3' },
+    { id: 'minimal', label: 'Minimal (Monochrome)', desc: 'Clean, modern, aesthetic gallery & design meets', previewColor: '#18181B' },
+    { id: 'conference', label: 'Conference (Indigo & Cyan)', desc: 'Tech summits, multi-track symposiums', previewColor: '#4F46E5' },
+    { id: 'education', label: 'Education (Emerald Green)', desc: 'Academic courses, training workshops', previewColor: '#059669' },
+    { id: 'custom', label: 'Custom Palette (Night Mode)', desc: 'Tailored dark mode with neon accents', previewColor: '#6366F1' },
   ];
 
   const handleSelectPreset = (templateId: ThemeTemplate) => {
@@ -157,27 +158,31 @@ export const WizardThemeBuilderScreen: React.FC = () => {
     <AdminLayout
       activeNav="events"
       pageTitle="Create Event — Step 3: Theme Builder"
-      pageSubtitle="Customize colors, typography, layout, and preview the live participant screen."
+      pageSubtitle="Customize brand colors, typography, header banner, and preview live attendee view."
     >
-
       <WizardStepHeader currentStepNumber={3} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Left Column: Theme Controls (6 Cols) */}
-        <div className="lg:col-span-6 space-y-6">
+        {/* Left Column: Theme Controls (7 Cols) */}
+        <div className="lg:col-span-7 space-y-6">
           
           {/* Preset Templates */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Palette className="w-4 h-4 text-indigo-600" />
-                Template Presets
-              </h3>
-              <span className="text-[11px] text-slate-400">Click to apply preset</span>
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <Palette className="w-4 h-4 text-blue-600" />
+                  Template Presets
+                </h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">Select a pre-configured harmonious color palette</p>
+              </div>
+              <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                {presets.length} Presets
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {presets.map((p) => {
                 const isSelected = currentTheme.template === p.id;
                 return (
@@ -185,21 +190,25 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     key={p.id}
                     type="button"
                     onClick={() => handleSelectPreset(p.id)}
-                    className={`p-3 rounded-lg border text-left transition-all relative overflow-hidden ${
+                    className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden cursor-pointer ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/30'
-                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                        ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-500/20 shadow-xs'
+                        : 'border-slate-200/80 hover:border-slate-300 bg-slate-50/50 hover:bg-slate-50'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div 
-                        className="w-4 h-4 rounded-full border border-white shadow-xs" 
+                        className="w-5 h-5 rounded-full border border-white shadow-xs" 
                         style={{ backgroundColor: p.previewColor }} 
                       />
-                      {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600" />}
+                      {isSelected && (
+                        <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                          <Check className="w-2.5 h-2.5" />
+                        </div>
+                      )}
                     </div>
                     <div className="font-bold text-xs text-slate-900 capitalize">{p.label.split(' ')[0]}</div>
-                    <div className="text-[10px] text-slate-400 truncate">{p.label.split('(')[1]?.replace(')', '') || ''}</div>
+                    <div className="text-[10px] text-slate-500 truncate mt-0.5 font-medium">{p.desc}</div>
                   </button>
                 );
               })}
@@ -207,81 +216,81 @@ export const WizardThemeBuilderScreen: React.FC = () => {
           </div>
 
           {/* Color Palette Customizer */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
             <div className="border-b border-slate-100 pb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Custom Colors</h3>
-              <p className="text-[11px] text-slate-400">Fine-tune brand colors for buttons, highlights, and backgrounds</p>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Custom Colors & Swatches</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Fine-tune brand colors for headers, action buttons, and surfaces</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Primary Color</label>
-                <div className="flex items-center gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">Primary Header Color</label>
+                <div className="flex items-center gap-2.5">
                   <input
                     type="color"
                     value={currentTheme.colors.primary}
                     onChange={(e) => handleUpdateColors('primary', e.target.value)}
-                    className="w-8 h-8 rounded border border-slate-300 cursor-pointer"
+                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5 bg-white shrink-0"
                   />
                   <input
                     type="text"
                     value={currentTheme.colors.primary}
                     onChange={(e) => handleUpdateColors('primary', e.target.value)}
-                    className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded font-mono uppercase text-slate-700"
+                    className="flex-1 h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Button Color</label>
-                <div className="flex items-center gap-2">
+              <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">Action Button Color</label>
+                <div className="flex items-center gap-2.5">
                   <input
                     type="color"
                     value={currentTheme.colors.button}
                     onChange={(e) => handleUpdateColors('button', e.target.value)}
-                    className="w-8 h-8 rounded border border-slate-300 cursor-pointer"
+                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5 bg-white shrink-0"
                   />
                   <input
                     type="text"
                     value={currentTheme.colors.button}
                     onChange={(e) => handleUpdateColors('button', e.target.value)}
-                    className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded font-mono uppercase text-slate-700"
+                    className="flex-1 h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Page Background</label>
-                <div className="flex items-center gap-2">
+              <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">Page Background Color</label>
+                <div className="flex items-center gap-2.5">
                   <input
                     type="color"
                     value={currentTheme.colors.background}
                     onChange={(e) => handleUpdateColors('background', e.target.value)}
-                    className="w-8 h-8 rounded border border-slate-300 cursor-pointer"
+                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5 bg-white shrink-0"
                   />
                   <input
                     type="text"
                     value={currentTheme.colors.background}
                     onChange={(e) => handleUpdateColors('background', e.target.value)}
-                    className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded font-mono uppercase text-slate-700"
+                    className="flex-1 h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Text Color</label>
-                <div className="flex items-center gap-2">
+              <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">Text & Heading Color</label>
+                <div className="flex items-center gap-2.5">
                   <input
                     type="color"
                     value={currentTheme.colors.text}
                     onChange={(e) => handleUpdateColors('text', e.target.value)}
-                    className="w-8 h-8 rounded border border-slate-300 cursor-pointer"
+                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5 bg-white shrink-0"
                   />
                   <input
                     type="text"
                     value={currentTheme.colors.text}
                     onChange={(e) => handleUpdateColors('text', e.target.value)}
-                    className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded font-mono uppercase text-slate-700"
+                    className="flex-1 h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -289,37 +298,37 @@ export const WizardThemeBuilderScreen: React.FC = () => {
           </div>
 
           {/* Event Banner & Brand Image Card */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                  <ImageIcon className="w-4 h-4 text-indigo-600" />
-                  Event Banner & Image
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-blue-600" />
+                  Event Header Banner Image
                 </h3>
-                <p className="text-[11px] text-slate-400">Upload to Cloudinary or paste a direct image URL</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Upload to Cloudinary or paste a direct image URL</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowUrlInput(!showUrlInput)}
-                  className="text-[11px] font-semibold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
                 >
-                  <Link2 className="w-3 h-3" />
+                  <Link2 className="w-3.5 h-3.5" />
                   <span>{showUrlInput ? 'File Upload' : 'Paste Link'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsCloudinaryModalOpen(true)}
-                  className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
-                  title="Configure Cloudinary storage"
+                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                  title="Configure Cloudinary storage credentials"
                 >
-                  <Settings className="w-3.5 h-3.5" />
+                  <Settings className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
             {showUrlInput ? (
-              <div className="space-y-2 animate-fade-in">
+              <div className="space-y-2">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <Link2 className="w-4 h-4" />
@@ -336,22 +345,22 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                         }
                       });
                     }}
-                    placeholder="https://res.cloudinary.com/<cloud>/image/upload/... or image link"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                    placeholder="https://res.cloudinary.com/<cloud>/image/upload/... or direct image link"
+                    className="w-full pl-10 pr-4 h-10 bg-slate-50/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-mono"
                   />
                 </div>
-                <p className="text-[10px] text-slate-500 font-medium">
-                  Direct links from Cloudinary or any web CDN will update the live phone preview instantly.
+                <p className="text-[11px] text-slate-500">
+                  Direct CDN image URLs will update the live phone preview on the right instantly.
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
                   
-                  {/* Upload Drop Area (7 Cols) */}
-                  <label className="sm:col-span-7 bg-indigo-50/40 hover:bg-indigo-50/70 border border-dashed border-indigo-200 hover:border-indigo-400 rounded-xl p-3.5 flex items-center justify-between gap-3 cursor-pointer transition-all">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-indigo-100/90 text-indigo-600 flex items-center justify-center shrink-0">
+                  {/* Upload Drop Area */}
+                  <label className="sm:col-span-7 bg-blue-50/30 hover:bg-blue-50/60 border border-dashed border-blue-200 hover:border-blue-400 rounded-xl p-3.5 flex items-center justify-between gap-3 cursor-pointer transition-all">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                         {isUploadingBanner ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
@@ -360,15 +369,15 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       </div>
                       <div className="min-w-0">
                         <div className="text-xs font-bold text-slate-900 truncate">
-                          {isUploadingBanner ? 'Uploading...' : 'Upload Image'}
+                          {isUploadingBanner ? 'Uploading to Cloudinary...' : 'Upload Banner'}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-medium truncate">
-                          JPG, PNG, WebP (Cloudinary)
+                        <div className="text-[10px] text-slate-500 truncate">
+                          JPG, PNG, WebP (Cloudinary CDN)
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-white hover:bg-indigo-50 text-indigo-600 border border-indigo-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-2xs transition-all shrink-0">
+                    <div className="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-2xs transition-all shrink-0">
                       <span>Choose File</span>
                     </div>
                     <input
@@ -380,7 +389,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     />
                   </label>
 
-                  {/* Banner Live Preview (5 Cols) */}
+                  {/* Banner Live Thumbnail */}
                   <div className="sm:col-span-5 relative h-20 rounded-xl overflow-hidden border border-slate-200 shadow-xs bg-slate-900 group">
                     <img
                       src={currentBanner}
@@ -411,8 +420,8 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 </div>
 
                 {/* Preset Banner Selector */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pt-0.5 select-none">
-                  <span className="text-[10px] text-slate-400 font-bold shrink-0">
+                <div className="flex items-center gap-1.5 overflow-x-auto pt-1 select-none">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider shrink-0">
                     Presets:
                   </span>
                   {bannerPresets.map((preset, idx) => (
@@ -428,9 +437,9 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                           }
                         });
                       }}
-                      className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all shrink-0 cursor-pointer ${
+                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all shrink-0 cursor-pointer ${
                         currentBanner === preset.url
-                          ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-bold'
+                          ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
                           : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                       }`}
                     >
@@ -443,39 +452,40 @@ export const WizardThemeBuilderScreen: React.FC = () => {
           </div>
 
           {/* Typography */}
-          <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
             <div className="border-b border-slate-100 pb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Type className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                <Type className="w-4 h-4 text-blue-600" />
                 Typography & Font Family
               </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Select the typeface applied across public registration screens</p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {['Outfit', 'Plus Jakarta Sans', 'Inter', 'Playfair Display'].map((font) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {['Plus Jakarta Sans', 'Inter', 'Outfit', 'Playfair Display'].map((font) => (
                 <button
                   key={font}
                   type="button"
                   onClick={() => handleUpdateFont(font)}
-                  className={`p-2.5 rounded-lg border text-center transition-all ${
+                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
                     currentTheme.typography.fontFamily === font
-                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold'
-                      : 'border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100'
+                      ? 'border-blue-600 bg-blue-50/60 text-blue-700 font-bold shadow-xs'
+                      : 'border-slate-200/80 bg-slate-50/50 text-slate-700 hover:bg-slate-100'
                   }`}
                   style={{ fontFamily: font }}
                 >
                   <div className="text-xs">{font}</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">Aa Bb 123</div>
+                  <div className="text-[10px] text-slate-400 mt-1">Aa Bb 123</div>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Wizard Navigation */}
-          <div className="pt-4 flex items-center justify-between gap-3">
+          <div className="pt-2 flex items-center justify-between gap-3">
             <button
               onClick={() => { setWizardStep(2); setScreen('05_create_form'); }}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
+              className="h-10 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 transition-all shadow-xs cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back: Form Builder</span>
@@ -483,7 +493,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
 
             <button
               onClick={() => { setWizardStep(4); setScreen('07_create_settings'); }}
-              className="px-5 py-2.5 rounded-xl bg-[#1769FF] hover:bg-[#0055FF] text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center gap-2 transition-all cursor-pointer"
+              className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
             >
               <span>Next: Operational Settings</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -492,16 +502,16 @@ export const WizardThemeBuilderScreen: React.FC = () => {
 
         </div>
 
-        {/* Right Column: Live Interactive Mobile Preview (6 Cols) */}
-        <div className="lg:col-span-6 flex flex-col items-center">
+        {/* Right Column: Live Interactive Mobile Preview (5 Cols) */}
+        <div className="lg:col-span-5 flex flex-col items-center">
           
-          <div className="w-full flex items-center justify-between mb-3 px-2">
+          <div className="w-full flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
-              <Eye className="w-4 h-4 text-indigo-600" />
+              <Eye className="w-4 h-4 text-blue-600" />
               Live Participant View Preview
             </div>
-            <span className="text-[11px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              Instant Sync
+            <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              ● Instant Sync
             </span>
           </div>
 
@@ -532,7 +542,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     }}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 </div>
               )}
 
@@ -548,11 +558,11 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                   {wizardDraft.name || 'AI Automation Workshop'}
                 </h4>
                 <div className="text-xs text-white/80 space-y-0.5">
-                  <div className="flex items-center gap-1 text-[11px]">
+                  <div className="flex items-center gap-1.5 text-[11px]">
                     <Calendar className="w-3 h-3" />
                     <span>{wizardDraft.start_date || '20 Sep 2026'} • {wizardDraft.start_time || '10:00 AM'}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[11px]">
+                  <div className="flex items-center gap-1.5 text-[11px]">
                     <MapPin className="w-3 h-3" />
                     <span>{wizardDraft.venue || 'ACADENO Hall, Kozhikode'}</span>
                   </div>
@@ -576,7 +586,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                         type="text"
                         disabled
                         placeholder={f.placeholder || `Enter ${f.label}`}
-                        className="w-full px-2.5 py-1.5 rounded-md border border-slate-200 bg-white/90 text-xs text-slate-800 placeholder-slate-400"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white/90 text-xs text-slate-800 placeholder-slate-400"
                       />
                     </div>
                   ))}
@@ -590,7 +600,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       backgroundColor: currentTheme.colors.button,
                       color: currentTheme.colors.buttonText,
                     }}
-                    className="w-full py-2.5 px-4 rounded-lg font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-transform active:scale-95"
+                    className="w-full py-2.5 px-4 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
                   >
                     <span>Register Now</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -611,11 +621,11 @@ export const WizardThemeBuilderScreen: React.FC = () => {
       {/* Cloudinary Storage Settings Modal */}
       {isCloudinaryModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 shadow-2xl p-6 space-y-5 animate-scale-up">
+          <div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 shadow-2xl p-6 space-y-5">
             
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Cloud className="w-4 h-4" />
                 </div>
                 <div>
@@ -626,7 +636,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsCloudinaryModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -643,7 +653,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                   value={cloudNameInput}
                   onChange={(e) => setCloudNameInput(e.target.value)}
                   placeholder="e.g. acadeno or dx7yzw123"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
                 <span className="text-[10px] text-slate-400 mt-1 block">
                   Found on your Cloudinary Dashboard.
@@ -660,7 +670,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                   value={uploadPresetInput}
                   onChange={(e) => setUploadPresetInput(e.target.value)}
                   placeholder="e.g. eventlink_preset or ml_default"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
                 <span className="text-[10px] text-slate-400 mt-1 block">
                   Created in Cloudinary Settings ⚙️ &rarr; Upload &rarr; Add Upload Preset (Unsigned).
@@ -677,7 +687,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#1769FF] hover:bg-[#0055FF] text-white text-xs font-bold shadow-sm shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Save Credentials</span>
@@ -692,3 +702,4 @@ export const WizardThemeBuilderScreen: React.FC = () => {
     </AdminLayout>
   );
 };
+

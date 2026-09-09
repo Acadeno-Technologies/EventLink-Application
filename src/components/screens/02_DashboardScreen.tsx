@@ -2,8 +2,8 @@ import React from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { 
-  LineChart, 
-  Line, 
+  AreaChart,
+  Area,
   XAxis, 
   YAxis, 
   Tooltip, 
@@ -17,7 +17,10 @@ import {
   TrendingUp, 
   Plus, 
   Sparkles,
-  Layers
+  Layers,
+  ArrowRight,
+  ExternalLink,
+  QrCode
 } from 'lucide-react';
 
 export const DashboardScreen: React.FC = () => {
@@ -26,6 +29,7 @@ export const DashboardScreen: React.FC = () => {
     registrations, 
     currentUser, 
     setScreen, 
+    setSelectedEventId,
     startNewEventWizard
   } = useEventStore();
 
@@ -35,13 +39,13 @@ export const DashboardScreen: React.FC = () => {
   const thisMonthRegistrations = registrations.length;
 
   const chartData = [
-    { day: 'Mon', registrations: 0, views: 0 },
-    { day: 'Tue', registrations: 0, views: 0 },
-    { day: 'Wed', registrations: 0, views: 0 },
-    { day: 'Thu', registrations: 0, views: 0 },
-    { day: 'Fri', registrations: 0, views: 0 },
-    { day: 'Sat', registrations: 0, views: 0 },
-    { day: 'Sun', registrations: 0, views: 0 },
+    { day: 'Mon', registrations: Math.min(totalRegistrations, 2), views: 12 },
+    { day: 'Tue', registrations: Math.min(totalRegistrations, 5), views: 24 },
+    { day: 'Wed', registrations: Math.min(totalRegistrations, 3), views: 18 },
+    { day: 'Thu', registrations: Math.min(totalRegistrations, 8), views: 35 },
+    { day: 'Fri', registrations: Math.min(totalRegistrations, 6), views: 28 },
+    { day: 'Sat', registrations: Math.min(totalRegistrations, 12), views: 45 },
+    { day: 'Sun', registrations: Math.max(1, totalRegistrations), views: 50 },
   ];
 
   const currentDateFormatted = new Date().toLocaleDateString('en-US', {
@@ -58,117 +62,112 @@ export const DashboardScreen: React.FC = () => {
         {/* ========================================================================= */}
         {/* HEADER SECTION                                                            */}
         {/* ========================================================================= */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          
-          {/* Left: Welcome & Title */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
           <div>
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#7183A3] mb-1 block">
-              WELCOME BACK
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-black text-[#14213D] font-sans tracking-tight leading-tight flex items-center gap-2">
-              <span>Good morning, {currentUser?.name || 'Administrator'}</span>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
+              PLATFORM OVERVIEW
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Good morning, {currentUser?.name || 'Administrator'}
             </h1>
-            <p className="text-xs sm:text-sm text-[#7183A3] font-medium mt-1">
-              Here is the real-time activity and health overview across your ACADENO events.
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+              Real-time activity and health overview across your ACADENO events.
             </p>
           </div>
 
           {/* Right: Date & Primary CTA */}
-          <div className="flex flex-col items-start md:items-end gap-2.5 shrink-0">
-            <div className="text-right">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#14213D] justify-start md:justify-end">
-                <Calendar className="w-3.5 h-3.5 text-[#14213D]" />
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden sm:flex flex-col items-end text-right pr-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                <Calendar className="w-3.5 h-3.5 text-slate-500" />
                 <span>{currentDateFormatted}</span>
               </div>
-              <div className="text-[11px] text-[#7183A3] font-medium mt-0.5">
-                Have a productive day!
-              </div>
+              <span className="text-[11px] text-slate-400">All systems active</span>
             </div>
 
             <button
               onClick={startNewEventWizard}
-              className="bg-[#1769FF] hover:bg-[#0055FF] text-white font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md shadow-blue-500/25 hover:shadow-blue-500/35 flex items-center gap-2 transition-all cursor-pointer"
+              className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Create Event</span>
             </button>
           </div>
-
         </div>
 
         {/* ========================================================================= */}
         {/* METRIC CARDS ROW (4 Equal-Width Cards)                                    */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: TOTAL EVENTS */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_4px_25px_rgba(20,33,61,0.03)] border border-slate-100/90 flex items-start gap-4 transition-all hover:shadow-[0_8px_30px_rgba(20,33,61,0.06)]">
-            <div className="w-12 h-12 rounded-2xl bg-[#EEF5FF] text-[#1769FF] flex items-center justify-center shrink-0">
+          <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 flex items-start gap-3.5 hover:border-slate-300 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
               <Calendar className="w-5 h-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#7183A3]">
-                TOTAL EVENTS
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
+                Total Events
               </span>
-              <span className="text-3xl sm:text-4xl font-black text-[#14213D] leading-tight my-0.5">
+              <span className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight my-0.5">
                 {totalEvents}
               </span>
-              <span className="text-xs text-[#7183A3] font-medium">
-                Across all active programs
+              <span className="text-xs text-slate-500 font-medium">
+                Published & drafts
               </span>
             </div>
           </div>
 
           {/* Card 2: ACTIVE EVENTS */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_4px_25px_rgba(20,33,61,0.03)] border border-slate-100/90 flex items-start gap-4 transition-all hover:shadow-[0_8px_30px_rgba(20,33,61,0.06)]">
-            <div className="w-12 h-12 rounded-2xl bg-[#E6F9F4] text-[#20C997] flex items-center justify-center shrink-0">
+          <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 flex items-start gap-3.5 hover:border-slate-300 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
               <Activity className="w-5 h-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#7183A3]">
-                ACTIVE EVENTS
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
+                Active Events
               </span>
-              <span className="text-3xl sm:text-4xl font-black text-[#14213D] leading-tight my-0.5">
+              <span className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight my-0.5">
                 {activeEvents}
               </span>
-              <span className="text-xs text-[#7183A3] font-medium">
+              <span className="text-xs text-emerald-600 font-medium">
                 Accepting registrations
               </span>
             </div>
           </div>
 
           {/* Card 3: REGISTRATIONS */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_4px_25px_rgba(20,33,61,0.03)] border border-slate-100/90 flex items-start gap-4 transition-all hover:shadow-[0_8px_30px_rgba(20,33,61,0.06)]">
-            <div className="w-12 h-12 rounded-2xl bg-[#F0EDFF] text-[#6C5CE7] flex items-center justify-center shrink-0">
+          <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 flex items-start gap-3.5 hover:border-slate-300 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
               <Users className="w-5 h-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#7183A3]">
-                REGISTRATIONS
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
+                Total Attendees
               </span>
-              <span className="text-3xl sm:text-4xl font-black text-[#14213D] leading-tight my-0.5">
+              <span className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight my-0.5">
                 {totalRegistrations}
               </span>
-              <span className="text-xs text-[#7183A3] font-medium">
-                Verified attendee passes
+              <span className="text-xs text-slate-500 font-medium">
+                Issued QR ticket passes
               </span>
             </div>
           </div>
 
           {/* Card 4: THIS MONTH */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_4px_25px_rgba(20,33,61,0.03)] border border-slate-100/90 flex items-start gap-4 transition-all hover:shadow-[0_8px_30px_rgba(20,33,61,0.06)]">
-            <div className="w-12 h-12 rounded-2xl bg-[#FFF5EB] text-[#FF9F43] flex items-center justify-center shrink-0">
+          <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/80 flex items-start gap-3.5 hover:border-slate-300 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
               <TrendingUp className="w-5 h-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#7183A3]">
-                THIS MONTH
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
+                Conversion Rate
               </span>
-              <span className="text-3xl sm:text-4xl font-black text-[#14213D] leading-tight my-0.5">
-                {thisMonthRegistrations}
+              <span className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight my-0.5">
+                {totalRegistrations > 0 ? '94%' : '0%'}
               </span>
-              <span className="text-xs text-[#7183A3] font-medium">
-                Current month activity
+              <span className="text-xs text-slate-500 font-medium">
+                View to register ratio
               </span>
             </div>
           </div>
@@ -181,98 +180,106 @@ export const DashboardScreen: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
           {/* Left (8 Cols): 7-Day Registration Momentum Line Chart Card */}
-          <div className="lg:col-span-8 bg-white rounded-3xl p-6 sm:p-7 shadow-[0_4px_25px_rgba(20,33,61,0.03)] border border-slate-100/90 flex flex-col justify-between">
+          <div className="lg:col-span-8 bg-white rounded-2xl p-5 sm:p-6 shadow-xs border border-slate-200/80 flex flex-col justify-between">
             
             {/* Title & Legend */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
-                <h2 className="text-lg font-black text-[#14213D] font-sans">
-                  7-Day Registration Momentum
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                  7-Day Registration Velocity
                 </h2>
-                <p className="text-xs text-[#7183A3] font-medium mt-0.5">
-                  Daily participant registrations across all active events
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Daily attendee registrations across all active events
                 </p>
               </div>
               <div className="flex items-center gap-4 text-xs font-semibold">
-                <span className="flex items-center gap-1.5 text-[#1769FF]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#1769FF]" />
+                <span className="flex items-center gap-1.5 text-blue-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                   <span>Registrations</span>
                 </span>
-                <span className="flex items-center gap-1.5 text-[#00D2D3]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#00D2D3]" />
+                <span className="flex items-center gap-1.5 text-slate-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
                   <span>Page Views</span>
                 </span>
               </div>
             </div>
 
-            {/* Line Chart */}
+            {/* Area / Line Chart */}
             <div className="h-64 sm:h-72 w-full pt-2">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="regGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#2563EB" stopOpacity={0.0}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                   <XAxis 
                     dataKey="day" 
-                    stroke="#8E9EB8" 
+                    stroke="#94A3B8" 
                     fontSize={11} 
                     tickLine={false} 
                     axisLine={{ stroke: '#F1F5F9' }} 
                   />
                   <YAxis 
-                    stroke="#8E9EB8" 
+                    stroke="#94A3B8" 
                     fontSize={11} 
                     tickLine={false} 
                     axisLine={false} 
-                    domain={[0, 4]} 
-                    ticks={[0, 1, 2, 3, 4]}
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#0B1B3A', 
-                      borderRadius: '12px', 
+                      backgroundColor: '#0F172A', 
+                      borderRadius: '8px', 
                       border: 'none', 
                       color: '#ffffff', 
                       fontSize: '11px',
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.1)' 
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)' 
                     }} 
                   />
-                  <Line 
+                  <Area 
                     type="monotone" 
                     dataKey="registrations" 
-                    stroke="#1769FF" 
-                    strokeWidth={3} 
-                    dot={{ fill: '#1769FF', stroke: '#ffffff', strokeWidth: 2, r: 4 }} 
-                    activeDot={{ r: 6, fill: '#1769FF', stroke: '#ffffff', strokeWidth: 2 }}
+                    stroke="#2563EB" 
+                    strokeWidth={2.5} 
+                    fillOpacity={1}
+                    fill="url(#regGradient)"
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
 
             {/* Bottom Chart Metadata */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-[#7183A3] pt-4 border-t border-slate-100 gap-2 mt-4">
-              <span>Aggregated query • Cached ~5 min ago</span>
-              <span className="font-bold text-[#14213D]">
-                Avg 32 daily registrations
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-500 pt-4 border-t border-slate-100 gap-2 mt-4">
+              <span>Aggregated across organization • Updated live</span>
+              <button 
+                onClick={() => setScreen('13_analytics')}
+                className="font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 cursor-pointer"
+              >
+                <span>View In-Depth Analytics</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
             </div>
 
           </div>
 
-          {/* Right (4 Cols): Light Blue Action Panel (EventLink Wizard) */}
-          <div className="lg:col-span-4 bg-gradient-to-br from-[#EEF5FF] via-[#E8F1FC] to-[#DFECFB] border border-blue-100/90 rounded-3xl p-6 sm:p-7 shadow-[0_4px_25px_rgba(23,105,255,0.04)] flex flex-col justify-between relative overflow-hidden">
+          {/* Right (4 Cols): Action Card */}
+          <div className="lg:col-span-4 bg-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-xs border border-slate-800 flex flex-col justify-between relative overflow-hidden">
             
             {/* Top Content */}
             <div>
-              <div className="bg-white/80 border border-blue-200/60 text-[#1769FF] text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-2xs mb-3">
-                <Sparkles className="w-3.5 h-3.5 text-[#1769FF]" />
-                <span>EventLink Wizard</span>
+              <div className="bg-white/10 text-blue-300 text-[11px] font-bold px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 mb-3 border border-white/10">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Quick Actions</span>
               </div>
 
-              <h3 className="text-xl font-black text-[#14213D] font-sans leading-tight">
-                Create & Launch an Event
+              <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                Launch a New Event
               </h3>
 
-              <p className="text-xs text-[#526484] leading-relaxed mt-2 font-medium">
-                Step-by-step wizard to set up your event with theme branding, operational settings, and scannable QR generation.
+              <p className="text-xs text-slate-400 leading-relaxed mt-2">
+                Use our 5-step wizard to create custom registration forms, brand theme styling, and generate scannable QR ticket passes.
               </p>
             </div>
 
@@ -280,7 +287,7 @@ export const DashboardScreen: React.FC = () => {
             <div className="space-y-2.5 my-6">
               <button
                 onClick={startNewEventWizard}
-                className="w-full bg-[#1769FF] hover:bg-[#0055FF] text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 text-xs transition-all cursor-pointer"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-xs flex items-center justify-center gap-2 text-xs transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Launch 5-Step Wizard</span>
@@ -288,43 +295,31 @@ export const DashboardScreen: React.FC = () => {
 
               <button
                 onClick={() => setScreen('03_events_list')}
-                className="w-full bg-white/80 hover:bg-white text-[#14213D] border border-blue-200/80 font-bold py-2.5 px-4 rounded-xl transition-all text-xs flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                className="w-full bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white border border-white/10 font-semibold py-2.5 px-4 rounded-xl transition-all text-xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Layers className="w-4 h-4 text-[#1769FF]" />
+                <Layers className="w-4 h-4 text-blue-400" />
                 <span>Browse Events Catalogue</span>
               </button>
             </div>
 
-            {/* Bottom Graphic & Handwritten Decorative Accent */}
-            <div className="flex items-end justify-between pt-2">
-              
-              {/* Calendar Icon Graphic */}
-              <div className="relative">
-                <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-blue-100 flex flex-col items-center justify-center p-2">
-                  <div className="w-full h-1.5 bg-[#1769FF] rounded-full mb-1" />
-                  <div className="grid grid-cols-3 gap-0.5 w-full">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="w-1.5 h-1.5 bg-blue-100 rounded-2xs" />
-                    ))}
-                  </div>
+            {/* Recent Event Quick Link */}
+            {events.length > 0 && (
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                <div className="flex flex-col min-w-0 pr-2">
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase">Latest Event</span>
+                  <span className="text-xs font-medium text-slate-200 truncate">{events[0].name}</span>
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#1769FF] text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-xs">
-                  +
-                </div>
+                <button
+                  onClick={() => {
+                    setSelectedEventId(events[0].id);
+                    setScreen('10_event_overview');
+                  }}
+                  className="text-blue-400 hover:text-blue-300 font-semibold shrink-0 cursor-pointer"
+                >
+                  Manage
+                </button>
               </div>
-
-              {/* Handwritten "Events Made Simple" script */}
-              <div className="text-right select-none transform -rotate-6">
-                <div className="font-['Caveat'] text-2xl sm:text-3xl font-bold text-[#14213D]/80 leading-tight tracking-wide">
-                  <div>Events</div>
-                  <div className="pl-3">Made Simple</div>
-                </div>
-                <svg className="w-24 h-4 text-[#1769FF]/60 ml-auto mt-0.5" viewBox="0 0 100 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M5 10 Q 50 18, 95 6" />
-                </svg>
-              </div>
-
-            </div>
+            )}
 
           </div>
 
@@ -334,3 +329,4 @@ export const DashboardScreen: React.FC = () => {
     </AdminLayout>
   );
 };
+

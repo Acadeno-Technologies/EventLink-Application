@@ -9,7 +9,9 @@ import {
   UserCog, 
   LogOut, 
   Menu, 
-  X
+  X,
+  ExternalLink,
+  ShieldCheck
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -29,7 +31,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 }) => {
   const { 
     setScreen, 
-    logout
+    logout,
+    currentUser,
+    selectedEvent
   } = useEventStore();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -43,35 +47,35 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-[#F4F8FD] flex flex-col md:flex-row text-[#14213D] antialiased font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row text-slate-900 antialiased font-sans">
       
       {/* Mobile Top Bar */}
-      <div className="md:hidden bg-[#0B1B3A] text-white px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-md">
-        <div className="bg-white rounded-xl px-3 py-1.5 flex items-center gap-2 shadow-xs">
+      <div className="md:hidden bg-[#0B172B] text-white px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-xs border-b border-slate-800">
+        <div 
+          onClick={() => setScreen('02_dashboard')}
+          className="bg-white rounded-xl px-2.5 py-1 flex items-center gap-2 shadow-xs cursor-pointer"
+        >
           <img 
             src={acadenoLogoPng} 
             alt="ACADENO" 
-            className="h-6 w-auto object-contain" 
+            className="h-5 w-auto object-contain" 
           />
-          <div className="w-px h-4 bg-slate-200" />
-          <span className="text-xs font-black text-[#0B1B3A] tracking-wider">EVENTLINK</span>
+          <div className="w-px h-3.5 bg-slate-200" />
+          <span className="text-[11px] font-bold text-slate-900 tracking-wider">EVENTLINK</span>
         </div>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10"
+          className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+          aria-label="Toggle navigation menu"
         >
           {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Sidebar Navigation */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-[240px] min-w-[240px] bg-gradient-to-b from-[#0B1B3A] via-[#0E224A] to-[#08152D] text-white flex flex-col justify-between transition-transform duration-300 md:static md:translate-x-0 shadow-xl border-r border-blue-950/40 relative overflow-hidden ${
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[240px] min-w-[240px] bg-[#0B172B] text-white flex flex-col justify-between transition-transform duration-300 md:static md:translate-x-0 shadow-lg border-r border-slate-800/80 ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        
-        {/* Subtle background ambient curves */}
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none" />
-        <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-blue-500/10 blur-2xl pointer-events-none" />
 
         {/* Top & Navigation Section */}
         <div className="p-4 relative z-10">
@@ -79,24 +83,24 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           {/* ACADENO EventLink Logo Card */}
           <div 
             onClick={() => { setScreen('02_dashboard'); setIsMobileMenuOpen(false); }}
-            className="bg-white rounded-2xl p-3 shadow-md border border-white/20 flex flex-col items-center justify-center cursor-pointer hover:shadow-lg transition-shadow select-none mb-6"
+            className="bg-white rounded-2xl p-3 shadow-xs border border-slate-100 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-all select-none mb-6 group"
           >
             <img 
               src={acadenoLogoPng} 
               alt="ACADENO Logo" 
-              className="h-10 w-auto object-contain" 
+              className="h-9 w-auto object-contain group-hover:scale-105 transition-transform" 
               loading="eager"
             />
-            <div className="text-[11px] font-black text-[#0B1B3A] tracking-wider uppercase mt-1">
+            <div className="text-[11px] font-extrabold text-slate-900 tracking-wider uppercase mt-1">
               ACADENO
             </div>
-            <div className="text-[9px] font-bold text-[#1769FF] tracking-widest uppercase -mt-0.5">
+            <div className="text-[9px] font-bold text-blue-600 tracking-widest uppercase -mt-0.5">
               EVENTLINK
             </div>
           </div>
 
           {/* Navigation Menu Items */}
-          <nav className="space-y-1.5">
+          <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeNav === item.id;
@@ -108,13 +112,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                     setScreen(item.screen);
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-xs font-semibold transition-all cursor-pointer select-none ${
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none ${
                     isActive
-                      ? 'bg-[#1769FF] text-white shadow-md shadow-blue-600/35 font-bold'
-                      : 'text-[#8E9EB8] hover:text-white hover:bg-white/5'
+                      ? 'bg-blue-600 text-white shadow-xs font-bold'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#8E9EB8]'}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                   <span className="truncate">{item.label}</span>
                 </button>
               );
@@ -124,29 +128,35 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         </div>
 
         {/* Bottom Status & Logout Section */}
-        <div className="p-4 relative z-10 space-y-4">
+        <div className="p-4 relative z-10 space-y-3.5 border-t border-slate-800/80">
           
-          {/* Platform info with green dot indicator */}
-          <div className="flex items-start gap-2.5 px-2">
-            <span className="w-2 h-2 rounded-full bg-[#20C997] shadow-xs shadow-emerald-400 mt-1 shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-slate-200 leading-tight">
-                Event Management Platform
+          {/* User Profile Info */}
+          <div className="flex items-center gap-2.5 px-1.5">
+            <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-blue-400/40 text-blue-300 flex items-center justify-center text-xs font-bold shrink-0">
+              {currentUser?.name?.charAt(0) || 'A'}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-semibold text-slate-200 truncate">
+                {currentUser?.name || 'Administrator'}
               </span>
-              <span className="text-[10px] text-[#7183A3] font-medium leading-normal mt-0.5">
-                ACADENO Technologies Pvt. Ltd.
+              <span className="text-[10px] text-slate-400 capitalize truncate">
+                {currentUser?.role?.replace('_', ' ') || 'Super Admin'}
               </span>
             </div>
           </div>
 
-          {/* Prominent Rounded Logout Button */}
+          {/* Logout Button */}
           <button
             onClick={logout}
-            className="w-full bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 border border-white/10 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+            className="w-full bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white py-2 px-3 rounded-xl flex items-center justify-center gap-2 border border-white/10 text-xs font-semibold transition-all cursor-pointer"
           >
-            <LogOut className="w-4 h-4 text-slate-300" />
-            <span>Logout</span>
+            <LogOut className="w-3.5 h-3.5 text-slate-400" />
+            <span>Sign Out</span>
           </button>
+
+          <div className="text-[10px] text-slate-400 px-1 text-center font-medium">
+            ACADENO Technologies
+          </div>
 
         </div>
 
@@ -154,12 +164,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-[1400px] w-full mx-auto animate-fade-in">
+        <main className="flex-1 p-5 sm:p-7 lg:p-8 max-w-[1400px] w-full mx-auto animate-fade-in">
           {(pageTitle || headerAction) && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/80">
               <div>
-                {pageTitle && <h1 className="text-2xl sm:text-3xl font-extrabold text-[#14213D] tracking-tight font-sans">{pageTitle}</h1>}
-                {pageSubtitle && <p className="text-xs sm:text-sm text-[#7183A3] mt-1 font-medium">{pageSubtitle}</p>}
+                {pageTitle && <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{pageTitle}</h1>}
+                {pageSubtitle && <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">{pageSubtitle}</p>}
               </div>
               {headerAction && <div className="shrink-0">{headerAction}</div>}
             </div>
@@ -172,3 +182,4 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     </div>
   );
 };
+
