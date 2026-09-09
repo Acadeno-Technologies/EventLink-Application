@@ -798,6 +798,73 @@ ACADENO Event Operations Team`;
           </div>
         )}
 
+        {/* ========================================================================= */}
+        {/* CUSTOM DELETE CONFIRMATION POPUP MODAL                                    */}
+        {/* ========================================================================= */}
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
+            <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden relative p-6 space-y-5 animate-in zoom-in-95">
+              
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0 shadow-xs">
+                  <Trash2 className="w-6 h-6" />
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-slate-900 font-display">
+                    Delete Registration?
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Are you sure you want to permanently delete the ticket record for <span className="font-bold text-slate-800">{reg.name}</span>?
+                  </p>
+                </div>
+              </div>
+
+              {/* Participant Summary Card */}
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs space-y-1.5 font-mono">
+                <div className="flex justify-between">
+                  <span className="text-slate-400 font-sans font-medium">Ticket ID:</span>
+                  <span className="font-bold text-indigo-600">{reg.registration_code}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 font-sans font-medium">Email:</span>
+                  <span className="text-slate-700">{reg.email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 font-sans font-medium">Phone:</span>
+                  <span className="text-slate-700">{phoneFormatted}</span>
+                </div>
+              </div>
+
+              {/* Warning Notice */}
+              <div className="p-3 bg-rose-50/70 border border-rose-200/80 rounded-xl text-[11px] text-rose-700 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+                <span>This action cannot be undone and will be logged in audit records.</span>
+              </div>
+
+              {/* Modal Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Yes, Delete Registration</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
       </div>
     </AdminLayout>
   );
