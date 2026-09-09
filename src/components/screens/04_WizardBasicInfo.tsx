@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { WizardStepHeader } from '../wizard/WizardStepHeader';
+import { uploadImageToCloudinary } from '../../utils/cloudinaryUtils';
 import { 
   ArrowLeft,
   Calendar, 
@@ -14,7 +15,9 @@ import {
   CheckCircle2, 
   AlertCircle,
   Trash2,
-  ChevronDown
+  ChevronDown,
+  Loader2,
+  Link2
 } from 'lucide-react';
 
 export const WizardBasicInfoScreen: React.FC = () => {
@@ -23,10 +26,13 @@ export const WizardBasicInfoScreen: React.FC = () => {
     updateWizardDraft, 
     setWizardStep, 
     setScreen, 
-    saveWizardDraft 
+    saveWizardDraft,
+    showToast
   } = useEventStore();
 
   const [savedNotice, setSavedNotice] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
 
   const bannerPresets = [
     { label: 'AI & Tech', url: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1200&auto=format&fit=crop&q=80' },
@@ -36,6 +42,25 @@ export const WizardBasicInfoScreen: React.FC = () => {
   ];
 
   const currentBanner = wizardDraft.banner_url || bannerPresets[1].url;
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingBanner(true);
+    try {
+      const cloudUrl = await uploadImageToCloudinary(file);
+      updateWizardDraft({ banner_url: cloudUrl });
+      showToast('Image uploaded and stored in Cloudinary!');
+    } catch {
+      // Fallback preview
+      const fallbackUrl = URL.createObjectURL(file);
+      updateWizardDraft({ banner_url: fallbackUrl });
+      showToast('Image loaded for draft.');
+    } finally {
+      setIsUploadingBanner(false);
+    }
+  };
 
   const handleNameChange = (val: string) => {
     const slugVal = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -273,64 +298,100 @@ export const WizardBasicInfoScreen: React.FC = () => {
 
           {/* Row 5: Event Banner Image */}
           <div className="space-y-3">
-            <label className="text-[11px] font-extrabold uppercase tracking-wider text-[#14213D] flex items-center gap-1.5">
-              <ImageIcon className="w-3.5 h-3.5 text-[#1769FF]" />
-              <span>EVENT BANNER IMAGE</span>
-            </label>
-
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-              
-              {/* Upload Box (7 Cols) */}
-              <label className="sm:col-span-7 bg-[#EEF5FF]/60 hover:bg-[#EEF5FF] border border-dashed border-blue-200 hover:border-blue-400 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 cursor-pointer transition-all">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-11 h-11 rounded-2xl bg-blue-100/90 text-[#1769FF] flex items-center justify-center shrink-0">
-                    <Upload className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-[#14213D] truncate">
-                      Upload event banner
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
-                      Recommended size: 1920 × 640 (JPG, PNG)
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white hover:bg-blue-50 text-[#1769FF] border border-blue-200/90 text-xs font-bold px-4 py-2 rounded-xl shadow-2xs transition-all shrink-0">
-                  <span>Choose Image</span>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const url = URL.createObjectURL(file);
-                      updateWizardDraft({ banner_url: url });
-                    }
-                  }}
-                />
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-extrabold uppercase tracking-wider text-[#14213D] flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-[#1769FF]" />
+                <span>EVENT BANNER IMAGE (CLOUDINARY / WEB)</span>
               </label>
-
-              {/* Banner Live Preview (5 Cols) */}
-              <div className="sm:col-span-5 relative h-24 rounded-2xl overflow-hidden border border-slate-200 shadow-xs bg-slate-900 group">
-                <img
-                  src={currentBanner}
-                  alt="Banner preview"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => updateWizardDraft({ banner_url: '' })}
-                  className="w-7 h-7 bg-white/95 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-lg flex items-center justify-center shadow-xs border border-slate-200 absolute top-2 right-2 transition-colors cursor-pointer"
-                  title="Remove banner"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
+              <button
+                type="button"
+                onClick={() => setShowUrlInput(!showUrlInput)}
+                className="text-[11px] font-semibold text-[#1769FF] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Link2 className="w-3 h-3" />
+                <span>{showUrlInput ? 'Switch to File Upload' : 'Paste Cloudinary Image Link'}</span>
+              </button>
             </div>
+
+            {showUrlInput ? (
+              <div className="space-y-2 animate-fade-in">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Link2 className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="url"
+                    value={wizardDraft.banner_url || ''}
+                    onChange={(e) => updateWizardDraft({ banner_url: e.target.value })}
+                    placeholder="https://res.cloudinary.com/<your_cloud>/image/upload/... or image link"
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFD] border border-slate-200 rounded-xl text-xs font-medium text-[#10244A] focus:outline-none focus:ring-2 focus:ring-[#1769FF]/20 focus:border-[#1769FF] transition-all"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500 font-medium">
+                  Tip: Copy any image URL from your Cloudinary Media Library and paste it directly above.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                
+                {/* Upload Box (7 Cols) */}
+                <label className="sm:col-span-7 bg-[#EEF5FF]/60 hover:bg-[#EEF5FF] border border-dashed border-blue-200 hover:border-blue-400 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 cursor-pointer transition-all">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-11 h-11 rounded-2xl bg-blue-100/90 text-[#1769FF] flex items-center justify-center shrink-0">
+                      {isUploadingBanner ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-[#1769FF]" />
+                      ) : (
+                        <Upload className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-[#14213D] truncate flex items-center gap-1.5">
+                        <span>{isUploadingBanner ? 'Uploading to Cloudinary...' : 'Upload event banner'}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
+                        Recommended size: 1920 × 640 (JPG, PNG, WebP)
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white hover:bg-blue-50 text-[#1769FF] border border-blue-200/90 text-xs font-bold px-4 py-2 rounded-xl shadow-2xs transition-all shrink-0 flex items-center gap-1.5">
+                    {isUploadingBanner ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <span>Choose Image</span>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploadingBanner}
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                </label>
+
+                {/* Banner Live Preview (5 Cols) */}
+                <div className="sm:col-span-5 relative h-24 rounded-2xl overflow-hidden border border-slate-200 shadow-xs bg-slate-900 group">
+                  <img
+                    src={currentBanner}
+                    alt="Banner preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => updateWizardDraft({ banner_url: '' })}
+                    className="w-7 h-7 bg-white/95 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-lg flex items-center justify-center shadow-xs border border-slate-200 absolute top-2 right-2 transition-colors cursor-pointer"
+                    title="Remove banner"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+              </div>
+            )}
 
             {/* Presets Chips */}
             <div className="flex items-center gap-2 overflow-x-auto pt-1 select-none">
