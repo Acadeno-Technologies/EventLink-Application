@@ -1,8 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Event, Registration } from '../types';
 
-const defaultSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ojfqulclkirnipavdajx.supabase.co';
-const defaultAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const defaultSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://pvsnehkntsbljgqagkbi.supabase.co';
+const defaultAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2c25laGtudHNibGpncWFna2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMzUyNDcsImV4cCI6MjEwNDYxMTI0N30.ZECkP606S1eGlt_UAq4qhVffuTm66jQlSw8zMOB2rmE';
 
 let supabaseInstance: SupabaseClient | null = null;
 

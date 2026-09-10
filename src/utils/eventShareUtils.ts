@@ -12,22 +12,33 @@ export function encodeEventToShareUrl(event: Event | undefined | null, origin?: 
   const base = origin || (typeof window !== 'undefined' ? window.location.origin : 'https://acadeno-eventlink.onrender.com');
   const slug = event.slug || (event.name ? event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'event');
 
-  const payload = {
+  // Strip massive base64 image strings from URL payload so URL remains ultra-compact (~250-350 bytes)
+  // QR codes fail if data exceeds ~2.9KB, and browsers/servers fail with 414 URI Too Long.
+  const isWebUrl = event.banner_url && (event.banner_url.startsWith('http://') || event.banner_url.startsWith('https://'));
+  const safeBannerUrl = isWebUrl ? event.banner_url : '';
+
+  const payload: Record<string, any> = {
     id: event.id,
     name: event.name,
     slug: slug,
-    desc: event.short_description || '',
-    banner: event.banner_url || '',
+    desc: (event.short_description || '').slice(0, 160),
     venue: event.venue || '',
     start_date: event.start_date,
-    end_date: event.end_date,
+    end_date: event.end_date || event.start_date,
     start_time: event.start_time || '10:00 AM',
     end_time: event.end_time || '1:00 PM',
     status: event.status || 'active',
-    theme: event.theme,
-    settings: event.settings,
-    form_schema: event.form_schema
   };
+
+  if (safeBannerUrl) {
+    payload.banner = safeBannerUrl;
+  }
+  if (event.settings?.max_registrations) {
+    payload.cap = event.settings.max_registrations;
+  }
+  if (event.theme?.template) {
+    payload.themeTpl = event.theme.template;
+  }
 
   try {
     const json = JSON.stringify(payload);
@@ -40,14 +51,7 @@ export function encodeEventToShareUrl(event: Event | undefined | null, origin?: 
     return `${base}/?event=${encodeURIComponent(slug)}&d=${encodeURIComponent(base64)}`;
   } catch (err) {
     console.error('Failed to base64 encode event payload:', err);
-    const params = new URLSearchParams();
-    params.set('event', slug);
-    params.set('title', event.name);
-    if (event.venue) params.set('venue', event.venue);
-    if (event.start_date) params.set('date', event.start_date);
-    if (event.settings?.max_registrations) params.set('cap', String(event.settings.max_registrations));
-    if (event.banner_url) params.set('banner', event.banner_url);
-    return `${base}/?${params.toString()}`;
+    return `${base}/?event=${encodeURIComponent(slug)}`;
   }
 }
 
@@ -90,11 +94,11 @@ export function decodeEventFromUrlParams(params: URLSearchParams, orgId: string)
             { id: 'f_phone', type: 'phone', label: 'Mobile Number', required: true, order: 3, placeholder: '+91 98765 43210' },
             { id: 'f_dept', type: 'text', label: 'College / Organization', required: false, order: 4, placeholder: 'e.g. College / Company' }
           ],
-          theme: parsed.theme || themePresets.workshop,
+          theme: ((parsed.themeTpl || parsed.themeId) && (themePresets as any)[parsed.themeTpl || parsed.themeId]) || parsed.theme || themePresets.workshop,
           settings: parsed.settings || {
             registration_opens_at: new Date().toISOString(),
             registration_closes_at: '',
-            max_registrations: 100,
+            max_registrations: parsed.cap ? Number(parsed.cap) : 100,
             require_payment: false,
             after_registration: 'ticket',
             send_email_confirmation: true,
