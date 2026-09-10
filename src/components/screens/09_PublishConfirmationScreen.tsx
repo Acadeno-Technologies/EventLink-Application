@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { generateQrDataUrl, downloadQrImage } from '../../utils/qrUtils';
+import { encodeEventToShareUrl } from '../../utils/eventShareUtils';
 import { 
   CheckCircle2, 
   Copy, 
@@ -23,7 +24,7 @@ export const PublishConfirmationScreen: React.FC = () => {
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
   const eventSlug = selectedEvent?.slug || (selectedEvent?.name ? selectedEvent.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'new-event');
-  const publicUrl = `${origin}/?event=${eventSlug}`;
+  const publicUrl = encodeEventToShareUrl(selectedEvent, origin);
 
   useEffect(() => {
     generateQrDataUrl(publicUrl, { width: 320 }).then(setQrUrl);

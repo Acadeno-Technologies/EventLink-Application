@@ -21,9 +21,27 @@ import { RegistrationSuccessScreen } from './components/screens/16_RegistrationS
 import { RegistrationClosedScreen } from './components/screens/17_RegistrationClosedScreen';
 
 const MainRouter: React.FC = () => {
-  const { currentScreen, toastMessage } = useEventStore();
+  const { currentScreen, setScreen, currentUser, toastMessage } = useEventStore();
+
+  const publicScreens = [
+    '01_login',
+    '15_public_registration',
+    '16_registration_success',
+    '17_registration_closed'
+  ];
+
+  // If visitor is not authenticated and trying to access an internal admin screen, redirect to login
+  React.useEffect(() => {
+    if (!currentUser && !publicScreens.includes(currentScreen)) {
+      setScreen('01_login');
+    }
+  }, [currentUser, currentScreen, setScreen]);
 
   const renderScreen = () => {
+    if (!currentUser && !publicScreens.includes(currentScreen)) {
+      return <LoginScreen />;
+    }
+
     switch (currentScreen) {
       case '01_login':
         return <LoginScreen />;
@@ -60,7 +78,7 @@ const MainRouter: React.FC = () => {
       case '17_registration_closed':
         return <RegistrationClosedScreen />;
       default:
-        return <DashboardScreen />;
+        return currentUser ? <DashboardScreen /> : <LoginScreen />;
     }
   };
 

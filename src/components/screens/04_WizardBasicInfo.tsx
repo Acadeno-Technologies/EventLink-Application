@@ -313,7 +313,7 @@ export const WizardBasicInfoScreen: React.FC = () => {
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                 <ImageIcon className="w-3.5 h-3.5 text-blue-600" />
-                <span>Event Cover Banner (Cloudinary / CDN)</span>
+                <span>Event Cover Image</span>
               </label>
               <button
                 type="button"
@@ -353,7 +353,7 @@ export const WizardBasicInfoScreen: React.FC = () => {
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-slate-800 truncate">
-                        {isUploadingBanner ? 'Uploading to Cloudinary...' : 'Upload cover banner'}
+                        {isUploadingBanner ? 'Uploading image...' : 'Upload cover image'}
                       </div>
                       <div className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
                         Recommended size: 1920 × 640 (JPG, PNG, WebP)

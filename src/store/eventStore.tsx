@@ -13,6 +13,13 @@ import {
   initialUsers, 
   themePresets 
 } from '../data/seedData';
+import { decodeEventFromUrlParams } from '../utils/eventShareUtils';
+import { 
+  syncEventToCloud, 
+  syncRegistrationToCloud, 
+  fetchRemoteEvents, 
+  fetchRemoteRegistrations 
+} from '../utils/supabaseClient';
 
 interface EventContextType {
   currentScreen: ScreenId;
@@ -109,8 +116,17 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   });
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const user = users.find(u => u.role === currentRole) || users[0];
-    return user;
+    if (typeof window !== 'undefined') {
+      const savedAuth = localStorage.getItem(`${STORAGE_KEY_PREFIX}auth_user`);
+      if (savedAuth) {
+        try {
+          return JSON.parse(savedAuth);
+        } catch {
+          return null;
+        }
+      }
+    }
+    return null;
   });
 
   const [organization, setOrganization] = useState<Organization>(() => {
@@ -202,6 +218,14 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [registrations]);
 
   useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`${STORAGE_KEY_PREFIX}auth_user`, JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem(`${STORAGE_KEY_PREFIX}auth_user`);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}users`, JSON.stringify(users));
   }, [users]);
 
@@ -220,6 +244,38 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.setItem(`${STORAGE_KEY_PREFIX}selected_reg`, selectedRegistrationId);
     }
   }, [selectedRegistrationId]);
+
+  // Initial cloud sync fetch on mount
+  useEffect(() => {
+    let isMounted = true;
+    fetchRemoteEvents().then(remoteEvts => {
+      if (isMounted && remoteEvts && remoteEvts.length > 0) {
+        setEvents(prev => {
+          const merged = [...prev];
+          remoteEvts.forEach(re => {
+            const idx = merged.findIndex(e => e.id === re.id);
+            if (idx >= 0) merged[idx] = { ...merged[idx], ...re };
+            else merged.push(re);
+          });
+          return merged;
+        });
+      }
+    });
+
+    fetchRemoteRegistrations().then(remoteRegs => {
+      if (isMounted && remoteRegs && remoteRegs.length > 0) {
+        setRegistrations(prev => {
+          const merged = [...prev];
+          remoteRegs.forEach(rr => {
+            if (!merged.some(r => r.id === rr.id)) merged.push(rr);
+          });
+          return merged;
+        });
+      }
+    });
+
+    return () => { isMounted = false; };
+  }, []);
 
   // Read URL search params on mount or change (?event=slug or ?code=regCode)
   useEffect(() => {
@@ -261,69 +317,36 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         return;
       }
 
-      if (eventParam) {
+      if (eventParam || params.get('d') || params.get('data')) {
         let foundEvt = events.find(e => 
-          e.slug.toLowerCase() === eventParam.toLowerCase() || 
-          e.id === eventParam || 
-          e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase()
+          (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) || 
+          (eventParam && e.id === eventParam) || 
+          (eventParam && e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase())
         );
 
-        // If event is not yet in local storage (e.g. mobile phone scanning from new browser), dynamically instantiate it!
-        if (!foundEvt) {
-          const cleanTitle = eventParam
-            .replace(/[-_]+/g, ' ')
-            .replace(/\b\w/g, char => char.toUpperCase());
+        // Decode rich payload or URL parameters
+        const decodedEvt = decodeEventFromUrlParams(params, organization.id);
 
-          const newEvt: Event = {
-            id: `evt-${eventParam}`,
-            org_id: organization.id,
-            name: cleanTitle,
-            slug: eventParam.toLowerCase(),
-            short_description: `Registration for ${cleanTitle} at ACADENO Technologies.`,
-            banner_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80',
-            venue: 'ACADENO Technologies, CSEZ Unit, Kochi',
-            start_date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
-            end_date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
-            start_time: '10:00 AM',
-            end_time: '1:00 PM',
-            status: 'active',
-            created_by: 'arathy@acadeno.in',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            views_count: 1,
-            form_schema: [
-              { id: 'f_name', type: 'text', label: 'Full Name', required: true, order: 1, placeholder: 'Enter full name' },
-              { id: 'f_email', type: 'email', label: 'Email Address', required: true, order: 2, placeholder: 'name@gmail.com' },
-              { id: 'f_phone', type: 'phone', label: 'Mobile Number', required: true, order: 3, placeholder: '+91 98765 43210' },
-              { id: 'f_dept', type: 'text', label: 'College / Organization', required: false, order: 4, placeholder: 'e.g. College / Company' }
-            ],
-            theme: themePresets.workshop,
-            settings: {
-              registration_opens_at: new Date().toISOString(),
-              registration_closes_at: '',
-              max_registrations: 250,
-              require_payment: false,
-              after_registration: 'ticket',
-              send_email_confirmation: true,
-              send_whatsapp_confirmation: true,
-              send_sms_confirmation: false,
-              allow_excel_export: true,
-              require_consent: true,
-              consent_text: 'I agree to receive event notifications from ACADENO under India DPDP Act 2023 regulations.'
+        if (decodedEvt) {
+          foundEvt = decodedEvt;
+          setEvents(prev => {
+            const exists = prev.some(e => e.id === decodedEvt.id || e.slug === decodedEvt.slug);
+            if (!exists) {
+              return [decodedEvt, ...prev];
             }
-          };
-
-          foundEvt = newEvt;
-          setEvents(prev => [newEvt, ...prev.filter(x => x.id !== newEvt.id)]);
+            return prev.map(e => (e.id === decodedEvt.id || e.slug === decodedEvt.slug) ? { ...e, ...decodedEvt } : e);
+          });
         }
 
-        setSelectedEventId(foundEvt.id);
-        if (foundEvt.status === 'closed') {
-          setCurrentScreen('17_registration_closed');
-        } else {
-          setCurrentScreen('15_public_registration');
+        if (foundEvt) {
+          setSelectedEventId(foundEvt.id);
+          if (foundEvt.status === 'closed') {
+            setCurrentScreen('17_registration_closed');
+          } else {
+            setCurrentScreen('15_public_registration');
+          }
+          return;
         }
-        return;
       }
 
       if (screenParam) {
@@ -572,16 +595,25 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setSelectedEventId(publishedEvent.id);
     setScreen('09_publish_confirm');
     showToast(`🎉 "${publishedEvent.name}" is now live!`);
+    
+    // Sync to Supabase Cloud asynchronously
+    syncEventToCloud(publishedEvent);
+    
     return publishedEvent;
   };
 
   const updateEvent = (eventId: string, updates: Partial<Event>) => {
+    let updatedEvt: Event | undefined;
     setEvents(prev => prev.map(e => {
       if (e.id === eventId) {
-        return { ...e, ...updates, updated_at: new Date().toISOString() };
+        updatedEvt = { ...e, ...updates, updated_at: new Date().toISOString() };
+        return updatedEvt;
       }
       return e;
     }));
+    if (updatedEvt) {
+      syncEventToCloud(updatedEvt);
+    }
     showToast('Event updated successfully');
   };
 
@@ -630,6 +662,9 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
       return e;
     }));
+
+    // Sync registration to Cloud database asynchronously
+    syncRegistrationToCloud(newReg);
 
     return newReg;
   };
