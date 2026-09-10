@@ -226,6 +226,21 @@ export const WizardPreviewPublishScreen: React.FC = () => {
                 fontFamily: theme.typography.fontFamily,
               }}
             >
+              {/* Optional Event Banner Image */}
+              {(wizardDraft.banner_url || wizardDraft.theme?.banner_url) && (
+                <div className="w-full h-32 sm:h-36 relative overflow-hidden bg-slate-950 border-b border-white/10">
+                  <img 
+                    src={wizardDraft.banner_url || wizardDraft.theme?.banner_url} 
+                    alt={wizardDraft.name || 'Event Cover'} 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
+                    }}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                </div>
+              )}
+
               {/* Header Hero */}
               <div 
                 className="p-6 text-white relative"

@@ -3,11 +3,6 @@ import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { WizardStepHeader } from '../wizard/WizardStepHeader';
 import { 
-  uploadImageToCloudinary, 
-  getCloudinaryConfig, 
-  setStoredCloudinaryConfig 
-} from '../../utils/cloudinaryUtils';
-import { 
   ArrowLeft,
   Calendar, 
   Clock, 
@@ -21,11 +16,7 @@ import {
   Trash2,
   ChevronDown,
   Loader2,
-  Link2,
-  Settings,
-  Cloud,
-  Check,
-  X
+  Link2
 } from 'lucide-react';
 
 export const WizardBasicInfoScreen: React.FC = () => {
@@ -41,9 +32,6 @@ export const WizardBasicInfoScreen: React.FC = () => {
   const [savedNotice, setSavedNotice] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
-  const [isCloudinaryModalOpen, setIsCloudinaryModalOpen] = useState(false);
-  const [cloudNameInput, setCloudNameInput] = useState(getCloudinaryConfig().cloudName || '');
-  const [uploadPresetInput, setUploadPresetInput] = useState(getCloudinaryConfig().uploadPreset || '');
 
   const bannerPresets = [
     { label: 'AI & Tech', url: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1200&auto=format&fit=crop&q=80' },
@@ -54,44 +42,28 @@ export const WizardBasicInfoScreen: React.FC = () => {
 
   const currentBanner = wizardDraft.banner_url || bannerPresets[1].url;
 
-  const handleSaveCloudinaryConfig = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cloudNameInput.trim() || !uploadPresetInput.trim()) {
-      showToast('Please enter both Cloud Name and Upload Preset');
-      return;
-    }
-    setStoredCloudinaryConfig(cloudNameInput.trim(), uploadPresetInput.trim());
-    setIsCloudinaryModalOpen(false);
-    showToast('Cloudinary credentials saved! You can now upload images directly.');
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const config = getCloudinaryConfig();
-    if (!config.cloudName || !config.uploadPreset) {
-      setIsCloudinaryModalOpen(true);
-      showToast('Please configure your Cloudinary Cloud Name & Upload Preset first.');
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file (JPG, PNG, WebP).');
       return;
     }
 
     setIsUploadingBanner(true);
-    try {
-      const cloudUrl = await uploadImageToCloudinary(file);
-      updateWizardDraft({ banner_url: cloudUrl });
-      showToast('Image uploaded & stored in Cloudinary!');
-    } catch {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64Url = reader.result as string;
-        updateWizardDraft({ banner_url: base64Url });
-      };
-      reader.readAsDataURL(file);
-      showToast('Image saved to draft.');
-    } finally {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      updateWizardDraft({ banner_url: dataUrl });
+      showToast('Cover image uploaded successfully!');
       setIsUploadingBanner(false);
-    }
+    };
+    reader.onerror = () => {
+      showToast('Failed to read image file.');
+      setIsUploadingBanner(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleNameChange = (val: string) => {
@@ -415,18 +387,6 @@ export const WizardBasicInfoScreen: React.FC = () => {
                   {preset.label}
                 </button>
               ))}
-
-              <div className="ml-auto">
-                <button
-                  type="button"
-                  onClick={() => setIsCloudinaryModalOpen(true)}
-                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1 cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-xl transition-colors shrink-0"
-                  title="Configure Cloudinary storage credentials"
-                >
-                  <Settings className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Cloudinary Config</span>
-                </button>
-              </div>
             </div>
 
           </div>
@@ -464,87 +424,6 @@ export const WizardBasicInfoScreen: React.FC = () => {
         </div>
 
       </div>
-
-      {/* Cloudinary Storage Settings Modal */}
-      {isCloudinaryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 shadow-xl p-6 space-y-5 animate-in zoom-in-95">
-            
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-                  <Cloud className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">Cloudinary Direct Upload</h3>
-                  <p className="text-[11px] text-slate-500">Store event banner files permanently in your Cloudinary CDN</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsCloudinaryModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveCloudinaryConfig} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Cloudinary Cloud Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={cloudNameInput}
-                  onChange={(e) => setCloudNameInput(e.target.value)}
-                  placeholder="e.g. acadeno or dx7yzw123"
-                  className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
-                />
-                <span className="text-[10px] text-slate-400 mt-1 block">
-                  Found on your Cloudinary Dashboard.
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Unsigned Upload Preset Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={uploadPresetInput}
-                  onChange={(e) => setUploadPresetInput(e.target.value)}
-                  placeholder="e.g. eventlink_preset or ml_default"
-                  className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
-                />
-                <span className="text-[10px] text-slate-400 mt-1 block">
-                  Created in Cloudinary Settings ⚙️ &rarr; Upload &rarr; Add Upload Preset (Unsigned).
-                </span>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsCloudinaryModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Save Credentials</span>
-                </button>
-              </div>
-            </form>
-
-          </div>
-        </div>
-      )}
 
     </AdminLayout>
   );

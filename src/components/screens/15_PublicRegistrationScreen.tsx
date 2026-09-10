@@ -369,11 +369,11 @@ export const PublicRegistrationScreen: React.FC = () => {
       {/* Main Ticket-style Container */}
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200/80 transition-all">
         
-        {/* Optional Uploaded Event Banner (Cloudinary / Image URL) */}
-        {evt.banner_url && (
+        {/* Optional Uploaded Event Banner */}
+        {(evt.banner_url || evt.theme?.banner_url) && (
           <div className="w-full h-44 sm:h-52 relative overflow-hidden bg-slate-900 border-b border-white/10">
             <img 
-              src={evt.banner_url} 
+              src={evt.banner_url || evt.theme?.banner_url} 
               alt={evt.name} 
               onError={(e) => {
                 (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80';
