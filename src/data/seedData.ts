@@ -13,8 +13,8 @@ export const initialUsers: User[] = [
   {
     id: 'user-001',
     org_id: 'org-csez-001',
-    name: 'Arathy',
-    email: 'arathy@acadeno.in',
+    name: 'Super Admin',
+    email: 'admin@acadeno.in',
     password: 'Acadeno2026!',
     role: 'super_admin',
     status: 'active',
@@ -24,6 +24,18 @@ export const initialUsers: User[] = [
   },
   {
     id: 'user-002',
+    org_id: 'org-csez-001',
+    name: 'Arathy',
+    email: 'arathy@acadeno.in',
+    password: 'Acadeno2026!',
+    role: 'super_admin',
+    status: 'active',
+    department: 'Administration',
+    last_login_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'user-003',
     org_id: 'org-csez-001',
     name: 'Anu Varma',
     email: 'anu@acadeno.in',
@@ -35,7 +47,7 @@ export const initialUsers: User[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'user-003',
+    id: 'user-004',
     org_id: 'org-csez-001',
     name: 'Rahul K.',
     email: 'rahul@acadeno.in',

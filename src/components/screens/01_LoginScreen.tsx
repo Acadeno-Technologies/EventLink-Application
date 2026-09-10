@@ -19,8 +19,8 @@ import {
 
 export const LoginScreen: React.FC = () => {
   const { login } = useEventStore();
-  const [email, setEmail] = useState('arathy@acadeno.in');
-  const [password, setPassword] = useState('acadeno123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [use2FA, setUse2FA] = useState(false);
@@ -57,12 +57,6 @@ export const LoginScreen: React.FC = () => {
         setLoginError('Incorrect password. Please verify your credentials.');
       }
     }, 350);
-  };
-
-  const handleQuickFill = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setLoginError(null);
   };
 
   return (
@@ -297,31 +291,6 @@ export const LoginScreen: React.FC = () => {
                 )}
               </button>
             </form>
-
-            {/* Quick Demo Credentials Switcher */}
-            <div className="mt-6 pt-4 border-t border-slate-100">
-              <span className="text-[11px] font-semibold text-slate-400 block mb-2">
-                Quick Demo Credentials:
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('arathy@acadeno.in', 'acadeno123')}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-[11px] font-semibold text-slate-700 border border-slate-200 text-left transition-colors cursor-pointer"
-                >
-                  <div className="font-bold text-slate-900 truncate">Arathy (Admin)</div>
-                  <div className="text-[10px] text-slate-500">arathy@acadeno.in</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('admin@acadeno.in', 'acadeno123')}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-[11px] font-semibold text-slate-700 border border-slate-200 text-left transition-colors cursor-pointer"
-                >
-                  <div className="font-bold text-slate-900 truncate">Super Admin</div>
-                  <div className="text-[10px] text-slate-500">admin@acadeno.in</div>
-                </button>
-              </div>
-            </div>
 
           </div>
 
