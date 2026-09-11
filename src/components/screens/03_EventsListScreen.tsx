@@ -60,7 +60,8 @@ export const EventsListScreen: React.FC = () => {
 
   const handleOpenLink = (evt: Event) => {
     setSelectedEventId(evt.id);
-    setScreen('15_public_registration');
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    window.open(`${origin}/?event=${encodeURIComponent(evt.slug)}`, '_blank');
   };
 
   const handleOpenRegistrations = (evt: Event) => {

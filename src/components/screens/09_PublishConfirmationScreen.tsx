@@ -197,7 +197,7 @@ export const PublishConfirmationScreen: React.FC = () => {
               {/* Bottom Navigation Buttons (Equal 2-column width) */}
               <div className="grid grid-cols-2 gap-3.5 pt-1">
                 <button
-                  onClick={() => setScreen('15_public_registration')}
+                  onClick={() => window.open(publicUrl, '_blank')}
                   className="h-12 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-bold border border-[#CBD5E1] flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer"
                 >
                   <ExternalLink className="w-4 h-4 text-[#1463FF]" />

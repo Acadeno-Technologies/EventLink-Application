@@ -129,7 +129,10 @@ export const EventOverviewScreen: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setScreen('15_public_registration')}
+            onClick={() => {
+              const origin = typeof window !== 'undefined' ? window.location.origin : '';
+              window.open(`${origin}/?event=${encodeURIComponent(evt.slug)}`, '_blank');
+            }}
             className="h-9 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <ExternalLink className="w-3.5 h-3.5" />
