@@ -104,37 +104,37 @@ export const WizardSettingsScreen: React.FC = () => {
         </div>
 
         {/* Main Settings Grid with Distinct Modular Card Boxes */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
           {/* ========================================================================= */}
           {/* LEFT COLUMN: 3 DISTINCT CARDS (lg:col-span-6)                            */}
           {/* ========================================================================= */}
-          <div className="lg:col-span-6 space-y-4">
+          <div className="lg:col-span-6 space-y-4 sm:space-y-5">
             
             {/* BOX 1: Registration Operational Window */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3.5">
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
                 <CalendarClock className="w-4 h-4 text-[#1463FF]" />
                 <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
                   Registration Operational Window
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-[#101B33]">
                     Registration Opens Date
                   </label>
                   <input
                     type="date"
-                    value={settings.registration_opens_at ? settings.registration_opens_at.split('T')[0] : '2026-09-10'}
+                    value={settings.registration_opens_at ? settings.registration_opens_at.split('T')[0] : '2026-09-11'}
                     onChange={(e) => handleUpdateSettings('registration_opens_at', e.target.value)}
-                    className="w-full h-9.5 px-3 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
+                    className="w-full h-10 px-3.5 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
                   />
-                  <p className="text-[10.5px] text-[#7184A3]">Form activates at 00:00 on this date</p>
+                  <p className="text-[11px] text-[#7184A3]">Form activates at 00:00 on this date</p>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-[#101B33]">
                     Registration Closes Date
                   </label>
@@ -142,23 +142,23 @@ export const WizardSettingsScreen: React.FC = () => {
                     type="date"
                     value={settings.registration_closes_at ? settings.registration_closes_at.split('T')[0] : '2026-09-18'}
                     onChange={(e) => handleUpdateSettings('registration_closes_at', e.target.value)}
-                    className="w-full h-9.5 px-3 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
+                    className="w-full h-10 px-3.5 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
                   />
-                  <p className="text-[10.5px] text-[#7184A3]">Transitions to Closed state automatically</p>
+                  <p className="text-[11px] text-[#7184A3]">Transitions to Closed state automatically</p>
                 </div>
               </div>
             </div>
 
             {/* BOX 2: Capacity & Booking Limits */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#1463FF]" />
                   <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
                     Capacity & Booking Limits
                   </h3>
                 </div>
-                <span className="text-[10.5px] font-semibold text-[#1463FF] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                <span className="text-[10.5px] font-semibold text-[#1463FF] bg-[#F0F5FF] px-2.5 py-0.5 rounded-md border border-[#1463FF]/20">
                   Atomically Enforced
                 </span>
               </div>
@@ -169,60 +169,50 @@ export const WizardSettingsScreen: React.FC = () => {
                 </label>
                 
                 <div className="flex items-center gap-2.5">
-                  <input
-                    type="number"
-                    min={1}
-                    max={50000}
-                    value={settings.max_registrations || 500}
-                    onChange={(e) => handleUpdateSettings('max_registrations', parseInt(e.target.value) || 0)}
-                    className="w-32 sm:w-36 h-9.5 px-3 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all"
-                  />
-                  <div className="flex items-center gap-1.5 overflow-x-auto select-none no-scrollbar">
-                    {[100, 250, 500, 1000].map((cap) => (
-                      <button
-                        key={cap}
-                        type="button"
-                        onClick={() => handleUpdateSettings('max_registrations', cap)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                          settings.max_registrations === cap
-                            ? 'bg-[#F0F5FF] border-[#1463FF] text-[#1463FF] font-bold shadow-2xs'
-                            : 'bg-white border-[#DCE5F0] text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        {cap}
-                      </button>
-                    ))}
-                  </div>
+                  {[100, 250, 500, 1000].map((cap) => (
+                    <button
+                      key={cap}
+                      type="button"
+                      onClick={() => handleUpdateSettings('max_registrations', cap)}
+                      className={`w-20 sm:w-24 h-10 rounded-xl text-xs sm:text-sm font-semibold border transition-all cursor-pointer flex items-center justify-center ${
+                        settings.max_registrations === cap
+                          ? 'bg-[#F0F5FF] border-[#1463FF] text-[#1463FF] font-bold shadow-2xs ring-1 ring-[#1463FF]'
+                          : 'bg-white border-[#DCE5F0] text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {cap}
+                    </button>
+                  ))}
                 </div>
-                <p className="text-[10.5px] text-[#7184A3]">
+                <p className="text-[11px] text-[#7184A3] pt-0.5">
                   Prevents overbooking during high-volume participant traffic and QR registration scans.
                 </p>
               </div>
             </div>
 
             {/* BOX 3: India DPDP Act 2023 Consent */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-[#1463FF]" />
                   <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
                     India DPDP Act 2023 Consent
                   </h3>
                 </div>
-                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
                   Compliance Required
                 </span>
               </div>
 
               <div className="space-y-1.5">
-                <p className="text-[10.5px] text-[#7184A3]">
+                <p className="text-[11px] text-[#7184A3]">
                   Mandatory privacy notice displayed on participant registration form:
                 </p>
                 <input
                   type="text"
-                  value={settings.consent_text || ''}
+                  value={settings.consent_text || 'I agree to receive event notifications under India DPDP Act 2023 regulations.'}
                   onChange={(e) => handleUpdateSettings('consent_text', e.target.value)}
-                  className="w-full h-9 px-3 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all"
+                  className="w-full h-9.5 px-3.5 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all"
                 />
               </div>
             </div>
@@ -232,21 +222,21 @@ export const WizardSettingsScreen: React.FC = () => {
           {/* ========================================================================= */}
           {/* RIGHT COLUMN: 2 DISTINCT CARDS (lg:col-span-6)                           */}
           {/* ========================================================================= */}
-          <div className="lg:col-span-6 space-y-4">
+          <div className="lg:col-span-6 space-y-4 sm:space-y-5">
             
             {/* BOX 4: After Registration Behavior */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3.5">
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#1463FF]" />
                 <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
                   After Registration Behavior
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 
                 {/* Option 1: Digital Ticket */}
-                <label className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                <label className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between min-h-[110px] ${
                   settings.after_registration === 'ticket'
                     ? 'border-[#1463FF] bg-[#F0F5FF]/70 ring-2 ring-[#1463FF]/15 shadow-2xs'
                     : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
@@ -277,7 +267,7 @@ export const WizardSettingsScreen: React.FC = () => {
                 </label>
 
                 {/* Option 2: Redirect to URL */}
-                <label className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                <label className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between min-h-[110px] ${
                   settings.after_registration === 'redirect'
                     ? 'border-[#1463FF] bg-[#F0F5FF]/70 ring-2 ring-[#1463FF]/15 shadow-2xs'
                     : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
@@ -313,15 +303,15 @@ export const WizardSettingsScreen: React.FC = () => {
                     placeholder="https://acadeno.com/thank-you"
                     value={settings.redirect_url || ''}
                     onChange={(e) => handleUpdateSettings('redirect_url', e.target.value)}
-                    className="w-full h-9 px-3 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] font-mono transition-all"
+                    className="w-full h-9 px-3.5 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] font-mono transition-all"
                   />
                 </div>
               )}
             </div>
 
             {/* BOX 5: Confirmation & Delivery Channels */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3">
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
                 <MessageSquare className="w-4 h-4 text-[#1463FF]" />
                 <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
                   Confirmation & Delivery Channels
@@ -336,13 +326,13 @@ export const WizardSettingsScreen: React.FC = () => {
                     ? 'border-[#1463FF]/40 bg-[#F0F5FF]/50'
                     : 'border-[#DCE5F0] bg-white hover:bg-slate-50/50'
                 }`}>
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-blue-100 text-[#1463FF] flex items-center justify-center shrink-0">
-                      <Mail className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-7.5 h-7.5 rounded-lg bg-blue-100 text-[#1463FF] flex items-center justify-center shrink-0">
+                      <Mail className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-[#101B33] truncate">Instant Email Confirmation</div>
-                      <div className="text-[10px] text-[#7184A3] truncate">Automated ticket PDF pass attachment</div>
+                      <div className="text-[11px] text-[#7184A3] truncate">Automated ticket PDF pass attachment</div>
                     </div>
                   </div>
                   <input
@@ -356,39 +346,39 @@ export const WizardSettingsScreen: React.FC = () => {
                 {/* WhatsApp Channel */}
                 <label className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
                   settings.send_whatsapp_confirmation
-                    ? 'border-emerald-400/40 bg-emerald-50/40'
+                    ? 'border-emerald-300 bg-emerald-50/50'
                     : 'border-[#DCE5F0] bg-white hover:bg-slate-50/50'
                 }`}>
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                      <Smartphone className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-7.5 h-7.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <MessageSquare className="w-4 h-4 fill-white" />
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-[#101B33] truncate">WhatsApp Pass Notification</div>
-                      <div className="text-[10px] text-[#7184A3] truncate">Meta Cloud API direct ticket message</div>
+                      <div className="text-[11px] text-[#7184A3] truncate">Meta Cloud API direct ticket message</div>
                     </div>
                   </div>
                   <input
                     type="checkbox"
                     checked={settings.send_whatsapp_confirmation}
                     onChange={(e) => handleUpdateSettings('send_whatsapp_confirmation', e.target.checked)}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    className="w-4 h-4 rounded text-[#1463FF] focus:ring-[#1463FF] cursor-pointer"
                   />
                 </label>
 
                 {/* Excel Export */}
                 <label className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
                   settings.allow_excel_export
-                    ? 'border-slate-400/40 bg-slate-50/70'
+                    ? 'border-slate-300 bg-[#F8FAFC]/80'
                     : 'border-[#DCE5F0] bg-white hover:bg-slate-50/50'
                 }`}>
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-7.5 h-7.5 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                      <FileSpreadsheet className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-[#101B33] truncate">Live Excel/CSV Export</div>
-                      <div className="text-[10px] text-[#7184A3] truncate">Allow staff & organizers export access</div>
+                      <div className="text-[11px] text-[#7184A3] truncate">Allow staff & organizers export access</div>
                     </div>
                   </div>
                   <input
