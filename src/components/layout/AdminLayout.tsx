@@ -73,30 +73,30 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       </div>
 
       {/* Sidebar Navigation */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-[230px] min-w-[230px] bg-[#071A33] text-white flex flex-col justify-between transition-transform duration-300 md:static md:translate-x-0 border-r border-[#102A4E] shadow-xl md:shadow-none ${
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[210px] sm:w-[220px] min-w-[210px] sm:min-w-[220px] bg-[#071A33] text-white flex flex-col justify-between transition-transform duration-300 md:static md:translate-x-0 border-r border-[#102A4E] shadow-xl md:shadow-none ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
 
         {/* Top: Logo & Navigation Links */}
-        <div className="p-5 relative z-10">
+        <div className="p-4 sm:p-5 relative z-10">
           
-          {/* ACADENO EVENTLINK Brand Logo Header */}
+          {/* ACADENO EVENTLINK Brand Logo in White Rounded Container Box */}
           <div 
             onClick={() => { setScreen('02_dashboard'); setIsMobileMenuOpen(false); }}
-            className="flex items-center gap-3 cursor-pointer mb-8 group select-none"
+            className="bg-white rounded-2xl p-3 mb-6 flex items-center justify-center gap-2.5 cursor-pointer group shadow-sm select-none border border-slate-100/10 hover:shadow-md transition-all"
           >
             {/* Custom Vibrant Modern 'A' Glyph */}
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1463FF] via-[#2B7FFF] to-[#38BDF8] flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1463FF] via-[#2B7FFF] to-[#38BDF8] flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current">
                 <path d="M12 2.5L3.5 21.5h4.2l1.9-4.2h5.8l1.9 4.2h4.2L12 2.5zm-1.1 11.2l2.1-4.8 2.1 4.8h-4.2z" />
               </svg>
             </div>
             
             <div className="flex flex-col text-left">
-              <span className="text-sm font-black text-white tracking-wider leading-tight uppercase font-sans">
+              <span className="text-xs font-black text-[#071A33] tracking-wider leading-tight uppercase font-sans">
                 ACADENO
               </span>
-              <span className="text-[10px] font-extrabold text-[#1463FF] tracking-widest uppercase leading-none">
+              <span className="text-[9px] font-extrabold text-[#1463FF] tracking-widest uppercase leading-none">
                 EVENTLINK
               </span>
             </div>

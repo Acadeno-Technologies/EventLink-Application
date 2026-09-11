@@ -3,6 +3,7 @@ import { useEventStore } from '../../store/eventStore';
 import { ScreenId } from '../../types';
 import { 
   ChevronRight, 
+  Check,
   CalendarDays, 
   Settings, 
   Send
@@ -18,14 +19,13 @@ export const WizardStepHeader: React.FC<WizardStepHeaderProps> = ({ currentStepN
   const steps: { 
     number: number; 
     label: string; 
-    icon?: React.ComponentType<{ className?: string }>; 
     screen: ScreenId 
   }[] = [
-    { number: 1, label: 'Basic Info', icon: CalendarDays, screen: '04_create_basic' },
+    { number: 1, label: 'Basic Info', screen: '04_create_basic' },
     { number: 2, label: 'Form Builder', screen: '05_create_form' },
     { number: 3, label: 'Theme & Branding', screen: '06_create_theme' },
-    { number: 4, label: 'Settings & Limits', icon: Settings, screen: '07_create_settings' },
-    { number: 5, label: 'Preview & Publish', icon: Send, screen: '08_create_preview' },
+    { number: 4, label: 'Settings & Limits', screen: '07_create_settings' },
+    { number: 5, label: 'Preview & Publish', screen: '08_create_preview' },
   ];
 
   return (
@@ -34,7 +34,6 @@ export const WizardStepHeader: React.FC<WizardStepHeaderProps> = ({ currentStepN
         {steps.map((step, idx) => {
           const isCurrent = step.number === currentStepNumber;
           const isCompleted = step.number < currentStepNumber;
-          const Icon = step.icon;
 
           return (
             <React.Fragment key={step.number}>
@@ -48,11 +47,11 @@ export const WizardStepHeader: React.FC<WizardStepHeaderProps> = ({ currentStepN
                   isCurrent
                     ? 'bg-[#1463FF] text-white shadow-[0_4px_14px_rgba(20,99,255,0.35)] font-bold'
                     : isCompleted
-                    ? 'bg-[#F0F5FF] text-[#1463FF] hover:bg-[#E5EFFF]'
-                    : 'bg-[#F1F5F9] text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
+                    ? 'bg-[#EBF3FF] text-[#1463FF] hover:bg-[#DDEBFF] font-semibold'
+                    : 'bg-[#F1F5F9] text-slate-500 hover:bg-slate-200/80 hover:text-slate-800'
                 }`}
               >
-                {/* Step Number Badge */}
+                {/* Step Badge */}
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 transition-colors ${
                   isCurrent
                     ? 'bg-white text-[#1463FF] shadow-xs'
@@ -60,13 +59,12 @@ export const WizardStepHeader: React.FC<WizardStepHeaderProps> = ({ currentStepN
                     ? 'bg-[#1463FF] text-white'
                     : 'bg-[#E2E8F0] text-slate-500'
                 }`}>
-                  {step.number}
+                  {isCompleted ? (
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  ) : (
+                    step.number
+                  )}
                 </div>
-
-                {/* Optional Step Icon */}
-                {Icon && (
-                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isCurrent ? 'text-white' : isCompleted ? 'text-[#1463FF]' : 'text-slate-500'}`} />
-                )}
 
                 <span>{step.label}</span>
               </button>
@@ -81,5 +79,3 @@ export const WizardStepHeader: React.FC<WizardStepHeaderProps> = ({ currentStepN
     </div>
   );
 };
-
-
