@@ -302,85 +302,109 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
   }, []);
 
-  // Read URL search params on mount or change (?event=slug or ?code=regCode)
+  // Read URL search params on mount or popstate (?event=slug or ?code=regCode)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const eventParam = params.get('event') || params.get('e') || params.get('event_id');
-      const codeParam = params.get('code') || params.get('ticket') || params.get('reg');
-      const screenParam = params.get('screen') as ScreenId | null;
 
-      if (codeParam) {
-        let foundReg = registrations.find(r => 
-          r.registration_code.toLowerCase() === codeParam.toLowerCase() || 
-          r.id.toLowerCase() === codeParam.toLowerCase()
-        );
+    const handleUrlRoute = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const eventParam = params.get('event') || params.get('e') || params.get('event_id');
+        const codeParam = params.get('code') || params.get('ticket') || params.get('reg');
+        const screenParam = params.get('screen') as ScreenId | null;
 
-        if (!foundReg) {
-          const newReg: Registration = {
-            id: `reg-${codeParam}`,
-            event_id: selectedEventId || 'evt-demo',
-            registration_code: codeParam.toUpperCase(),
-            name: 'Participant Pass',
-            email: 'attendee@acadeno.in',
-            phone: '+91 98765 43210',
-            submitted_at: new Date().toISOString(),
-            status: 'confirmed',
-            payment_status: 'not_required',
-            attendance_status: 'not_marked',
-            source: 'qr_scan',
-            responses: {}
-          };
-          foundReg = newReg;
-          setRegistrations(prev => [newReg, ...prev]);
-        }
+        if (codeParam) {
+          const currentRegs: Registration[] = (() => {
+            const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}registrations`);
+            return saved ? JSON.parse(saved) : [];
+          })();
 
-        setSelectedRegistrationId(foundReg.id);
-        setSelectedEventId(foundReg.event_id);
-        setCurrentScreen('16_registration_success');
-        return;
-      }
+          let foundReg = currentRegs.find(r => 
+            r.registration_code.toLowerCase() === codeParam.toLowerCase() || 
+            r.id.toLowerCase() === codeParam.toLowerCase()
+          );
 
-      if (eventParam || params.get('d') || params.get('data')) {
-        let foundEvt = events.find(e => 
-          (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) || 
-          (eventParam && e.id === eventParam) || 
-          (eventParam && e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase())
-        );
-
-        // Decode rich payload or URL parameters
-        const decodedEvt = decodeEventFromUrlParams(params, organization.id);
-
-        if (decodedEvt) {
-          foundEvt = decodedEvt;
-          setEvents(prev => {
-            const exists = prev.some(e => e.id === decodedEvt.id || e.slug === decodedEvt.slug);
-            if (!exists) {
-              return [decodedEvt, ...prev];
-            }
-            return prev.map(e => (e.id === decodedEvt.id || e.slug === decodedEvt.slug) ? { ...e, ...decodedEvt } : e);
-          });
-        }
-
-        if (foundEvt) {
-          setSelectedEventId(foundEvt.id);
-          if (foundEvt.status === 'closed') {
-            setCurrentScreen('17_registration_closed');
-          } else {
-            setCurrentScreen('15_public_registration');
+          if (!foundReg) {
+            const newReg: Registration = {
+              id: `reg-${codeParam}`,
+              event_id: selectedEventId || 'evt-demo',
+              registration_code: codeParam.toUpperCase(),
+              name: 'Participant Pass',
+              email: 'attendee@acadeno.in',
+              phone: '+91 98765 43210',
+              submitted_at: new Date().toISOString(),
+              status: 'confirmed',
+              payment_status: 'not_required',
+              attendance_status: 'not_marked',
+              source: 'qr_scan',
+              responses: {}
+            };
+            foundReg = newReg;
+            setRegistrations(prev => {
+              if (prev.some(r => r.registration_code.toLowerCase() === codeParam.toLowerCase())) {
+                return prev;
+              }
+              return [newReg, ...prev];
+            });
           }
+
+          setSelectedRegistrationId(foundReg.id);
+          setSelectedEventId(foundReg.event_id);
+          setCurrentScreen('16_registration_success');
           return;
         }
-      }
 
-      if (screenParam) {
-        setCurrentScreen(screenParam);
+        if (eventParam || params.get('d') || params.get('data')) {
+          const currentEvts: Event[] = (() => {
+            const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}events`);
+            return saved ? JSON.parse(saved) : [];
+          })();
+
+          let foundEvt = currentEvts.find(e => 
+            (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) || 
+            (eventParam && e.id === eventParam) || 
+            (eventParam && e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase())
+          );
+
+          // Decode rich payload or URL parameters
+          const decodedEvt = decodeEventFromUrlParams(params, organization.id);
+
+          if (decodedEvt) {
+            foundEvt = decodedEvt;
+            setEvents(prev => {
+              const exists = prev.some(e => e.id === decodedEvt.id || e.slug === decodedEvt.slug);
+              if (!exists) {
+                return [decodedEvt, ...prev];
+              }
+              return prev.map(e => (e.id === decodedEvt.id || e.slug === decodedEvt.slug) ? { ...e, ...decodedEvt } : e);
+            });
+          }
+
+          if (foundEvt) {
+            setSelectedEventId(foundEvt.id);
+            setCurrentScreen(prev => {
+              // Don't override if user is already viewing registration success
+              if (prev === '16_registration_success') return prev;
+              return foundEvt!.status === 'closed' ? '17_registration_closed' : '15_public_registration';
+            });
+            return;
+          }
+        }
+
+        if (screenParam) {
+          setCurrentScreen(screenParam);
+        }
+      } catch (err) {
+        console.error('URL params routing error:', err);
       }
-    } catch (err) {
-      console.error('URL params routing error:', err);
-    }
-  }, [events, registrations]);
+    };
+
+    handleUrlRoute();
+    window.addEventListener('popstate', handleUrlRoute);
+    return () => {
+      window.removeEventListener('popstate', handleUrlRoute);
+    };
+  }, [organization.id, selectedEventId]);
 
   // Selected event & registrations helper
   const selectedEvent = events.find(e => e.id === selectedEventId) || (events.length > 0 ? events[0] : undefined);

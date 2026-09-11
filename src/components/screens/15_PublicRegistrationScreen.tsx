@@ -315,6 +315,12 @@ export const PublicRegistrationScreen: React.FC = () => {
         responses: formData,
         source: 'direct',
       }).then(newReg => {
+        try {
+          const newUrl = `${window.location.origin}/?code=${encodeURIComponent(newReg.registration_code)}`;
+          window.history.pushState({ code: newReg.registration_code }, '', newUrl);
+        } catch (e) {
+          console.warn('history.pushState notice:', e);
+        }
         setSelectedRegistrationId(newReg.id);
         setScreen('16_registration_success');
       }).catch(err => {

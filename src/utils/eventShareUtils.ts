@@ -30,6 +30,19 @@ export function encodeEventToShareUrl(event: Event | undefined | null, origin?: 
     status: event.status || 'active',
   };
 
+  if (event.form_schema && Array.isArray(event.form_schema) && event.form_schema.length > 0) {
+    payload.schema = event.form_schema.map(f => ({
+      id: f.id,
+      type: f.type,
+      label: f.label,
+      required: !!f.required,
+      order: f.order,
+      placeholder: f.placeholder,
+      options: f.options,
+      section: f.section
+    }));
+  }
+
   if (safeBannerUrl) {
     payload.banner = safeBannerUrl;
   }
@@ -88,11 +101,10 @@ export function decodeEventFromUrlParams(params: URLSearchParams, orgId: string)
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           views_count: 1,
-          form_schema: parsed.form_schema || [
+          form_schema: parsed.schema || parsed.form_schema || [
             { id: 'f_name', type: 'text', label: 'Full Name', required: true, order: 1, placeholder: 'Enter full name' },
             { id: 'f_email', type: 'email', label: 'Email Address', required: true, order: 2, placeholder: 'name@gmail.com' },
             { id: 'f_phone', type: 'phone', label: 'Mobile Number', required: true, order: 3, placeholder: '+91 98765 43210' },
-            { id: 'f_dept', type: 'text', label: 'College / Organization', required: false, order: 4, placeholder: 'e.g. College / Company' }
           ],
           theme: ((parsed.themeTpl || parsed.themeId) && (themePresets as any)[parsed.themeTpl || parsed.themeId]) || parsed.theme || themePresets.workshop,
           settings: parsed.settings || {
@@ -153,7 +165,6 @@ export function decodeEventFromUrlParams(params: URLSearchParams, orgId: string)
       { id: 'f_name', type: 'text', label: 'Full Name', required: true, order: 1, placeholder: 'Enter full name' },
       { id: 'f_email', type: 'email', label: 'Email Address', required: true, order: 2, placeholder: 'name@gmail.com' },
       { id: 'f_phone', type: 'phone', label: 'Mobile Number', required: true, order: 3, placeholder: '+91 98765 43210' },
-      { id: 'f_dept', type: 'text', label: 'College / Organization', required: false, order: 4, placeholder: 'e.g. College / Company' }
     ],
     theme: themePresets.workshop,
     settings: {
