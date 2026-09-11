@@ -3,22 +3,22 @@ import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { ThemeTemplate, EventTheme } from '../../types';
 import { themePresets } from '../../data/seedData';
-import { 
-  Palette, 
-  Type, 
-  ArrowRight, 
-  ArrowLeft, 
-  Sparkles, 
-  Check, 
-  Eye, 
-  Calendar, 
-  MapPin, 
+import {
+  Palette,
+  Type,
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  Check,
+  Eye,
+  Calendar,
+  MapPin,
   Clock,
   Image as ImageIcon,
-  Upload, 
-  Loader2, 
-  Link2, 
-  Trash2, 
+  Upload,
+  Loader2,
+  Link2,
+  Trash2,
   Layers,
   Menu,
   CheckCircle2,
@@ -29,12 +29,12 @@ import {
 } from 'lucide-react';
 
 export const WizardThemeBuilderScreen: React.FC = () => {
-  const { 
-    wizardDraft, 
-    updateWizardDraft, 
-    setWizardStep, 
-    setScreen, 
-    showToast 
+  const {
+    wizardDraft,
+    updateWizardDraft,
+    setWizardStep,
+    setScreen,
+    showToast
   } = useEventStore();
 
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
@@ -49,7 +49,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
   ];
 
   const currentBanner = wizardDraft.banner_url || bannerPresets[1].url;
-  
+
   // Default theme fallback
   const currentTheme: EventTheme = wizardDraft.theme || {
     template: 'workshop',
@@ -161,24 +161,24 @@ export const WizardThemeBuilderScreen: React.FC = () => {
   // Filtered font options based on search input
   const filteredFonts = fontSearch.trim() === ''
     ? (() => {
-        const topDefaults = allFontOptions.slice(0, 4);
-        const currentSelectedFont = currentTheme.typography.fontFamily;
-        if (currentSelectedFont && !topDefaults.some(f => f.id.toLowerCase() === currentSelectedFont.toLowerCase())) {
-          const matchingOption = allFontOptions.find(f => f.id.toLowerCase() === currentSelectedFont.toLowerCase()) || {
-            id: currentSelectedFont,
-            label: currentSelectedFont,
-            desc: 'Custom Applied',
-            category: 'Custom'
-          };
-          return [matchingOption, ...topDefaults.slice(0, 3)];
-        }
-        return topDefaults;
-      })()
-    : allFontOptions.filter(f => 
-        f.label.toLowerCase().includes(fontSearch.toLowerCase()) || 
-        f.desc.toLowerCase().includes(fontSearch.toLowerCase()) ||
-        f.category.toLowerCase().includes(fontSearch.toLowerCase())
-      );
+      const topDefaults = allFontOptions.slice(0, 4);
+      const currentSelectedFont = currentTheme.typography.fontFamily;
+      if (currentSelectedFont && !topDefaults.some(f => f.id.toLowerCase() === currentSelectedFont.toLowerCase())) {
+        const matchingOption = allFontOptions.find(f => f.id.toLowerCase() === currentSelectedFont.toLowerCase()) || {
+          id: currentSelectedFont,
+          label: currentSelectedFont,
+          desc: 'Custom Applied',
+          category: 'Custom'
+        };
+        return [matchingOption, ...topDefaults.slice(0, 3)];
+      }
+      return topDefaults;
+    })()
+    : allFontOptions.filter(f =>
+      f.label.toLowerCase().includes(fontSearch.toLowerCase()) ||
+      f.desc.toLowerCase().includes(fontSearch.toLowerCase()) ||
+      f.category.toLowerCase().includes(fontSearch.toLowerCase())
+    );
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -193,7 +193,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
     const reader = new FileReader();
     reader.onload = () => {
       const base64Url = reader.result as string;
-      updateWizardDraft({ 
+      updateWizardDraft({
         banner_url: base64Url,
         theme: {
           ...currentTheme,
@@ -213,7 +213,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
   return (
     <AdminLayout activeNav="events">
       <div className="space-y-4 w-full">
-        
+
         {/* Top Header Section with Right Decorative Illustration */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-0.5">
           <div>
@@ -227,11 +227,11 @@ export const WizardThemeBuilderScreen: React.FC = () => {
 
           {/* Right Decorative Calendar Illustration + Script Text */}
           <div className="hidden lg:flex items-center gap-3 shrink-0 pr-2">
-            
+
             {/* 3D Stylized Calendar Card */}
             <div className="relative w-13 h-13 rounded-2xl bg-gradient-to-br from-[#38BDF8] via-[#1463FF] to-[#1E40AF] p-0.5 shadow-[0_6px_16px_rgba(20,99,255,0.2)] transform -rotate-3 hover:rotate-0 transition-transform">
               <div className="w-full h-full bg-[#0B254D] rounded-[11px] p-1.5 flex flex-col justify-between overflow-hidden relative">
-                
+
                 {/* Spiral Ring Binder Pins */}
                 <div className="flex justify-around -mt-0.5">
                   <div className="w-1.5 h-2 bg-slate-300 rounded-full" />
@@ -269,13 +269,13 @@ export const WizardThemeBuilderScreen: React.FC = () => {
         </div>
 
         {/* Main Grid: Left Column Cards + Right Column Live Preview Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch mt-3 sm:mt-4">
-          
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch mt-6 sm:mt-7">
+
           {/* ========================================================================= */}
           {/* LEFT COLUMN: OUTER BACKGROUND CONTAINER WITH 3 CARDS (lg:col-span-7)       */}
           {/* ========================================================================= */}
           <div className="lg:col-span-7 bg-[#F4F7FB] border border-[#DCE5F0] rounded-2xl p-4 sm:p-5 space-y-3.5 flex flex-col justify-between">
-            
+
             {/* CARD 1 — CUSTOM COLORS & BRANDING */}
             <div className="bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-4.5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-2.5">
               <div className="border-b border-slate-100 pb-2">
@@ -288,7 +288,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                
+
                 {/* 1. Primary Header Color */}
                 <div className="space-y-1">
                   <label className="block text-xs sm:text-[12px] font-bold text-[#101B33] truncate">
@@ -417,7 +417,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       type="url"
                       value={wizardDraft.banner_url || ''}
                       onChange={(e) => {
-                        updateWizardDraft({ 
+                        updateWizardDraft({
                           banner_url: e.target.value,
                           theme: {
                             ...currentTheme,
@@ -432,7 +432,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                  
+
                   {/* Upload Box */}
                   <label className="sm:col-span-8 bg-[#F8FAFC] hover:bg-[#F1F5F9] border-2 border-dashed border-[#CBD5E1] hover:border-[#1463FF] rounded-xl px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition-all">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -478,7 +478,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        updateWizardDraft({ 
+                        updateWizardDraft({
                           banner_url: '',
                           theme: {
                             ...currentTheme,
@@ -508,7 +508,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       key={idx}
                       type="button"
                       onClick={() => {
-                        updateWizardDraft({ 
+                        updateWizardDraft({
                           banner_url: preset.url,
                           theme: {
                             ...currentTheme,
@@ -516,11 +516,10 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                           }
                         });
                       }}
-                      className={`text-xs font-semibold px-2.5 py-0.5 rounded-lg border transition-all shrink-0 cursor-pointer ${
-                        isSelected
+                      className={`text-xs font-semibold px-2.5 py-0.5 rounded-lg border transition-all shrink-0 cursor-pointer ${isSelected
                           ? 'bg-[#F0F5FF] border-[#1463FF] text-[#1463FF] font-bold shadow-2xs'
                           : 'bg-white border-[#DCE5F0] text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                      }`}
+                        }`}
                     >
                       {preset.label}
                     </button>
@@ -574,14 +573,13 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       key={font.id}
                       type="button"
                       onClick={() => handleUpdateFont(font.id)}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
-                        isSelected
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${isSelected
                           ? 'border-[#1463FF] bg-[#F0F5FF]/70 ring-2 ring-[#1463FF]/15 shadow-2xs'
                           : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                      }`}
+                        }`}
                     >
                       <div className="min-w-0">
-                        <div 
+                        <div
                           className="text-xs sm:text-[12.5px] font-bold text-[#101B33] truncate"
                           style={{ fontFamily: font.id }}
                         >
@@ -592,11 +590,10 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                        isSelected
+                      <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${isSelected
                           ? 'border-[#1463FF] bg-[#1463FF]'
                           : 'border-slate-300 bg-white'
-                      }`}>
+                        }`}>
                         {isSelected && (
                           <div className="w-1 h-1 rounded-full bg-white" />
                         )}
@@ -635,7 +632,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
           {/* RIGHT COLUMN: LIVE PARTICIPANT PREVIEW CARD (lg:col-span-5)               */}
           {/* ========================================================================= */}
           <div className="lg:col-span-5 bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-4.5 shadow-[0_2px_12px_rgba(7,26,51,0.03)] flex flex-col items-center justify-between">
-            
+
             {/* Card Header Tag */}
             <div className="w-full flex items-center justify-between mb-2 border-b border-slate-100 pb-2">
               <div className="flex items-center gap-1.5">
@@ -651,7 +648,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
 
             {/* Realistic Smartphone Frame Mockup */}
             <div className="w-full max-w-[340px] sm:max-w-[350px] rounded-[36px] p-3 bg-[#0B1528] border-2 border-slate-800 shadow-2xl relative my-auto">
-              
+
               {/* Phone Speaker & Camera Notch */}
               <div className="w-24 h-2.5 bg-slate-800 rounded-b-lg mx-auto mb-2 flex items-center justify-center gap-1">
                 <div className="w-7 h-0.5 bg-slate-900 rounded-full" />
@@ -659,7 +656,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
               </div>
 
               {/* Inner Smartphone Screen */}
-              <div 
+              <div
                 className="rounded-[24px] overflow-hidden p-2.5 flex flex-col justify-start shadow-inner transition-colors duration-300 relative"
                 style={{
                   backgroundColor: currentTheme.colors.background || '#F8FAFC',
@@ -667,22 +664,22 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                   fontFamily: currentTheme.typography.fontFamily || 'Poppins',
                 }}
               >
-                
+
                 {/* Floating Event Ticket / Registration Card */}
                 <div className="w-full bg-white rounded-xl shadow-md overflow-hidden border border-black/5 flex flex-col transition-all">
-                  
+
                   {/* Event Banner Image */}
                   <div className="w-full h-24 relative overflow-hidden bg-slate-950 shrink-0">
-                    <img 
-                      src={currentBanner} 
-                      alt="Event banner" 
+                    <img
+                      src={currentBanner}
+                      alt="Event banner"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
                       }}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
-                    
+
                     {/* Top Bar inside Phone */}
                     <div className="absolute top-2 left-2.5 right-2.5 flex items-center justify-between text-white/90 text-xs">
                       <Menu className="w-3.5 h-3.5 cursor-pointer" />
@@ -691,14 +688,14 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                   </div>
 
                   {/* Event Information Hero */}
-                  <div 
+                  <div
                     className="px-3.5 py-2.5 text-white relative transition-colors duration-300"
                     style={{ backgroundColor: currentTheme.colors.primary || '#2563EB' }}
                   >
                     <h4 className="text-sm font-extrabold leading-tight mb-0.5 truncate">
                       {wizardDraft.name || 'ACADENO Event'}
                     </h4>
-                    
+
                     <div className="space-y-0.5 text-white/90 text-[11px] font-medium">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3 h-3 shrink-0" />
@@ -712,19 +709,19 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                   </div>
 
                   {/* Registration Form Body */}
-                  <div 
+                  <div
                     className="p-3.5 flex-1 flex flex-col justify-between space-y-2.5 bg-white"
                     style={{ color: currentTheme.colors.text || '#101B33' }}
                   >
                     <div className="space-y-1.5">
                       <div>
-                        <h5 
+                        <h5
                           className="text-xs sm:text-[13px] font-bold transition-colors leading-tight"
                           style={{ color: currentTheme.colors.text || '#101B33' }}
                         >
                           Register for this event
                         </h5>
-                        <p 
+                        <p
                           className="text-[10px] mt-0.5 transition-colors"
                           style={{ color: currentTheme.colors.text || '#7184A3', opacity: 0.75 }}
                         >
@@ -735,7 +732,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       {/* Form Fields */}
                       <div className="space-y-2">
                         <div>
-                          <label 
+                          <label
                             className="block text-[11px] font-bold mb-0.5 transition-colors"
                             style={{ color: currentTheme.colors.text || '#101B33' }}
                           >
@@ -751,7 +748,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                         </div>
 
                         <div>
-                          <label 
+                          <label
                             className="block text-[11px] font-bold mb-0.5 transition-colors"
                             style={{ color: currentTheme.colors.text || '#101B33' }}
                           >
@@ -767,7 +764,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                         </div>
 
                         <div>
-                          <label 
+                          <label
                             className="block text-[11px] font-bold mb-0.5 transition-colors"
                             style={{ color: currentTheme.colors.text || '#101B33' }}
                           >
@@ -798,7 +795,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
 
-                      <div 
+                      <div
                         className="text-[10px] text-center font-medium transition-colors"
                         style={{ color: currentTheme.colors.text || '#7184A3', opacity: 0.8 }}
                       >
