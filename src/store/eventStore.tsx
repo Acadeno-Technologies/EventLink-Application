@@ -82,15 +82,6 @@ interface EventContextType {
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
-// Purge all legacy localStorage data to ensure 0 local caching
-if (typeof window !== 'undefined') {
-  try {
-    localStorage.clear();
-  } catch (e) {
-    console.error('Storage purge error:', e);
-  }
-}
-
 export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentScreen, setCurrentScreen] = useState<ScreenId>(() => {
     if (typeof window !== 'undefined') {
