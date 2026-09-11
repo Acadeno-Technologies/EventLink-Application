@@ -12,7 +12,9 @@ import {
   QrCode, 
   ArrowRight,
   Sparkles,
-  Check
+  Check,
+  Link2,
+  Scan
 } from 'lucide-react';
 
 export const PublishConfirmationScreen: React.FC = () => {
@@ -25,7 +27,7 @@ export const PublishConfirmationScreen: React.FC = () => {
   const publicUrl = encodeEventToShareUrl(selectedEvent, origin);
 
   useEffect(() => {
-    generateQrDataUrl(publicUrl, { width: 280 }).then(setQrUrl);
+    generateQrDataUrl(publicUrl, { width: 480, margin: 1 }).then(setQrUrl);
   }, [publicUrl]);
 
   const handleCopyLink = () => {
@@ -55,7 +57,7 @@ export const PublishConfirmationScreen: React.FC = () => {
 
   return (
     <AdminLayout activeNav="events">
-      <div className="space-y-3.5 w-full max-w-5xl mx-auto">
+      <div className="w-full max-w-6xl mx-auto space-y-4">
         
         {/* Top Header Section with Right Decorative Illustration */}
         <div className="flex items-center justify-between gap-4 pb-0.5">
@@ -101,120 +103,148 @@ export const PublishConfirmationScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Main 2-Column Compact Confirmation Card (Zero Scrolling) */}
-        <div className="bg-white rounded-2xl border border-[#DCE5F0] shadow-sm p-4 sm:p-5 lg:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6 items-center">
+        {/* Main 2-Column Confirmation Card with Increased Height & Generous Spacing */}
+        <div className="bg-white rounded-3xl border border-[#DCE5F0] shadow-sm p-7 sm:p-9 lg:p-10 min-h-[540px] flex flex-col justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
 
-            {/* Left Column (7 cols): Status + Title + Link + Share Buttons + Navigation */}
-            <div className="md:col-span-7 space-y-3.5 text-left">
+            {/* Left Column (7 cols): Status Header + Link Box + Action Buttons + Bottom Nav */}
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
               
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-xs">
-                  <Check className="w-5 h-5 stroke-[2.5]" />
-                </div>
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200/80 mb-1">
-                    <Sparkles className="w-3 h-3 text-emerald-600" />
-                    <span>Live & Accepting Responses</span>
+              {/* Centered Top Status Section */}
+              <div className="text-center flex flex-col items-center">
+                {/* Celebration Check Circle with subtle confetti accents */}
+                <div className="relative mb-3">
+                  {/* Decorative confetti mini lines */}
+                  <span className="absolute -top-1 -left-4 w-2 h-3.5 bg-sky-300 rounded-full rotate-[-25deg]" />
+                  <span className="absolute top-1 -right-4 w-2 h-3.5 bg-sky-400 rounded-full rotate-[30deg]" />
+                  <span className="absolute -top-3 right-1 w-1.5 h-3 bg-emerald-400 rounded-full rotate-[15deg]" />
+                  <span className="absolute top-5 -left-5 w-1.5 h-3 bg-sky-400 rounded-full rotate-[-45deg]" />
+                  
+                  <div className="w-16 h-16 rounded-full bg-[#EBFBF3] text-[#10B981] flex items-center justify-center shadow-xs border border-emerald-100">
+                    <Check className="w-8 h-8 stroke-[3]" />
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 leading-tight">
-                    Your event is live!
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-normal">
-                    Distribute the link or scan the QR code to allow participants to fill out their dynamic registration ticket.
-                  </p>
                 </div>
+
+                {/* Status Pill */}
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#EBFBF3] text-[#059669] text-xs font-bold border border-emerald-200/70 mb-2.5">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>Live & Accepting Responses</span>
+                </div>
+
+                {/* Title */}
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#071A33] tracking-tight font-display leading-tight">
+                  Your event is live!
+                </h2>
+
+                {/* Description */}
+                <p className="text-xs sm:text-sm text-slate-500 font-medium max-w-lg mx-auto mt-1.5 leading-relaxed">
+                  Distribute the link or scan the QR code to allow participants to fill out their dynamic registration ticket.
+                </p>
               </div>
 
               {/* Public URL Box */}
-              <div className="bg-[#F8FAFC] p-2.5 sm:p-3 rounded-xl border border-[#DCE5F0] flex items-center justify-between gap-2.5">
-                <div className="min-w-0 flex-1">
-                  <div className="text-[9.5px] uppercase font-bold text-slate-400 tracking-wider font-mono">
-                    LIVE REGISTRATION LINK
+              <div className="bg-[#F8FAFD] p-3 sm:p-4 rounded-2xl border border-[#DCE5F0] flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-9 h-9 rounded-xl bg-[#EBF3FF] text-[#1463FF] flex items-center justify-center shrink-0 border border-blue-100">
+                    <Link2 className="w-4.5 h-4.5" />
                   </div>
-                  <div className="text-xs font-mono font-bold text-[#1463FF] truncate mt-0.5">
-                    {publicUrl}
+                  <div className="min-w-0 flex-1 text-left">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider font-mono">
+                      LIVE REGISTRATION LINK
+                    </div>
+                    <div className="text-xs sm:text-sm font-mono font-bold text-[#1463FF] truncate mt-0.5">
+                      {publicUrl}
+                    </div>
                   </div>
                 </div>
+
                 <button
                   onClick={handleCopyLink}
-                  className="h-8 px-3 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#DCE5F0] text-xs font-bold flex items-center gap-1.5 shrink-0 transition-colors shadow-2xs cursor-pointer"
+                  className="h-10 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-[#DCE5F0] text-xs font-bold flex items-center gap-2 shrink-0 transition-colors shadow-2xs cursor-pointer"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                  {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
                   <span>{copied ? 'Copied!' : 'Copy Link'}</span>
                 </button>
               </div>
 
-              {/* Action Share Buttons Grid */}
-              <div className="grid grid-cols-3 gap-2 pt-0.5">
+              {/* Action Share Buttons (Equal 3-column width) */}
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   onClick={handleDownloadQr}
-                  className="h-8.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="h-11 sm:h-12 px-3 rounded-xl bg-[#F8FAFC] hover:bg-slate-100 text-slate-700 border border-[#DCE5F0] text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 shadow-2xs cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Download QR</span>
+                  <Download className="w-4 h-4 text-slate-600" />
+                  <span className="truncate">Download QR (PNG)</span>
                 </button>
 
                 <button
                   onClick={handleWhatsAppShare}
-                  className="h-8.5 px-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                  className="h-11 sm:h-12 px-3 rounded-xl bg-[#00A859] hover:bg-[#00924c] text-white text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 shadow-2xs cursor-pointer"
                 >
-                  <MessageSquare className="w-3.5 h-3.5 fill-white" />
-                  <span>WhatsApp</span>
+                  <MessageSquare className="w-4 h-4 fill-white" />
+                  <span className="truncate">Share on WhatsApp</span>
                 </button>
 
                 <button
                   onClick={handleEmailShare}
-                  className="h-8.5 px-2.5 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                  className="h-11 sm:h-12 px-3 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 shadow-2xs cursor-pointer"
                 >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Email Invite</span>
+                  <Mail className="w-4 h-4" />
+                  <span className="truncate">Email Invitation</span>
                 </button>
               </div>
 
-              {/* Bottom Navigation */}
-              <div className="pt-2.5 border-t border-slate-100 flex items-center gap-2.5">
+              {/* Bottom Navigation Buttons (Equal 2-column width) */}
+              <div className="grid grid-cols-2 gap-3.5 pt-1">
                 <button
                   onClick={() => setScreen('15_public_registration')}
-                  className="flex-1 h-9 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-[#DCE5F0] flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer truncate"
+                  className="h-12 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-bold border border-[#CBD5E1] flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer"
                 >
-                  <ExternalLink className="w-3.5 h-3.5 text-[#1463FF]" />
-                  <span>View Public Page</span>
+                  <ExternalLink className="w-4 h-4 text-[#1463FF]" />
+                  <span className="truncate">View Public Registration Page</span>
                 </button>
 
                 <button
                   onClick={() => setScreen('10_event_overview')}
-                  className="flex-1 h-9 px-3 rounded-xl bg-[#071A33] hover:bg-[#0F2D54] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer truncate"
+                  className="h-12 px-4 rounded-xl bg-[#071A33] hover:bg-[#0F2D54] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer"
                 >
-                  <span>Go to Overview</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span className="truncate">Go to Event Overview</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
 
             </div>
 
-            {/* Right Column (5 cols): Compact Official Entry QR Code */}
-            <div className="md:col-span-5 flex justify-center">
-              <div className="w-full max-w-[250px] p-3.5 bg-gradient-to-br from-[#0B172B] to-[#1E293B] rounded-2xl shadow-xl text-white border border-slate-800 text-center">
-                <div className="text-[9.5px] font-mono text-slate-400 mb-1.5 tracking-wider uppercase">
-                  Official Entry QR Code
+            {/* Right Column (5 cols): Large Official Entry QR Code Card */}
+            <div className="lg:col-span-5 flex justify-center">
+              <div className="w-full max-w-[360px] sm:max-w-[380px] p-6 sm:p-7 bg-[#0E1E38] rounded-3xl text-white border border-[#1B325B] shadow-xl text-center flex flex-col items-center">
+                <div className="text-[10px] font-mono tracking-widest text-slate-400 uppercase mb-4 font-bold">
+                  OFFICIAL ENTRY QR CODE
                 </div>
                 
-                <div className="p-2 bg-white rounded-xl inline-block shadow-inner mx-auto">
+                {/* White QR Code Wrapper */}
+                <div className="p-4 sm:p-4.5 bg-white rounded-2xl shadow-md inline-block mx-auto mb-4">
                   {qrUrl ? (
-                    <img src={qrUrl} alt="Event QR Code" className="w-32 h-32 mx-auto rounded-lg object-contain" />
+                    <img src={qrUrl} alt="Event QR Code" className="w-52 h-52 sm:w-60 sm:h-60 mx-auto rounded-lg object-contain" />
                   ) : (
-                    <div className="w-32 h-32 flex items-center justify-center text-slate-400">
-                      <QrCode className="w-8 h-8 animate-pulse" />
+                    <div className="w-52 h-52 sm:w-60 sm:h-60 flex items-center justify-center text-slate-400">
+                      <QrCode className="w-14 h-14 animate-pulse" />
                     </div>
                   )}
                 </div>
 
-                <div className="text-xs text-white font-bold mt-1.5 font-display truncate px-1">
-                  {selectedEvent?.name || 'AI Automation Workshop'}
+                {/* Event Name & Venue / Date */}
+                <div className="text-base sm:text-lg font-bold text-white font-display truncate w-full px-1">
+                  {selectedEvent?.name || 'Ai Workshop'}
                 </div>
-                <div className="text-[10px] text-slate-400 mt-0.5 truncate px-1">
-                  {selectedEvent?.venue || 'Kozhikode'} • {selectedEvent?.start_date}
+                <div className="text-xs text-slate-400 mt-1 truncate w-full px-1">
+                  {selectedEvent?.venue || 'Acadeno Office'} • {selectedEvent?.start_date || '2026-09-11'}
+                </div>
+
+                {/* Scan Pill */}
+                <div className="w-full mt-4 py-2.5 px-3.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-2 text-xs text-slate-300 font-medium">
+                  <Scan className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Scan this QR code to register</span>
                 </div>
               </div>
             </div>
@@ -226,5 +256,3 @@ export const PublishConfirmationScreen: React.FC = () => {
     </AdminLayout>
   );
 };
-
-

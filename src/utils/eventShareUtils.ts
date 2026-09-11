@@ -12,60 +12,14 @@ export function encodeEventToShareUrl(event: Event | undefined | null, origin?: 
   const base = origin || (typeof window !== 'undefined' ? window.location.origin : 'https://acadeno-eventlink.onrender.com');
   const slug = event.slug || (event.name ? event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'event');
 
-  // Strip massive base64 image strings from URL payload so URL remains ultra-compact (~250-350 bytes)
-  // QR codes fail if data exceeds ~2.9KB, and browsers/servers fail with 414 URI Too Long.
-  const isWebUrl = event.banner_url && (event.banner_url.startsWith('http://') || event.banner_url.startsWith('https://'));
-  const safeBannerUrl = isWebUrl ? event.banner_url : '';
+  const queryParams = new URLSearchParams();
+  queryParams.set('event', slug);
+  if (event.name) queryParams.set('name', event.name);
+  if (event.start_date) queryParams.set('date', event.start_date);
+  if (event.venue) queryParams.set('venue', event.venue);
+  if (event.settings?.max_registrations) queryParams.set('cap', String(event.settings.max_registrations));
 
-  const payload: Record<string, any> = {
-    id: event.id,
-    name: event.name,
-    slug: slug,
-    desc: (event.short_description || '').slice(0, 160),
-    venue: event.venue || '',
-    start_date: event.start_date,
-    end_date: event.end_date || event.start_date,
-    start_time: event.start_time || '10:00 AM',
-    end_time: event.end_time || '1:00 PM',
-    status: event.status || 'active',
-  };
-
-  if (event.form_schema && Array.isArray(event.form_schema) && event.form_schema.length > 0) {
-    payload.schema = event.form_schema.map(f => ({
-      id: f.id,
-      type: f.type,
-      label: f.label,
-      required: !!f.required,
-      order: f.order,
-      placeholder: f.placeholder,
-      options: f.options,
-      section: f.section
-    }));
-  }
-
-  if (safeBannerUrl) {
-    payload.banner = safeBannerUrl;
-  }
-  if (event.settings?.max_registrations) {
-    payload.cap = event.settings.max_registrations;
-  }
-  if (event.theme?.template) {
-    payload.themeTpl = event.theme.template;
-  }
-
-  try {
-    const json = JSON.stringify(payload);
-    // UTF-8 safe base64 encoding
-    const base64 = btoa(
-      encodeURIComponent(json).replace(/%([0-9A-F]{2})/g, (_, p1) =>
-        String.fromCharCode(parseInt(p1, 16))
-      )
-    );
-    return `${base}/?event=${encodeURIComponent(slug)}&d=${encodeURIComponent(base64)}`;
-  } catch (err) {
-    console.error('Failed to base64 encode event payload:', err);
-    return `${base}/?event=${encodeURIComponent(slug)}`;
-  }
+  return `${base}/?${queryParams.toString()}`;
 }
 
 /**

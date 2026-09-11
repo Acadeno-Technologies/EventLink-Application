@@ -45,9 +45,12 @@ export const RegistrationSuccessScreen: React.FC = () => {
     short_description: 'Python FullStack Event Registration Pass.'
   };
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+  const passUrl = `${origin}/?code=${reg.registration_code}`;
+
   useEffect(() => {
-    generateQrDataUrl(reg.registration_code, { width: 300 }).then(setQrUrl);
-  }, [reg.registration_code]);
+    generateQrDataUrl(passUrl, { width: 300 }).then(setQrUrl);
+  }, [passUrl]);
 
   const handleDownloadTicket = () => {
     if (qrUrl) {

@@ -221,9 +221,9 @@ arathy@acadeno.in`;
 
   useEffect(() => {
     if (reg.registration_code) {
-      generateQrDataUrl(reg.registration_code, { width: 240 }).then(setQrCodeUrl);
+      generateQrDataUrl(passUrl, { width: 240 }).then(setQrCodeUrl);
     }
-  }, [reg.registration_code]);
+  }, [reg.registration_code, passUrl]);
 
   const handleOpenEdit = () => {
     setEditName(reg.name);
