@@ -237,35 +237,6 @@ export const WizardFormBuilderScreen: React.FC = () => {
                 </div>
               </div>
 
-              {/* Preset Question Sets */}
-              <div className="pt-3 border-t border-slate-100 space-y-2">
-                <div className="text-[11px] font-bold text-[#7184A3] uppercase tracking-wider">
-                  Preset Question Sets
-                </div>
-                <div className="space-y-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleAddField('dropdown', 'Select Track / Workshop Stream', 'Event Options');
-                      handleAddField('radio', 'Prior Experience Level', 'Event Options');
-                    }}
-                    className="w-full text-left text-xs font-semibold text-[#1463FF] hover:underline cursor-pointer block leading-snug"
-                  >
-                    + Add Workshop Track & Experience
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleAddField('dropdown', 'Dietary Preference (Veg / Non-Veg)', 'Logistics');
-                      handleAddField('number', 'Total Guest Count', 'Logistics');
-                    }}
-                    className="w-full text-left text-xs font-semibold text-[#1463FF] hover:underline cursor-pointer block leading-snug"
-                  >
-                    + Add Food & Guest Counters
-                  </button>
-                </div>
-              </div>
-
             </div>
 
             {/* COLUMN 2: FORM STRUCTURE (Canvas, lg:col-span-5) */}
