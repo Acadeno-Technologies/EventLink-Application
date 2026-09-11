@@ -77,37 +77,13 @@ interface EventContextType {
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
-// Purge any legacy localStorage data from previous runs to guarantee clean state
+// Purge all legacy localStorage data to ensure 0 local caching
 if (typeof window !== 'undefined') {
   try {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('acadeno_') && !k.startsWith('acadeno_v4_clean_')) {
-        keysToRemove.push(k);
-      }
-    }
-    keysToRemove.forEach(k => localStorage.removeItem(k));
+    localStorage.clear();
   } catch (e) {
     console.error('Storage purge error:', e);
   }
-}
-
-const STORAGE_KEY_PREFIX = 'acadeno_v4_clean_';
-const PENDING_LOCAL_MS = 30_000;
-
-function mergeRemoteAsSource<T extends { id: string; updated_at?: string; created_at?: string; submitted_at?: string }>(
-  local: T[],
-  remote: T[]
-): T[] {
-  const remoteIds = new Set(remote.map((item) => item.id));
-  const now = Date.now();
-  const pendingLocal = local.filter((item) => {
-    if (remoteIds.has(item.id)) return false;
-    const stamp = Date.parse(item.updated_at || item.created_at || item.submitted_at || '');
-    return Number.isFinite(stamp) && now - stamp < PENDING_LOCAL_MS;
-  });
-  return [...remote, ...pendingLocal];
 }
 
 export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -123,59 +99,18 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const screenParam = params.get('screen') as ScreenId | null;
       if (screenParam) return screenParam;
     }
-    return (localStorage.getItem(`${STORAGE_KEY_PREFIX}screen`) as ScreenId) || '01_login';
+    return '01_login';
   });
 
-  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
-    return (localStorage.getItem(`${STORAGE_KEY_PREFIX}role`) as UserRole) || 'super_admin';
-  });
-
-  const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}users`);
-    return saved ? JSON.parse(saved) : initialUsers;
-  });
-
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    if (typeof window !== 'undefined') {
-      const savedAuth = localStorage.getItem(`${STORAGE_KEY_PREFIX}auth_user`);
-      if (savedAuth) {
-        try {
-          return JSON.parse(savedAuth);
-        } catch {
-          return null;
-        }
-      }
-    }
-    return null;
-  });
-
-  const [organization, setOrganization] = useState<Organization>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}org`);
-    return saved ? JSON.parse(saved) : initialOrganization;
-  });
-
-  const [events, setEvents] = useState<Event[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}events`);
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [registrations, setRegistrations] = useState<Registration[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}registrations`);
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}auditLogs`);
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [selectedEventId, setSelectedEventId] = useState<string>(() => {
-    return localStorage.getItem(`${STORAGE_KEY_PREFIX}selected_event`) || '';
-  });
-
-  const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(() => {
-    return localStorage.getItem(`${STORAGE_KEY_PREFIX}selected_reg`) || null;
-  });
+  const [currentRole, setCurrentRole] = useState<UserRole>('super_admin');
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [organization, setOrganization] = useState<Organization>(initialOrganization);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
 
   // Wizard state
   const [wizardStep, setWizardStep] = useState<number>(1);
@@ -220,52 +155,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}screen`, currentScreen);
-  }, [currentScreen]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}role`, currentRole);
-  }, [currentRole]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}events`, JSON.stringify(events));
-  }, [events]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}registrations`, JSON.stringify(registrations));
-  }, [registrations]);
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}auth_user`, JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem(`${STORAGE_KEY_PREFIX}auth_user`);
-    }
-  }, [currentUser]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}users`, JSON.stringify(users));
-  }, [users]);
-
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}auditLogs`, JSON.stringify(auditLogs));
-  }, [auditLogs]);
-
-  useEffect(() => {
-    if (selectedEventId) {
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}selected_event`, selectedEventId);
-    }
-  }, [selectedEventId]);
-
-  useEffect(() => {
-    if (selectedRegistrationId) {
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}selected_reg`, selectedRegistrationId);
-    }
-  }, [selectedRegistrationId]);
-
-  // Cloud sync fetch on mount and periodic polling to stay in sync across devices
+  // Pure database sync polling with Neon Postgres
   useEffect(() => {
     let isMounted = true;
 
@@ -281,21 +171,21 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (evtsRes.error) {
           console.warn('[Neon Sync Poll - Events]:', evtsRes.error);
         } else if (evtsRes.data) {
-          setEvents((prev) => mergeRemoteAsSource(prev, evtsRes.data!));
+          setEvents(evtsRes.data);
         }
 
         if (regsRes.error) {
           console.warn('[Neon Sync Poll - Registrations]:', regsRes.error);
         } else if (regsRes.data) {
-          setRegistrations((prev) => mergeRemoteAsSource(prev, regsRes.data!));
+          setRegistrations(regsRes.data);
         }
       } catch (err) {
-        console.warn('Cloud sync interval warning:', err);
+        console.warn('Neon database polling warning:', err);
       }
     };
 
     syncWithCloud();
-    const interval = setInterval(syncWithCloud, 6000); // 6s real-time auto-sync
+    const interval = setInterval(syncWithCloud, 4000); // 4s real-time auto-sync with Neon
 
     const handleFocus = () => syncWithCloud();
     window.addEventListener('focus', handleFocus);
@@ -319,12 +209,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const screenParam = params.get('screen') as ScreenId | null;
 
         if (codeParam) {
-          const currentRegs: Registration[] = (() => {
-            const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}registrations`);
-            return saved ? JSON.parse(saved) : [];
-          })();
-
-          let foundReg = currentRegs.find(r => 
+          let foundReg = registrations.find(r => 
             r.registration_code.toLowerCase() === codeParam.toLowerCase() || 
             r.id.toLowerCase() === codeParam.toLowerCase()
           );
@@ -360,12 +245,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
 
         if (eventParam || params.get('d') || params.get('data')) {
-          const currentEvts: Event[] = (() => {
-            const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}events`);
-            return saved ? JSON.parse(saved) : [];
-          })();
-
-          let foundEvt = currentEvts.find(e => 
+          let foundEvt = events.find(e => 
             (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) || 
             (eventParam && e.id === eventParam) || 
             (eventParam && e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase())
@@ -388,7 +268,6 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           if (foundEvt) {
             setSelectedEventId(foundEvt.id);
             setCurrentScreen(prev => {
-              // Don't override if user is already viewing registration success
               if (prev === '16_registration_success') return prev;
               return foundEvt!.status === 'closed' ? '17_registration_closed' : '15_public_registration';
             });
