@@ -1,6 +1,5 @@
 import React, { ReactNode, useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
-import { NEON_LABEL, SUPABASE_PROJECT_REF } from '../../utils/supabaseClient';
 import acadenoLogoPng from '../../assets/acadeno-logo.png';
 import { 
   LayoutDashboard, 
@@ -11,8 +10,7 @@ import {
   LogOut, 
   Menu, 
   X,
-  ShieldCheck,
-  Database
+  ShieldCheck
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -128,35 +126,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
         </div>
 
-        {/* Bottom Status, Supabase Project Identity & Logout Section */}
+        {/* Bottom User Profile & Logout Section */}
         <div className="p-4 relative z-10 space-y-3 border-t border-slate-800/80">
           
-          {/* Connected Supabase Project Identity Check Badge */}
-          <div className="bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 text-[11px] space-y-1.5">
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="flex items-center gap-1.5 font-semibold text-[10px] uppercase tracking-wider text-slate-400">
-                <Database className="w-3 h-3 text-emerald-400" />
-                <span>Neon Cloud</span>
-              </span>
-              <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>SYNCED</span>
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 text-slate-200 border border-white/5">
-              <div className="min-w-0 pr-1">
-                <div className="text-[9px] text-slate-400 uppercase font-bold tracking-tight">Connected Database:</div>
-                <div className="font-mono font-bold text-[11px] text-blue-400 truncate">
-                  {NEON_LABEL}
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* User Profile Info */}
           <div className="flex items-center gap-2.5 px-1.5">
-            <div className="w-7 h-7 rounded-full bg-blue-600/30 border border-blue-400/40 text-blue-300 flex items-center justify-center text-xs font-bold shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 border border-blue-400/40 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-xs">
               {currentUser?.name?.charAt(0) || 'A'}
             </div>
             <div className="flex flex-col min-w-0">
@@ -202,13 +177,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           {children}
         </main>
 
-        {/* Global Admin Footer with Supabase Project Identity */}
+        {/* Global Admin Footer */}
         <footer className="px-6 py-4 border-t border-slate-200/80 bg-white/50 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 max-w-[1400px] w-full mx-auto">
           <span>Powered by <strong>ACADENO Technologies</strong> • EventLink Platform</span>
-          <span className="inline-flex items-center gap-1.5 text-slate-600 font-medium">
-            <span>Connected database:</span>
-            <span className="font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-blue-600">{SUPABASE_PROJECT_REF}</span>
-          </span>
+          <span className="text-slate-400 text-[11px]">Enterprise SaaS & Registration Management</span>
         </footer>
       </div>
 
