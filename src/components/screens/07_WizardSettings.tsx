@@ -49,14 +49,30 @@ export const WizardSettingsScreen: React.FC = () => {
   };
 
   return (
-    <AdminLayout
-      activeNav="events"
-      pageTitle="Create Event — Step 4: Settings"
-      pageSubtitle="Configure operational windows, attendee capacity limits, and notification delivery triggers."
-    >
-      <WizardStepHeader currentStepNumber={4} />
+    <AdminLayout activeNav="events">
+      <div className="space-y-6 max-w-[960px] mx-auto">
+        
+        {/* Header with Back Link */}
+        <div className="pb-1">
+          <button
+            type="button"
+            onClick={() => { setWizardStep(3); setScreen('06_create_theme'); }}
+            className="text-xs font-semibold text-[#1463FF] hover:underline flex items-center gap-1.5 cursor-pointer mb-2 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Step 3: Theme & Branding</span>
+          </button>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#071A33] tracking-tight font-sans">
+            Create Event — Step 4: Settings & Limits
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+            Configure operational windows, attendee capacity limits, and notification delivery triggers.
+          </p>
+        </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 max-w-4xl mx-auto space-y-7">
+        <WizardStepHeader currentStepNumber={4} />
+
+        <div className="bg-white rounded-2xl border border-[#DCE5F0] shadow-[0_2px_12px_rgba(7,26,51,0.04)] p-6 sm:p-8 space-y-7">
         
         {/* Registration Window */}
         <div className="space-y-4">
@@ -262,26 +278,30 @@ export const WizardSettingsScreen: React.FC = () => {
         </div>
 
         {/* Wizard Navigation */}
-        <div className="pt-4 border-t border-slate-200/80 flex items-center justify-between gap-3">
+        <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
           <button
+            type="button"
             onClick={() => { setWizardStep(3); setScreen('06_create_theme'); }}
-            className="h-10 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+            className="h-11 px-5 rounded-xl border border-[#DCE5F0] bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-4 h-4 text-slate-400" />
             <span>Back: Theme Builder</span>
           </button>
 
           <button
+            type="button"
             onClick={() => { setWizardStep(5); setScreen('08_create_preview'); }}
-            className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+            className="h-11 px-6 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-xs sm:text-sm font-bold shadow-[0_4px_14px_rgba(20,99,255,0.3)] flex items-center gap-2 transition-all cursor-pointer"
           >
             <span>Next: Preview & Publish</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
 
       </div>
-    </AdminLayout>
-  );
+
+    </div>
+  </AdminLayout>
+);
 };
 

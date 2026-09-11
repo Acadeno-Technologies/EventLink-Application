@@ -70,17 +70,33 @@ export const WizardPreviewPublishScreen: React.FC = () => {
   };
 
   return (
-    <AdminLayout
-      activeNav="events"
-      pageTitle="Create Event — Step 5: Preview & Publish"
-      pageSubtitle="Review participant appearance, verify operational checklist, and launch live."
-    >
-      <WizardStepHeader currentStepNumber={5} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <AdminLayout activeNav="events">
+      <div className="space-y-6 max-w-[1240px] mx-auto">
         
-        {/* Left Column: Verification Checklist & Publish Actions (5 Cols) */}
-        <div className="lg:col-span-5 space-y-6">
+        {/* Header with Back Link */}
+        <div className="pb-1">
+          <button
+            type="button"
+            onClick={() => { setWizardStep(4); setScreen('07_create_settings'); }}
+            className="text-xs font-semibold text-[#1463FF] hover:underline flex items-center gap-1.5 cursor-pointer mb-2 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Step 4: Settings & Limits</span>
+          </button>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#071A33] tracking-tight font-sans">
+            Create Event — Step 5: Preview & Publish
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+            Review participant appearance, verify operational checklist, and launch live.
+          </p>
+        </div>
+
+        <WizardStepHeader currentStepNumber={5} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Left Column: Verification Checklist & Publish Actions (5 Cols) */}
+          <div className="lg:col-span-5 space-y-6">
           
           {/* Pre-flight Checklist */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
@@ -320,7 +336,9 @@ export const WizardPreviewPublishScreen: React.FC = () => {
         </div>
 
       </div>
-    </AdminLayout>
-  );
+
+    </div>
+  </AdminLayout>
+);
 };
 

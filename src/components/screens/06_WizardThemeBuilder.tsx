@@ -122,17 +122,33 @@ export const WizardThemeBuilderScreen: React.FC = () => {
   };
 
   return (
-    <AdminLayout
-      activeNav="events"
-      pageTitle="Create Event — Step 3: Theme Builder"
-      pageSubtitle="Customize brand colors, typography, header banner, and preview live attendee view."
-    >
-      <WizardStepHeader currentStepNumber={3} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <AdminLayout activeNav="events">
+      <div className="space-y-6 max-w-[1240px] mx-auto">
         
-        {/* Left Column: Theme Controls (7 Cols) */}
-        <div className="lg:col-span-7 space-y-6">
+        {/* Header with Back Link */}
+        <div className="pb-1">
+          <button
+            type="button"
+            onClick={() => { setWizardStep(2); setScreen('05_create_form'); }}
+            className="text-xs font-semibold text-[#1463FF] hover:underline flex items-center gap-1.5 cursor-pointer mb-2 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Step 2: Form Builder</span>
+          </button>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#071A33] tracking-tight font-sans">
+            Create Event — Step 3: Theme & Branding
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+            Customize brand colors, typography, header banner, and preview live attendee view.
+          </p>
+        </div>
+
+        <WizardStepHeader currentStepNumber={3} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Left Column: Theme Controls (7 Cols) */}
+          <div className="lg:col-span-7 space-y-6">
           
           {/* Preset Templates */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
@@ -443,19 +459,21 @@ export const WizardThemeBuilderScreen: React.FC = () => {
           {/* Wizard Navigation */}
           <div className="pt-2 flex items-center justify-between gap-3">
             <button
+              type="button"
               onClick={() => { setWizardStep(2); setScreen('05_create_form'); }}
-              className="h-10 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+              className="h-11 px-5 rounded-xl border border-[#DCE5F0] bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
+              <ArrowLeft className="w-4 h-4 text-slate-400" />
               <span>Back: Form Builder</span>
             </button>
 
             <button
+              type="button"
               onClick={() => { setWizardStep(4); setScreen('07_create_settings'); }}
-              className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+              className="h-11 px-6 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-xs sm:text-sm font-bold shadow-[0_4px_14px_rgba(20,99,255,0.3)] flex items-center gap-2 transition-all cursor-pointer"
             >
               <span>Next: Operational Settings</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -577,7 +595,8 @@ export const WizardThemeBuilderScreen: React.FC = () => {
 
       </div>
 
-    </AdminLayout>
-  );
+    </div>
+  </AdminLayout>
+);
 };
 
