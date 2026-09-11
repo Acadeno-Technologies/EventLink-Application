@@ -4,7 +4,7 @@ export type EventStatus = 'draft' | 'active' | 'closed' | 'archived';
 export type RegistrationStatus = 'pending' | 'confirmed' | 'cancelled';
 export type PaymentStatus = 'not_required' | 'pending' | 'paid' | 'failed';
 export type AttendanceStatus = 'not_marked' | 'present' | 'absent';
-export type ThemeTemplate = 'corporate' | 'minimal' | 'festival' | 'workshop' | 'conference' | 'education' | 'custom';
+export type ThemeTemplate = 'corporate' | 'minimal' | 'festival' | 'workshop' | 'conference' | 'education' | 'classic' | 'custom';
 export type ThemeLayout = 'centered' | 'full_width' | 'card' | 'minimal';
 
 export type ScreenId =

@@ -145,6 +145,26 @@ export const themePresets: Record<ThemeTemplate, any> = {
     layout: 'centered',
     buttonStyle: 'rounded',
   },
+  classic: {
+    template: 'classic',
+    colors: {
+      primary: '#6366F1',
+      secondary: '#4338CA',
+      background: '#F8FAFC',
+      surface: '#FFFFFF',
+      text: '#0F172A',
+      button: '#FF7A00',
+      buttonText: '#FFFFFF',
+      accent: '#6366F1',
+    },
+    typography: {
+      fontFamily: 'Playfair Display',
+      headingSize: 'lg',
+      bodySize: 'md',
+    },
+    layout: 'centered',
+    buttonStyle: 'rounded',
+  },
   custom: {
     template: 'custom',
     colors: {

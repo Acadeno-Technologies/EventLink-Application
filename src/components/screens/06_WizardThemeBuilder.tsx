@@ -7,7 +7,6 @@ import { themePresets } from '../../data/seedData';
 import { 
   Palette, 
   Type, 
-  Layout, 
   ArrowRight, 
   ArrowLeft, 
   Sparkles, 
@@ -15,12 +14,16 @@ import {
   Eye, 
   Calendar, 
   MapPin, 
-  Ticket,
+  Clock,
   Image as ImageIcon,
-  Upload,
-  Loader2,
-  Link2,
-  Trash2,
+  Upload, 
+  Loader2, 
+  Link2, 
+  Trash2, 
+  ChevronDown,
+  Layers,
+  Menu,
+  CheckCircle2,
   Smartphone
 } from 'lucide-react';
 
@@ -44,7 +47,84 @@ export const WizardThemeBuilderScreen: React.FC = () => {
   ];
 
   const currentBanner = wizardDraft.banner_url || bannerPresets[1].url;
-  const currentTheme = wizardDraft.theme || themePresets.workshop;
+  
+  // Default theme fallback
+  const currentTheme: EventTheme = wizardDraft.theme || {
+    template: 'workshop',
+    colors: {
+      primary: '#2563EB',
+      secondary: '#4F46E5',
+      background: '#F8FAFC',
+      surface: '#FFFFFF',
+      text: '#0F172A',
+      button: '#FF8A00',
+      buttonText: '#FFFFFF',
+      accent: '#06B6D4',
+    },
+    typography: {
+      fontFamily: 'Poppins',
+      headingSize: 'lg',
+      bodySize: 'md',
+    },
+    layout: 'centered',
+    buttonStyle: 'rounded',
+  };
+
+  const presets: { id: ThemeTemplate; label: string; desc: string; previewColor: string }[] = [
+    { id: 'workshop', label: 'Workshop', desc: 'Clean and professional', previewColor: '#2563EB' },
+    { id: 'corporate', label: 'Corporate', desc: 'Modern and minimal', previewColor: '#0F172A' },
+    { id: 'festival', label: 'Festive', desc: 'Colorful and vibrant', previewColor: '#C026D3' },
+    { id: 'minimal', label: 'Minimal', desc: 'Simple and elegant', previewColor: '#64748B' },
+    { id: 'conference', label: 'Conference', desc: 'Bold and professional', previewColor: '#1E40AF' },
+    { id: 'education', label: 'Education', desc: 'Fresh and friendly', previewColor: '#10B981' },
+    { id: 'classic', label: 'Classic', desc: 'Timeless and sophisticated', previewColor: '#6366F1' },
+  ];
+
+  const fontOptions = [
+    { id: 'Poppins', label: 'Poppins', desc: 'Modern & Clean' },
+    { id: 'Inter', label: 'Inter', desc: 'Professional' },
+    { id: 'Outfit', label: 'Outfit', desc: 'Stylish & Modern' },
+    { id: 'Playfair Display', label: 'Playfair Display', desc: 'Elegant & Classic' },
+  ];
+
+  const handleSelectPreset = (templateId: ThemeTemplate) => {
+    const preset = themePresets[templateId] || themePresets.workshop;
+    updateWizardDraft({
+      theme: {
+        ...preset,
+        colors: {
+          ...preset.colors,
+          button: preset.colors.button || '#FF8A00',
+        },
+        logo_url: currentTheme.logo_url || '',
+        banner_url: wizardDraft.banner_url || '',
+      }
+    });
+  };
+
+  const handleUpdateColors = (key: keyof EventTheme['colors'], val: string) => {
+    updateWizardDraft({
+      theme: {
+        ...currentTheme,
+        colors: {
+          ...currentTheme.colors,
+          [key]: val,
+        }
+      }
+    });
+  };
+
+  const handleUpdateFont = (fontFamily: string) => {
+    updateWizardDraft({
+      theme: {
+        ...currentTheme,
+        typography: {
+          ...currentTheme.typography,
+          fontFamily,
+        }
+      }
+    });
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,284 +156,320 @@ export const WizardThemeBuilderScreen: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const presets: { id: ThemeTemplate; label: string; desc: string; previewColor: string }[] = [
-    { id: 'workshop', label: 'Workshop (Blue & Amber)', desc: 'Professional, high-contrast, technical events', previewColor: '#1769FF' },
-    { id: 'corporate', label: 'Corporate (Slate Dark)', desc: 'Executive seminars, boardroom talks, enterprise', previewColor: '#0F172A' },
-    { id: 'festival', label: 'Festival (Fuchsia & Gold)', desc: 'Cultural celebrations, Onam, college fests', previewColor: '#C026D3' },
-    { id: 'minimal', label: 'Minimal (Monochrome)', desc: 'Clean, modern, aesthetic gallery & design meets', previewColor: '#18181B' },
-    { id: 'conference', label: 'Conference (Indigo & Cyan)', desc: 'Tech summits, multi-track symposiums', previewColor: '#4F46E5' },
-    { id: 'education', label: 'Education (Emerald Green)', desc: 'Academic courses, training workshops', previewColor: '#059669' },
-    { id: 'custom', label: 'Custom Palette (Night Mode)', desc: 'Tailored dark mode with neon accents', previewColor: '#6366F1' },
-  ];
-
-  const handleSelectPreset = (templateId: ThemeTemplate) => {
-    const preset = themePresets[templateId];
-    updateWizardDraft({
-      theme: {
-        ...preset,
-        logo_url: currentTheme.logo_url || '',
-        banner_url: wizardDraft.banner_url || '',
-      }
-    });
-  };
-
-  const handleUpdateColors = (key: keyof EventTheme['colors'], val: string) => {
-    updateWizardDraft({
-      theme: {
-        ...currentTheme,
-        colors: {
-          ...currentTheme.colors,
-          [key]: val,
-        }
-      }
-    });
-  };
-
-  const handleUpdateFont = (fontFamily: string) => {
-    updateWizardDraft({
-      theme: {
-        ...currentTheme,
-        typography: {
-          ...currentTheme.typography,
-          fontFamily,
-        }
-      }
-    });
-  };
-
   return (
     <AdminLayout activeNav="events">
-      <div className="space-y-6 max-w-[1240px] mx-auto">
+      <div className="space-y-6 max-w-[1300px] mx-auto">
         
-        {/* Header with Back Link */}
-        <div className="pb-1">
-          <button
-            type="button"
-            onClick={() => { setWizardStep(2); setScreen('05_create_form'); }}
-            className="text-xs font-semibold text-[#1463FF] hover:underline flex items-center gap-1.5 cursor-pointer mb-2 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Step 2: Form Builder</span>
-          </button>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#071A33] tracking-tight font-sans">
-            Create Event — Step 3: Theme & Branding
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            Customize brand colors, typography, header banner, and preview live attendee view.
-          </p>
+        {/* Top Header Section with Right Decorative Illustration */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-1">
+          <div>
+            <button
+              type="button"
+              onClick={() => { setWizardStep(2); setScreen('05_create_form'); }}
+              className="text-xs font-semibold text-[#1463FF] hover:underline flex items-center gap-1.5 cursor-pointer mb-2 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Events Directory</span>
+            </button>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#101B33] tracking-tight font-sans">
+              Create Event — Step 3: Theme & Branding
+            </h1>
+            <p className="text-xs sm:text-sm text-[#7184A3] font-medium mt-1">
+              Customize your event’s visual style with colors, banner, and branding elements.
+            </p>
+          </div>
+
+          {/* Right Decorative Calendar Illustration + Script Text */}
+          <div className="hidden lg:flex items-center gap-4 shrink-0 pr-2">
+            
+            {/* 3D Stylized Calendar Card */}
+            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#38BDF8] via-[#1463FF] to-[#1E40AF] p-0.5 shadow-[0_8px_20px_rgba(20,99,255,0.25)] transform -rotate-6 hover:rotate-0 transition-transform">
+              <div className="w-full h-full bg-[#0B254D] rounded-[14px] p-2 flex flex-col justify-between overflow-hidden relative">
+                
+                {/* Spiral Ring Binder Pins */}
+                <div className="flex justify-around -mt-1">
+                  <div className="w-1.5 h-2.5 bg-slate-300 rounded-full" />
+                  <div className="w-1.5 h-2.5 bg-slate-300 rounded-full" />
+                  <div className="w-1.5 h-2.5 bg-slate-300 rounded-full" />
+                </div>
+
+                {/* Calendar Grid Dots */}
+                <div className="grid grid-cols-4 gap-1.5 my-auto px-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 font-bold" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                </div>
+
+                {/* Floating Plus Badge */}
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#1463FF] border-2 border-white text-white flex items-center justify-center font-bold text-xs shadow-md">
+                  +
+                </div>
+              </div>
+            </div>
+
+            {/* Handwritten Script Text */}
+            <div className="flex flex-col text-left select-none font-['Caveat',cursive] leading-tight">
+              <span className="text-sm sm:text-base font-bold text-slate-700">Plan</span>
+              <span className="text-sm sm:text-base font-bold text-[#1463FF]">Connect</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-500 italic">Make it Happen</span>
+            </div>
+
+          </div>
         </div>
 
+        {/* Step Progress Bar (Step 3 Active) */}
         <WizardStepHeader currentStepNumber={3} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Workspace (Two-Column Layout) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* Left Column: Theme Controls (7 Cols) */}
+          {/* ========================================================================= */}
+          {/* LEFT COLUMN: CUSTOMIZATION PANELS (7 Cols)                                */}
+          {/* ========================================================================= */}
           <div className="lg:col-span-7 space-y-6">
-          
-          {/* Preset Templates */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                  <Palette className="w-4 h-4 text-blue-600" />
-                  Template Presets
-                </h3>
-                <p className="text-[11px] text-slate-400 mt-0.5">Select a pre-configured harmonious color palette</p>
+            
+            {/* SECTION 1 — THEMATIC TEMPLATES */}
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-6 shadow-[0_2px_12px_rgba(7,26,51,0.04)] space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
+                    Thematic Templates
+                  </h3>
+                  <p className="text-xs text-[#7184A3] mt-0.5">
+                    Choose a ready-made theme or customize it to match your event style.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="px-3 py-1.5 rounded-xl border border-[#DCE5F0] bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                >
+                  <Eye className="w-3.5 h-3.5 text-[#1463FF]" />
+                  <span>Preview</span>
+                </button>
               </div>
-              <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
-                {presets.length} Presets
-              </span>
-            </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {presets.map((p) => {
-                const isSelected = currentTheme.template === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => handleSelectPreset(p.id)}
-                    className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden cursor-pointer ${
-                      isSelected
-                        ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-500/20 shadow-xs'
-                        : 'border-slate-200/80 hover:border-slate-300 bg-slate-50/50 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div 
-                        className="w-5 h-5 rounded-full border border-white shadow-xs" 
-                        style={{ backgroundColor: p.previewColor }} 
-                      />
-                      {isSelected && (
-                        <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                          <Check className="w-2.5 h-2.5" />
+              {/* 7 Theme Cards in Clean Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {presets.map((p) => {
+                  const isSelected = currentTheme.template === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleSelectPreset(p.id)}
+                      className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden cursor-pointer flex items-center justify-between gap-3 ${
+                        isSelected
+                          ? 'border-[#1463FF] bg-[#F8FAFC] ring-2 ring-[#1463FF]/15 shadow-2xs'
+                          : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div 
+                          className="w-5 h-5 rounded-lg shrink-0 border border-white shadow-2xs" 
+                          style={{ backgroundColor: p.previewColor }} 
+                        />
+                        <div className="min-w-0">
+                          <div className="font-bold text-xs text-[#101B33] truncate">
+                            {p.label}
+                          </div>
+                          <div className="text-[11px] text-[#7184A3] truncate font-medium mt-0.5">
+                            {p.desc}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    <div className="font-bold text-xs text-slate-900 capitalize">{p.label.split(' ')[0]}</div>
-                    <div className="text-[10px] text-slate-500 truncate mt-0.5 font-medium">{p.desc}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                      </div>
 
-          {/* Color Palette Customizer */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
-            <div className="border-b border-slate-100 pb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Custom Colors & Swatches</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Fine-tune brand colors for headers, action buttons, and surfaces</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60 space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">Primary Header Color</label>
-                <div className="flex items-center gap-2.5">
-                  <input
-                    type="color"
-                    value={currentTheme.colors.primary}
-                    onChange={(e) => handleUpdateColors('primary', e.target.value)}
-                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5 bg-white shrink-0"
-                  />
-                  <input
-                    type="text"
-                    value={currentTheme.colors.primary}
-                    onChange={(e) => handleUpdateColors('primary', e.target.value)}
-                    className="flex-1 h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60 space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">Action Button Color</label>
-                <div className="flex items-center gap-2.5">
-                  <input
-                    type="color"
-                    value={currentTheme.colors.button}
-                    onChange={(e) => handleUpdateColors('button', e.target.value)}
-                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5 bg-white shrink-0"
-                  />
-                  <input
-                    type="text"
-                    value={currentTheme.colors.button}
-                    onChange={(e) => handleUpdateColors('button', e.target.value)}
-                    className="flex-1 h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60 space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">Page Background Color</label>
-                <div className="flex items-center gap-2.5">
-                  <input
-                    type="color"
-                    value={currentTheme.colors.background}
-                    onChange={(e) => handleUpdateColors('background', e.target.value)}
-                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5 bg-white shrink-0"
-                  />
-                  <input
-                    type="text"
-                    value={currentTheme.colors.background}
-                    onChange={(e) => handleUpdateColors('background', e.target.value)}
-                    className="flex-1 h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60 space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">Text & Heading Color</label>
-                <div className="flex items-center gap-2.5">
-                  <input
-                    type="color"
-                    value={currentTheme.colors.text}
-                    onChange={(e) => handleUpdateColors('text', e.target.value)}
-                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5 bg-white shrink-0"
-                  />
-                  <input
-                    type="text"
-                    value={currentTheme.colors.text}
-                    onChange={(e) => handleUpdateColors('text', e.target.value)}
-                    className="flex-1 h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
+                      {/* Radio Selection Indicator */}
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                        isSelected
+                          ? 'border-[#1463FF] bg-[#1463FF]'
+                          : 'border-slate-300 bg-white'
+                      }`}>
+                        {isSelected && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          </div>
 
-          {/* Event Banner & Brand Image Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-blue-600" />
-                  Event Header Banner Image
+            {/* SECTION 2 — CUSTOM COLORS & BRANDING */}
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-6 shadow-[0_2px_12px_rgba(7,26,51,0.04)] space-y-4">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
+                  Custom Colors & Branding
                 </h3>
-                <p className="text-[11px] text-slate-400 mt-0.5">Upload an image from your device or paste a link</p>
+                <p className="text-xs text-[#7184A3] mt-0.5">
+                  Use your brand colors to personalize the event experience.
+                </p>
               </div>
-              <div className="flex items-center gap-2">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                {/* 1. Primary Header Color */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-[#101B33]">
+                    Primary Header Color
+                  </label>
+                  <div className="flex items-center h-11 px-3 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-4 focus-within:ring-[#1463FF]/10 transition-all relative">
+                    <input
+                      type="color"
+                      value={currentTheme.colors.primary}
+                      onChange={(e) => handleUpdateColors('primary', e.target.value)}
+                      className="w-5 h-5 rounded cursor-pointer border-0 p-0 mr-2.5 bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={currentTheme.colors.primary}
+                      onChange={(e) => handleUpdateColors('primary', e.target.value)}
+                      className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
+                    />
+                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* 2. Accent Button Color */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-[#101B33]">
+                    Accent Button Color
+                  </label>
+                  <div className="flex items-center h-11 px-3 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-4 focus-within:ring-[#1463FF]/10 transition-all relative">
+                    <input
+                      type="color"
+                      value={currentTheme.colors.button}
+                      onChange={(e) => handleUpdateColors('button', e.target.value)}
+                      className="w-5 h-5 rounded cursor-pointer border-0 p-0 mr-2.5 bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={currentTheme.colors.button}
+                      onChange={(e) => handleUpdateColors('button', e.target.value)}
+                      className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
+                    />
+                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* 3. Page Background Color */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-[#101B33]">
+                    Page Background Color
+                  </label>
+                  <div className="flex items-center h-11 px-3 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-4 focus-within:ring-[#1463FF]/10 transition-all relative">
+                    <input
+                      type="color"
+                      value={currentTheme.colors.background}
+                      onChange={(e) => handleUpdateColors('background', e.target.value)}
+                      className="w-5 h-5 rounded cursor-pointer border-0 p-0 mr-2.5 bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={currentTheme.colors.background}
+                      onChange={(e) => handleUpdateColors('background', e.target.value)}
+                      className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
+                    />
+                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* 4. Text & Heading Color */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-[#101B33]">
+                    Text & Heading Color
+                  </label>
+                  <div className="flex items-center h-11 px-3 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-4 focus-within:ring-[#1463FF]/10 transition-all relative">
+                    <input
+                      type="color"
+                      value={currentTheme.colors.text}
+                      onChange={(e) => handleUpdateColors('text', e.target.value)}
+                      className="w-5 h-5 rounded cursor-pointer border-0 p-0 mr-2.5 bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={currentTheme.colors.text}
+                      onChange={(e) => handleUpdateColors('text', e.target.value)}
+                      className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
+                    />
+                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 pointer-events-none" />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* SECTION 3 — BANNER IMAGE & BRANDING LOGO */}
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-6 shadow-[0_2px_12px_rgba(7,26,51,0.04)] space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
+                    Banner Image & Branding Logo
+                  </h3>
+                  <p className="text-xs text-[#7184A3] mt-0.5">
+                    Upload your event banner and add your brand logo (optional).
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={() => setShowUrlInput(!showUrlInput)}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
+                  className="text-xs font-semibold text-[#1463FF] hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <Link2 className="w-3.5 h-3.5" />
-                  <span>{showUrlInput ? 'File Upload' : 'Paste Link'}</span>
+                  <span>{showUrlInput ? 'File Upload' : 'Paste URL Link'}</span>
                 </button>
               </div>
-            </div>
 
-            {showUrlInput ? (
-              <div className="space-y-2">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Link2 className="w-4 h-4" />
+              {showUrlInput ? (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Link2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="url"
+                      value={wizardDraft.banner_url || ''}
+                      onChange={(e) => {
+                        updateWizardDraft({ 
+                          banner_url: e.target.value,
+                          theme: {
+                            ...currentTheme,
+                            banner_url: e.target.value
+                          }
+                        });
+                      }}
+                      placeholder="https://images.unsplash.com/... or direct image link"
+                      className="w-full h-11 pl-10 pr-4 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] font-medium"
+                    />
                   </div>
-                  <input
-                    type="url"
-                    value={wizardDraft.banner_url || ''}
-                    onChange={(e) => {
-                      updateWizardDraft({ 
-                        banner_url: e.target.value,
-                        theme: {
-                          ...currentTheme,
-                          banner_url: e.target.value
-                        }
-                      });
-                    }}
-                    placeholder="https://res.cloudinary.com/<cloud>/image/upload/... or direct image link"
-                    className="w-full pl-10 pr-4 h-10 bg-slate-50/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-mono"
-                  />
                 </div>
-                <p className="text-[11px] text-slate-500">
-                  Direct CDN image URLs will update the live phone preview on the right instantly.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
                   
-                  {/* Upload Drop Area */}
-                  <label className="sm:col-span-7 bg-blue-50/30 hover:bg-blue-50/60 border border-dashed border-blue-200 hover:border-blue-400 rounded-xl p-3.5 flex items-center justify-between gap-3 cursor-pointer transition-all">
+                  {/* Upload Box */}
+                  <label className="sm:col-span-7 bg-[#F8FAFC] hover:bg-[#F1F5F9] border-2 border-dashed border-[#CBD5E1] hover:border-[#1463FF] rounded-2xl p-4 flex items-center justify-between gap-3 cursor-pointer transition-all">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] text-[#1463FF] flex items-center justify-center shrink-0 border border-blue-100">
                         {isUploadingBanner ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                          <Upload className="w-4 h-4" />
+                          <Upload className="w-5 h-5" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-900 truncate">
-                          {isUploadingBanner ? 'Uploading...' : 'Upload Banner'}
+                        <div className="text-xs font-bold text-[#101B33] truncate">
+                          {isUploadingBanner ? 'Uploading...' : 'Upload banner image'}
                         </div>
-                        <div className="text-[10px] text-slate-500 truncate">
-                          Recommended: 1920 × 640 (JPG, PNG, WebP)
+                        <div className="text-[11px] text-[#7184A3] font-medium truncate mt-0.5">
+                          Recommended size: 1920 × 640 (JPG, PNG, WebP)
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-2xs transition-all shrink-0">
-                      <span>Choose File</span>
+                    <div className="bg-white hover:bg-slate-50 text-slate-700 border border-[#DCE5F0] text-xs font-semibold px-3 py-1.5 rounded-xl transition-all shrink-0 shadow-2xs">
+                      Browse File
                     </div>
                     <input
                       type="file"
@@ -364,8 +480,8 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     />
                   </label>
 
-                  {/* Banner Live Thumbnail */}
-                  <div className="sm:col-span-5 relative h-20 rounded-xl overflow-hidden border border-slate-200 shadow-xs bg-slate-900 group">
+                  {/* Banner Thumbnail */}
+                  <div className="sm:col-span-5 relative h-20 sm:h-22 rounded-2xl overflow-hidden border border-[#DCE5F0] shadow-2xs bg-slate-900 group">
                     <img
                       src={currentBanner}
                       alt="Banner preview"
@@ -385,21 +501,24 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                           }
                         });
                       }}
-                      className="w-6 h-6 bg-white/95 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded-md flex items-center justify-center shadow-xs border border-slate-200 absolute top-1.5 right-1.5 transition-colors cursor-pointer"
-                      title="Remove banner"
+                      className="w-6 h-6 bg-white/95 hover:bg-white text-slate-600 hover:text-rose-600 rounded-full flex items-center justify-center shadow-md border border-slate-200 absolute top-2 right-2 transition-colors cursor-pointer"
+                      title="Delete banner"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
 
                 </div>
+              )}
 
-                {/* Preset Banner Selector */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pt-1 select-none">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider shrink-0">
-                    Presets:
-                  </span>
-                  {bannerPresets.map((preset, idx) => (
+              {/* Sample Covers Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pt-1 select-none no-scrollbar">
+                <span className="text-[11px] text-[#7184A3] font-bold uppercase tracking-wider shrink-0">
+                  Sample Covers:
+                </span>
+                {bannerPresets.map((preset, idx) => {
+                  const isSelected = currentBanner === preset.url;
+                  return (
                     <button
                       key={idx}
                       type="button"
@@ -412,191 +531,247 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                           }
                         });
                       }}
-                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all shrink-0 cursor-pointer ${
-                        currentBanner === preset.url
-                          ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
-                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      className={`text-xs font-semibold px-3 py-1 rounded-xl border transition-all shrink-0 cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#F0F5FF] border-[#1463FF] text-[#1463FF] font-bold shadow-2xs'
+                          : 'bg-white border-[#DCE5F0] text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       {preset.label}
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
 
-          {/* Typography */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
-            <div className="border-b border-slate-100 pb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                <Type className="w-4 h-4 text-blue-600" />
-                Typography & Font Family
-              </h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Select the typeface applied across public registration screens</p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {['Plus Jakarta Sans', 'Inter', 'Outfit', 'Playfair Display'].map((font) => (
-                <button
-                  key={font}
-                  type="button"
-                  onClick={() => handleUpdateFont(font)}
-                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                    currentTheme.typography.fontFamily === font
-                      ? 'border-blue-600 bg-blue-50/60 text-blue-700 font-bold shadow-xs'
-                      : 'border-slate-200/80 bg-slate-50/50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                  style={{ fontFamily: font }}
-                >
-                  <div className="text-xs">{font}</div>
-                  <div className="text-[10px] text-slate-400 mt-1">Aa Bb 123</div>
-                </button>
-              ))}
-            </div>
-          </div>
+            {/* SECTION 4 — TYPOGRAPHY & FONT FAMILY */}
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-6 shadow-[0_2px_12px_rgba(7,26,51,0.04)] space-y-4">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
+                  Typography & Font Family
+                </h3>
+                <p className="text-xs text-[#7184A3] mt-0.5">
+                  Select a font style that matches your brand identity and event theme.
+                </p>
+              </div>
 
-          {/* Wizard Navigation */}
-          <div className="pt-2 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => { setWizardStep(2); setScreen('05_create_form'); }}
-              className="h-11 px-5 rounded-xl border border-[#DCE5F0] bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4 text-slate-400" />
-              <span>Back: Form Builder</span>
-            </button>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {fontOptions.map((font) => {
+                  const isSelected = currentTheme.typography.fontFamily === font.id;
+                  return (
+                    <button
+                      key={font.id}
+                      type="button"
+                      onClick={() => handleUpdateFont(font.id)}
+                      className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                        isSelected
+                          ? 'border-[#1463FF] bg-[#F0F5FF]/70 ring-2 ring-[#1463FF]/15 shadow-2xs'
+                          : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-[#101B33]">{font.label}</div>
+                        <div className="text-[10px] text-[#7184A3] mt-0.5 font-medium">{font.desc}</div>
+                      </div>
 
-            <button
-              type="button"
-              onClick={() => { setWizardStep(4); setScreen('07_create_settings'); }}
-              className="h-11 px-6 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-xs sm:text-sm font-bold shadow-[0_4px_14px_rgba(20,99,255,0.3)] flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <span>Next: Operational Settings</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-
-        </div>
-
-        {/* Right Column: Live Interactive Mobile Preview (5 Cols) */}
-        <div className="lg:col-span-5 flex flex-col items-center">
-          
-          <div className="w-full flex items-center justify-between mb-3 px-1">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
-              <Eye className="w-4 h-4 text-blue-600" />
-              Live Participant View Preview
-            </div>
-            <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-              ● Instant Sync
-            </span>
-          </div>
-
-          {/* Phone Device Frame */}
-          <div className="w-full max-w-sm rounded-[36px] p-3.5 bg-slate-900 border-4 border-slate-800 shadow-2xl relative">
-            {/* Notch */}
-            <div className="w-28 h-4 bg-slate-800 rounded-b-xl mx-auto mb-2 flex items-center justify-center">
-              <div className="w-10 h-1.5 bg-slate-900 rounded-full" />
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                        isSelected
+                          ? 'border-[#1463FF] bg-[#1463FF]'
+                          : 'border-slate-300 bg-white'
+                      }`}>
+                        {isSelected && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Inner Mobile Screen */}
-            <div 
-              className="rounded-[24px] overflow-hidden min-h-[500px] flex flex-col shadow-inner transition-colors duration-300"
-              style={{
-                backgroundColor: currentTheme.colors.background,
-                color: currentTheme.colors.text,
-                fontFamily: currentTheme.typography.fontFamily,
-              }}
-            >
-              {/* Optional Event Banner */}
-              {wizardDraft.banner_url && (
-                <div className="w-full h-28 relative overflow-hidden bg-slate-950">
+            {/* Bottom Actions */}
+            <div className="pt-2 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => { setWizardStep(2); setScreen('05_create_form'); }}
+                className="h-11 px-5 rounded-xl border border-[#DCE5F0] bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+              >
+                <ArrowLeft className="w-4 h-4 text-slate-400" />
+                <span>Back: Form Builder</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setWizardStep(4); setScreen('07_create_settings'); }}
+                className="h-11 px-6 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-xs sm:text-sm font-bold shadow-[0_4px_14px_rgba(20,99,255,0.3)] flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <span>Next: Settings & Limits</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+          </div>
+
+          {/* ========================================================================= */}
+          {/* RIGHT COLUMN: LIVE PARTICIPANT PREVIEW CARD (5 Cols)                      */}
+          {/* ========================================================================= */}
+          <div className="lg:col-span-5 bg-white rounded-2xl border border-[#DCE5F0] p-6 shadow-[0_2px_12px_rgba(7,26,51,0.04)] flex flex-col items-center">
+            
+            {/* Card Header */}
+            <div className="w-full flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#1463FF]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
+                  Live Preview (Your Event)
+                </h3>
+              </div>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                ● Live Preview
+              </span>
+            </div>
+
+            {/* Realistic Smartphone Frame Mockup */}
+            <div className="w-full max-w-[340px] rounded-[42px] p-3.5 bg-[#0B1528] border-4 border-slate-800 shadow-2xl relative">
+              
+              {/* Phone Speaker & Camera Notch */}
+              <div className="w-24 h-3.5 bg-slate-800 rounded-b-xl mx-auto mb-2 flex items-center justify-center gap-1.5">
+                <div className="w-8 h-1 bg-slate-900 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-slate-900 rounded-full" />
+              </div>
+
+              {/* Inner Smartphone Screen */}
+              <div 
+                className="rounded-[26px] overflow-hidden min-h-[520px] flex flex-col shadow-inner transition-colors duration-300 relative"
+                style={{
+                  backgroundColor: currentTheme.colors.background || '#F8FAFC',
+                  color: currentTheme.colors.text || '#0F172A',
+                  fontFamily: currentTheme.typography.fontFamily || 'Poppins',
+                }}
+              >
+                
+                {/* Event Banner Image */}
+                <div className="w-full h-32 relative overflow-hidden bg-slate-950 shrink-0">
                   <img 
-                    src={wizardDraft.banner_url} 
+                    src={currentBanner} 
                     alt="Event banner" 
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
                     }}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                </div>
-              )}
-
-              {/* Event Header Banner */}
-              <div 
-                className="p-5 text-white relative"
-                style={{ backgroundColor: currentTheme.colors.primary }}
-              >
-                <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/20 rounded inline-block mb-2">
-                  {currentTheme.template}
-                </div>
-                <h4 className="text-base font-bold leading-tight mb-1">
-                  {wizardDraft.name || 'AI Automation Workshop'}
-                </h4>
-                <div className="text-xs text-white/80 space-y-0.5">
-                  <div className="flex items-center gap-1.5 text-[11px]">
-                    <Calendar className="w-3 h-3" />
-                    <span>{wizardDraft.start_date || '20 Sep 2026'} • {wizardDraft.start_time || '10:00 AM'}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11px]">
-                    <MapPin className="w-3 h-3" />
-                    <span>{wizardDraft.venue || 'ACADENO Hall, Kozhikode'}</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
+                  
+                  {/* Top Bar inside Phone */}
+                  <div className="absolute top-2.5 left-3 right-3 flex items-center justify-between text-white/90 text-xs">
+                    <Menu className="w-4 h-4 cursor-pointer" />
+                    <Trash2 className="w-3.5 h-3.5 cursor-pointer opacity-80 hover:opacity-100" />
                   </div>
                 </div>
-              </div>
 
-              {/* Form Body Preview */}
-              <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                
-                <div className="space-y-2.5">
-                  <div className="text-[11px] text-slate-500 font-medium">
-                    {wizardDraft.short_description || 'Hands-on session on practical AI automation.'}
-                  </div>
-
-                  {wizardDraft.form_schema?.slice(0, 3).map((f) => (
-                    <div key={f.id} className="space-y-1">
-                      <label className="block text-[11px] font-bold">
-                        {f.label} {f.required && <span className="text-rose-500">*</span>}
-                      </label>
-                      <input
-                        type="text"
-                        disabled
-                        placeholder={f.placeholder || `Enter ${f.label}`}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white/90 text-xs text-slate-800 placeholder-slate-400"
-                      />
+                {/* Event Information Hero */}
+                <div 
+                  className="px-5 py-4 text-white relative transition-colors duration-300"
+                  style={{ backgroundColor: currentTheme.colors.primary || '#2563EB' }}
+                >
+                  <h4 className="text-base font-extrabold leading-tight mb-2">
+                    {wizardDraft.name || 'ACADENO Event'}
+                  </h4>
+                  
+                  <div className="space-y-1 text-white/90 text-[11px] font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3 h-3" />
+                      <span>{wizardDraft.start_date || '11 Sep 2026'} | {wizardDraft.start_time || '10:00 AM'} - {wizardDraft.end_time || '1:00 PM'}</span>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3 h-3" />
+                      <span>{wizardDraft.venue || 'ACADENO Conference Hall'}</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Styled Submit Button */}
-                <div className="pt-4">
-                  <button
-                    type="button"
-                    style={{
-                      backgroundColor: currentTheme.colors.button,
-                      color: currentTheme.colors.buttonText,
-                    }}
-                    className="w-full py-2.5 px-4 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
-                  >
-                    <span>Register Now</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                  <div className="text-[9px] text-center text-slate-400 mt-2">
-                    Secured by ACADENO EventLink • DPDP Compliant
+                {/* White Registration Form Card */}
+                <div className="bg-white rounded-t-3xl p-5 -mt-3 shadow-md flex-1 flex flex-col justify-between space-y-4">
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <h5 className="text-xs font-bold text-[#101B33]">
+                        Register for this event
+                      </h5>
+                      <p className="text-[10px] text-[#7184A3] mt-0.5">
+                        Fill in the details below to secure your spot.
+                      </p>
+                    </div>
+
+                    {/* Dummy/Actual Form Fields */}
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#101B33] mb-1">
+                          Full Name <span className="text-[#E5484D]">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          disabled
+                          placeholder="Enter your full name"
+                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] text-slate-700 placeholder-[#91A4C0]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#101B33] mb-1">
+                          Email Address <span className="text-[#E5484D]">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          disabled
+                          placeholder="you@example.com"
+                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] text-slate-700 placeholder-[#91A4C0]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#101B33] mb-1">
+                          Mobile Number <span className="text-[#E5484D]">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          disabled
+                          placeholder="+91 98765 43210"
+                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] text-slate-700 placeholder-[#91A4C0]"
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Register Button & Footer Link */}
+                  <div className="pt-2 space-y-2.5">
+                    <button
+                      type="button"
+                      style={{
+                        backgroundColor: currentTheme.colors.button || '#FF8A00',
+                        color: currentTheme.colors.buttonText || '#FFFFFF',
+                      }}
+                      className="w-full h-10 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                    >
+                      <span>Register Now</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+
+                    <div className="text-[10px] text-center text-[#7184A3]">
+                      Already have an account? <span className="text-[#1463FF] font-semibold hover:underline cursor-pointer">Sign In</span>
+                    </div>
+                  </div>
+
                 </div>
 
               </div>
             </div>
+
           </div>
 
         </div>
 
       </div>
-
-    </div>
-  </AdminLayout>
-);
+    </AdminLayout>
+  );
 };
-
