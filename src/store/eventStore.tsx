@@ -94,6 +94,21 @@ if (typeof window !== 'undefined') {
 }
 
 const STORAGE_KEY_PREFIX = 'acadeno_v4_clean_';
+const PENDING_LOCAL_MS = 30_000;
+
+function mergeRemoteAsSource<T extends { id: string; updated_at?: string; created_at?: string; submitted_at?: string }>(
+  local: T[],
+  remote: T[]
+): T[] {
+  const remoteIds = new Set(remote.map((item) => item.id));
+  const now = Date.now();
+  const pendingLocal = local.filter((item) => {
+    if (remoteIds.has(item.id)) return false;
+    const stamp = Date.parse(item.updated_at || item.created_at || item.submitted_at || '');
+    return Number.isFinite(stamp) && now - stamp < PENDING_LOCAL_MS;
+  });
+  return [...remote, ...pendingLocal];
+}
 
 export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentScreen, setCurrentScreen] = useState<ScreenId>(() => {
@@ -266,25 +281,13 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (evtsRes.error) {
           console.warn('[Neon Sync Poll - Events]:', evtsRes.error);
         } else if (evtsRes.data) {
-          setEvents(prev => {
-            const map = new Map<string, Event>();
-            // Keep existing local events
-            prev.forEach(e => map.set(e.id, e));
-            // Overwrite/merge with remote database events
-            evtsRes.data!.forEach(re => map.set(re.id, { ...(map.get(re.id) || {}), ...re }));
-            return Array.from(map.values());
-          });
+          setEvents((prev) => mergeRemoteAsSource(prev, evtsRes.data!));
         }
 
         if (regsRes.error) {
           console.warn('[Neon Sync Poll - Registrations]:', regsRes.error);
         } else if (regsRes.data) {
-          setRegistrations(prev => {
-            const map = new Map<string, Registration>();
-            prev.forEach(r => map.set(r.id, r));
-            regsRes.data!.forEach(rr => map.set(rr.id, { ...(map.get(rr.id) || {}), ...rr }));
-            return Array.from(map.values());
-          });
+          setRegistrations((prev) => mergeRemoteAsSource(prev, regsRes.data!));
         }
       } catch (err) {
         console.warn('Cloud sync interval warning:', err);
