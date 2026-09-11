@@ -1,33 +1,39 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Event, Registration } from '../types';
 
-const defaultSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://pvsnehkntsbljgqagkbi.supabase.co';
-const defaultAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2c25laGtudHNibGpncWFna2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMzUyNDcsImV4cCI6MjEwNDYxMTI0N30.ZECkP606S1eGlt_UAq4qhVffuTm66jQlSw8zMOB2rmE';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  const missing = [];
+  if (!supabaseUrl) missing.push('VITE_SUPABASE_URL');
+  if (!supabaseAnonKey) missing.push('VITE_SUPABASE_ANON_KEY');
+  const errorMsg = `[Supabase Initialization Error] Missing required environment variables: ${missing.join(', ')}. Please configure them in your environment or render.yaml.`;
+  console.error(errorMsg);
+  if (typeof window !== 'undefined' && import.meta.env.DEV) {
+    console.warn('⚠️ Supabase client running in unconfigured mode due to missing env variables.');
+  }
+}
+
+// Dev-only initialization diagnostic log
+if (import.meta.env.DEV && supabaseUrl) {
+  console.log(`[Supabase] Initialized successfully. Connecting to: ${supabaseUrl}`);
+}
 
 let supabaseInstance: SupabaseClient | null = null;
 
-export function getSupabaseClient(): SupabaseClient | null {
+export function getSupabaseClient(): SupabaseClient {
   if (supabaseInstance) return supabaseInstance;
 
-  const url = typeof window !== 'undefined' 
-    ? (localStorage.getItem('ACADENO_SUPABASE_URL') || defaultSupabaseUrl)
-    : defaultSupabaseUrl;
+  const url = supabaseUrl || (typeof window !== 'undefined' ? localStorage.getItem('ACADENO_SUPABASE_URL') : null);
+  const key = supabaseAnonKey || (typeof window !== 'undefined' ? localStorage.getItem('ACADENO_SUPABASE_ANON_KEY') : null);
 
-  const anonKey = typeof window !== 'undefined'
-    ? (localStorage.getItem('ACADENO_SUPABASE_ANON_KEY') || defaultAnonKey)
-    : defaultAnonKey;
-
-  if (!url || !anonKey) {
-    return null;
+  if (!url || !key) {
+    throw new Error('Supabase client failed to initialize: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be defined.');
   }
 
-  try {
-    supabaseInstance = createClient(url, anonKey);
-    return supabaseInstance;
-  } catch (err) {
-    console.error('Failed to initialize Supabase client:', err);
-    return null;
-  }
+  supabaseInstance = createClient(url, key);
+  return supabaseInstance;
 }
 
 export function setSupabaseConfig(url: string, anonKey: string): void {
@@ -35,131 +41,330 @@ export function setSupabaseConfig(url: string, anonKey: string): void {
     localStorage.setItem('ACADENO_SUPABASE_URL', url.trim());
     localStorage.setItem('ACADENO_SUPABASE_ANON_KEY', anonKey.trim());
   }
-  supabaseInstance = null; // Re-instantiate on next call
+  supabaseInstance = null;
 }
 
-/**
- * Fetch all events from Supabase Cloud
- */
-export async function fetchRemoteEvents(): Promise<Event[] | null> {
-  const client = getSupabaseClient();
-  if (!client) return null;
+export function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
+function isValidUUID(str: string | undefined | null): boolean {
+  if (!str) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
+const DEFAULT_ORG_ID = 'f56b03a9-9097-4638-8c4a-6f68227b2789';
+const DEFAULT_USER_ID = 'd79ebd86-73b7-4f55-9108-cdda19919cf0';
+
+/**
+ * Fetch all events from Supabase Cloud with attached forms & themes.
+ * Returns { data, error } directly instead of swallowing errors.
+ */
+export async function fetchRemoteEvents(): Promise<{ data: Event[] | null; error: any }> {
   try {
+    const client = getSupabaseClient();
     const { data, error } = await client
       .from('events')
-      .select('*')
+      .select(`
+        *,
+        event_forms ( schema, version ),
+        event_themes ( template, colors, typography, layout, logo_url, banner_url )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.warn('Supabase fetch events notice:', error.message);
-      return null;
+      console.error('[Supabase fetchRemoteEvents Error]:', error);
+      return { data: null, error };
     }
-    return data as Event[];
-  } catch (err) {
-    console.warn('Supabase fetch events error:', err);
-    return null;
+
+    if (!data) return { data: [], error: null };
+
+    const mappedEvents: Event[] = data.map((row: any): Event => {
+      const formRecord = Array.isArray(row.event_forms) ? row.event_forms[0] : row.event_forms;
+      const themeRecord = Array.isArray(row.event_themes) ? row.event_themes[0] : row.event_themes;
+
+      return {
+        id: row.id,
+        org_id: row.org_id || DEFAULT_ORG_ID,
+        name: row.name,
+        slug: row.slug,
+        short_description: row.short_description || '',
+        banner_url: row.banner_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80',
+        venue: row.venue || 'Virtual / Online',
+        start_date: row.start_date,
+        end_date: row.end_date || row.start_date,
+        start_time: row.start_time || '10:00 AM',
+        end_time: row.end_time || '1:00 PM',
+        status: row.status || 'active',
+        created_by: row.created_by || DEFAULT_USER_ID,
+        created_at: row.created_at,
+        updated_at: row.updated_at || row.created_at,
+        views_count: row.views_count || 1,
+        form_schema: formRecord?.schema || [
+          { id: 'f_name', type: 'text', label: 'Full Name', required: true, order: 1, placeholder: 'Enter full name' },
+          { id: 'f_email', type: 'email', label: 'Email Address', required: true, order: 2, placeholder: 'name@gmail.com' },
+          { id: 'f_phone', type: 'phone', label: 'Mobile Number', required: true, order: 3, placeholder: '+91 98765 43210' },
+        ],
+        theme: themeRecord || {
+          template: 'workshop',
+          colors: { primary: '#2563EB', background: '#F8FAFC', surface: '#FFFFFF', text: '#0F172A', button: '#FF7A00', buttonText: '#FFFFFF' },
+          typography: { fontFamily: 'Plus Jakarta Sans', headingSize: 'lg', bodySize: 'md' },
+          layout: 'centered'
+        },
+        settings: {
+          registration_opens_at: row.registration_opens_at || row.created_at,
+          registration_closes_at: row.registration_closes_at || '',
+          max_registrations: row.max_registrations || 100,
+          require_payment: !!row.require_payment,
+          payment_amount: row.payment_amount ? Number(row.payment_amount) : undefined,
+          after_registration: 'ticket',
+          send_email_confirmation: true,
+          send_whatsapp_confirmation: true,
+          send_sms_confirmation: false,
+          allow_excel_export: true,
+          require_consent: true,
+          consent_text: 'I agree to receive event notifications under India DPDP Act 2023 regulations.'
+        }
+      };
+    });
+
+    return { data: mappedEvents, error: null };
+  } catch (err: any) {
+    console.error('[Supabase fetchRemoteEvents Exception]:', err);
+    return { data: null, error: err };
   }
 }
 
 /**
- * Save / Upsert an event to Supabase Cloud
+ * Save / Upsert an event and its associated form & theme to Supabase Cloud.
+ * Returns { data, error } directly instead of swallowing errors.
  */
-export async function syncEventToCloud(event: Event): Promise<boolean> {
-  const client = getSupabaseClient();
-  if (!client) return false;
-
+export async function syncEventToCloud(event: Event): Promise<{ data: Event | null; error: any }> {
   try {
-    const { error } = await client
+    const client = getSupabaseClient();
+    const eventUuid = isValidUUID(event.id) ? event.id : generateUUID();
+    const orgUuid = isValidUUID(event.org_id) ? event.org_id : DEFAULT_ORG_ID;
+    const userUuid = isValidUUID(event.created_by) ? event.created_by : DEFAULT_USER_ID;
+
+    // 1. Upsert parent Event row
+    const { data: eventData, error: eventError } = await client
       .from('events')
       .upsert({
-        id: event.id,
-        org_id: event.org_id,
-        name: event.name,
-        slug: event.slug,
-        short_description: event.short_description,
-        banner_url: event.banner_url,
-        venue: event.venue,
-        start_date: event.start_date,
-        end_date: event.end_date,
-        start_time: event.start_time,
-        end_time: event.end_time,
-        status: event.status,
-        created_by: event.created_by,
-        created_at: event.created_at,
-        updated_at: new Date().toISOString(),
-        settings: event.settings,
-        form_schema: event.form_schema,
-        theme: event.theme
-      }, { onConflict: 'id' });
+        id: eventUuid,
+        org_id: orgUuid,
+        name: event.name || 'Untitled Event',
+        slug: event.slug || `event-${Date.now()}`,
+        short_description: event.short_description || '',
+        banner_url: event.banner_url || null,
+        venue: event.venue || 'Virtual / Online',
+        start_date: event.start_date || new Date().toISOString().split('T')[0],
+        end_date: event.end_date || event.start_date || new Date().toISOString().split('T')[0],
+        start_time: event.start_time || '10:00 AM',
+        end_time: event.end_time || '1:00 PM',
+        status: event.status || 'active',
+        max_registrations: event.settings?.max_registrations || 100,
+        require_payment: !!event.settings?.require_payment,
+        payment_amount: event.settings?.require_payment ? 499 : null,
+        created_by: userUuid,
+        created_at: event.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' })
+      .select()
+      .single();
 
-    if (error) {
-      console.warn('Supabase sync event notice:', error.message);
-      return false;
+    if (eventError) {
+      console.error('[Supabase syncEventToCloud Error]:', eventError);
+      return { data: null, error: eventError };
     }
-    return true;
-  } catch (err) {
-    console.warn('Supabase sync event error:', err);
-    return false;
+
+    // 2. Upsert child EventForm
+    if (event.form_schema && Array.isArray(event.form_schema)) {
+      const { error: formError } = await client
+        .from('event_forms')
+        .upsert({
+          id: generateUUID(),
+          event_id: eventUuid,
+          schema: event.form_schema,
+          version: 1,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'event_id' });
+
+      if (formError) {
+        console.error('[Supabase syncEventToCloud Form Error]:', formError);
+        return { data: null, error: formError };
+      }
+    }
+
+    // 3. Upsert child EventTheme
+    if (event.theme) {
+      const { error: themeError } = await client
+        .from('event_themes')
+        .upsert({
+          id: generateUUID(),
+          event_id: eventUuid,
+          template: event.theme.template || 'workshop',
+          colors: event.theme.colors || {},
+          typography: event.theme.typography || {},
+          layout: event.theme.layout || 'centered',
+          logo_url: event.theme.logo_url || null,
+          banner_url: event.theme.banner_url || null
+        }, { onConflict: 'event_id' });
+
+      if (themeError) {
+        console.error('[Supabase syncEventToCloud Theme Error]:', themeError);
+        return { data: null, error: themeError };
+      }
+    }
+
+    const updatedEvent: Event = {
+      ...event,
+      id: eventUuid,
+      org_id: orgUuid,
+      created_by: userUuid,
+      updated_at: new Date().toISOString()
+    };
+
+    return { data: updatedEvent, error: null };
+  } catch (err: any) {
+    console.error('[Supabase syncEventToCloud Exception]:', err);
+    return { data: null, error: err };
   }
 }
 
 /**
- * Fetch all registrations from Supabase Cloud
+ * Fetch all registrations from Supabase Cloud.
+ * Returns { data, error } directly instead of swallowing errors.
  */
-export async function fetchRemoteRegistrations(): Promise<Registration[] | null> {
-  const client = getSupabaseClient();
-  if (!client) return null;
-
+export async function fetchRemoteRegistrations(): Promise<{ data: Registration[] | null; error: any }> {
   try {
+    const client = getSupabaseClient();
     const { data, error } = await client
       .from('registrations')
       .select('*')
       .order('submitted_at', { ascending: false });
 
     if (error) {
-      console.warn('Supabase fetch registrations notice:', error.message);
-      return null;
+      console.error('[Supabase fetchRemoteRegistrations Error]:', error);
+      return { data: null, error };
     }
-    return data as Registration[];
-  } catch (err) {
-    console.warn('Supabase fetch registrations error:', err);
-    return null;
+
+    if (!data) return { data: [], error: null };
+
+    const mappedRegs: Registration[] = data.map((row: any): Registration => {
+      const resp = row.responses || {};
+      return {
+        id: row.id,
+        event_id: row.event_id,
+        registration_code: row.registration_code || `ACAD-${row.id.slice(0, 4).toUpperCase()}`,
+        name: resp.name || resp.f_name || resp.fullName || 'Attendee',
+        email: resp.email || resp.f_email || '',
+        phone: resp.phone || resp.f_phone || '',
+        responses: resp,
+        status: row.status || 'confirmed',
+        payment_status: row.payment_status || 'not_required',
+        attendance_status: row.attendance_status || 'not_marked',
+        source: row.source || 'direct',
+        ip_address: row.ip_address || '',
+        submitted_at: row.submitted_at || new Date().toISOString()
+      };
+    });
+
+    return { data: mappedRegs, error: null };
+  } catch (err: any) {
+    console.error('[Supabase fetchRemoteRegistrations Exception]:', err);
+    return { data: null, error: err };
   }
 }
 
 /**
- * Sync a new registration to Supabase Cloud
+ * Sync a new registration to Supabase Cloud.
+ * Returns { data, error } directly instead of swallowing errors.
  */
-export async function syncRegistrationToCloud(reg: Registration): Promise<boolean> {
-  const client = getSupabaseClient();
-  if (!client) return false;
-
+export async function syncRegistrationToCloud(reg: Registration): Promise<{ data: Registration | null; error: any }> {
   try {
+    const client = getSupabaseClient();
+    const regUuid = isValidUUID(reg.id) ? reg.id : generateUUID();
+    const eventUuid = isValidUUID(reg.event_id) ? reg.event_id : undefined;
+
+    if (!eventUuid) {
+      const err = new Error(`Cannot sync registration: event_id "${reg.event_id}" is not a valid UUID.`);
+      console.error('[Supabase syncRegistrationToCloud Error]:', err);
+      return { data: null, error: err };
+    }
+
     const { error } = await client
       .from('registrations')
-      .insert({
-        id: reg.id,
-        event_id: reg.event_id,
+      .upsert({
+        id: regUuid,
+        event_id: eventUuid,
         registration_code: reg.registration_code,
-        name: reg.name,
-        email: reg.email,
-        phone: reg.phone,
-        responses: reg.responses,
-        status: reg.status,
-        payment_status: reg.payment_status,
-        attendance_status: reg.attendance_status,
-        source: reg.source,
-        submitted_at: reg.submitted_at
-      });
+        responses: {
+          name: reg.name,
+          email: reg.email,
+          phone: reg.phone,
+          ...(reg.responses || {})
+        },
+        status: reg.status || 'confirmed',
+        payment_status: reg.payment_status || 'not_required',
+        attendance_status: reg.attendance_status || 'not_marked',
+        source: reg.source || 'direct',
+        ip_address: reg.ip_address || null,
+        submitted_at: reg.submitted_at || new Date().toISOString()
+      }, { onConflict: 'id' });
 
     if (error) {
-      console.warn('Supabase sync registration notice:', error.message);
-      return false;
+      console.error('[Supabase syncRegistrationToCloud Error]:', error);
+      return { data: null, error };
     }
-    return true;
-  } catch (err) {
-    console.warn('Supabase sync registration error:', err);
-    return false;
+
+    return { data: { ...reg, id: regUuid }, error: null };
+  } catch (err: any) {
+    console.error('[Supabase syncRegistrationToCloud Exception]:', err);
+    return { data: null, error: err };
+  }
+}
+
+/**
+ * Delete an event from Supabase Cloud.
+ */
+export async function deleteEventFromCloud(eventId: string): Promise<{ success: boolean; error: any }> {
+  try {
+    if (!isValidUUID(eventId)) return { success: true, error: null };
+    const client = getSupabaseClient();
+    const { error } = await client.from('events').delete().eq('id', eventId);
+    if (error) {
+      console.error('[Supabase deleteEventFromCloud Error]:', error);
+      return { success: false, error };
+    }
+    return { success: true, error: null };
+  } catch (err: any) {
+    console.error('[Supabase deleteEventFromCloud Exception]:', err);
+    return { success: false, error: err };
+  }
+}
+
+/**
+ * Delete a registration from Supabase Cloud.
+ */
+export async function deleteRegistrationFromCloud(regId: string): Promise<{ success: boolean; error: any }> {
+  try {
+    if (!isValidUUID(regId)) return { success: true, error: null };
+    const client = getSupabaseClient();
+    const { error } = await client.from('registrations').delete().eq('id', regId);
+    if (error) {
+      console.error('[Supabase deleteRegistrationFromCloud Error]:', error);
+      return { success: false, error };
+    }
+    return { success: true, error: null };
+  } catch (err: any) {
+    console.error('[Supabase deleteRegistrationFromCloud Exception]:', err);
+    return { success: false, error: err };
   }
 }

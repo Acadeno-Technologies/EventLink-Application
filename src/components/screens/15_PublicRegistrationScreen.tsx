@@ -104,75 +104,43 @@ export const PublicRegistrationScreen: React.FC = () => {
   ]);
 
   const validateEmailWithDetails = (emailStr: string): { isValid: boolean; errorMsg?: string; suggestion?: string } => {
-    const clean = emailStr.trim().toLowerCase();
+    const clean = String(emailStr || '').trim().toLowerCase();
     if (!clean) return { isValid: false, errorMsg: 'Email is required' };
 
-    // Standard email syntax check
-    const basicRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})$/;
-    const match = clean.match(basicRegex);
-    if (!match) {
-      return { isValid: false, errorMsg: 'Invalid format (e.g. name@gmail.com)' };
-    }
-
-    const domainPart = match[1];
-    const tldPart = match[2];
-    const fullDomain = `${domainPart}.${tldPart}`;
-
-    // Common Gmail typos detection
-    if (GMAIL_TYPOS.includes(fullDomain) || ((domainPart === 'gm' || domainPart === 'gma') && (tldPart === 'cm' || tldPart === 'com'))) {
-      return { isValid: false, errorMsg: 'Invalid domain', suggestion: 'Did you mean @gmail.com?' };
-    }
-
-    // Common Yahoo typos detection
-    if (YAHOO_TYPOS.includes(fullDomain)) {
-      return { isValid: false, errorMsg: 'Invalid domain', suggestion: 'Did you mean @yahoo.com?' };
-    }
-
-    // Common Outlook typos detection
-    if (OUTLOOK_TYPOS.includes(fullDomain)) {
-      return { isValid: false, errorMsg: 'Invalid domain', suggestion: 'Did you mean @outlook.com?' };
-    }
-
-    // Reject short or broken domain names
-    if (domainPart.length < 2) {
-      return { isValid: false, errorMsg: 'Domain name is too short' };
-    }
-
-    // Check valid recognized TLD
-    if (!VALID_TLDS.has(tldPart) && !tldPart.includes('.')) {
-      return { isValid: false, errorMsg: `Unrecognized domain extension (.${tldPart})` };
+    const basicRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!basicRegex.test(clean)) {
+      return { isValid: false, errorMsg: 'Invalid email format (e.g. name@gmail.com)' };
     }
 
     return { isValid: true, errorMsg: '✓ Valid Format' };
   };
 
   const validateIndianMobile = (phoneStr: string): { isValid: boolean; errorMsg: string } => {
-    const digits = phoneStr.replace(/\D/g, '');
+    let digits = String(phoneStr || '').replace(/\D/g, '');
+    if (digits.length === 12 && digits.startsWith('91')) {
+      digits = digits.slice(2);
+    } else if (digits.length === 11 && digits.startsWith('0')) {
+      digits = digits.slice(1);
+    }
+
     if (digits.length === 0) {
-      return { isValid: false, errorMsg: '0/10 digits' };
+      return { isValid: false, errorMsg: 'Mobile number required' };
     }
     if (digits.length < 10) {
       return { isValid: false, errorMsg: `${digits.length}/10 digits` };
     }
     if (digits.length === 10) {
-      // Indian mobile numbers must start with 6, 7, 8, or 9
       if (!/^[6-9]/.test(digits)) {
         return { isValid: false, errorMsg: 'Must start with 6, 7, 8, or 9' };
       }
-      // Check for dummy repetitive sequence
-      if (/^(\d)\1{9}$/.test(digits)) {
-        return { isValid: false, errorMsg: 'Invalid repetitive number' };
-      }
       return { isValid: true, errorMsg: '✓ Valid Mobile' };
     }
-    return { isValid: false, errorMsg: 'Max 10 digits' };
+    return { isValid: true, errorMsg: '✓ Valid Mobile' };
   };
 
   const handleFieldChange = (fieldId: string, val: any, fieldType?: string) => {
-    // If it's a phone/mobile field, enforce strictly numbers and max 10 digits
-    if (fieldType === 'phone' || fieldId === 'f_phone') {
-      const numericVal = String(val).replace(/\D/g, '').slice(0, 10);
-      setFormData(prev => ({ ...prev, [fieldId]: numericVal }));
+    if (fieldType === 'phone' || fieldId === 'f_phone' || /phone|mobile/i.test(fieldId)) {
+      setFormData(prev => ({ ...prev, [fieldId]: val }));
       return;
     }
 
@@ -340,16 +308,20 @@ export const PublicRegistrationScreen: React.FC = () => {
       const finalName = rawName || 'Participant';
       const finalEmail = rawEmail || 'attendee@example.com';
 
-      const newReg = submitRegistration(evt.id, {
+      submitRegistration(evt.id, {
         name: finalName,
         email: finalEmail,
         phone: formattedPhone,
         responses: formData,
         source: 'direct',
+      }).then(newReg => {
+        setSelectedRegistrationId(newReg.id);
+        setScreen('16_registration_success');
+      }).catch(err => {
+        console.error('Registration error:', err);
+        setErrorMessage('Failed to complete registration. Please try again.');
       });
-      setSelectedRegistrationId(newReg.id);
-      setScreen('16_registration_success');
-    }, 700);
+    }, 400);
   };
 
   return (

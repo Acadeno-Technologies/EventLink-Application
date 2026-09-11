@@ -18,7 +18,10 @@ import {
   syncEventToCloud, 
   syncRegistrationToCloud, 
   fetchRemoteEvents, 
-  fetchRemoteRegistrations 
+  fetchRemoteRegistrations,
+  deleteEventFromCloud,
+  deleteRegistrationFromCloud,
+  generateUUID
 } from '../utils/supabaseClient';
 
 interface EventContextType {
@@ -50,17 +53,17 @@ interface EventContextType {
   updateWizardDraft: (updates: Partial<Event>) => void;
   startNewEventWizard: () => void;
   editExistingEventInWizard: (eventId: string, startStep?: number) => void;
-  saveWizardDraft: () => void;
-  publishWizardEvent: () => Event;
+  saveWizardDraft: () => Promise<Event>;
+  publishWizardEvent: () => Promise<Event>;
   
   // Actions
   login: (email: string, password?: string, role?: UserRole) => boolean;
   logout: () => void;
-  updateEvent: (eventId: string, updates: Partial<Event>) => void;
-  deleteEvent: (eventId: string) => boolean;
-  submitRegistration: (eventId: string, formData: { name: string; email: string; phone: string; responses: Record<string, any>; source?: string }) => Registration;
-  updateRegistration: (regId: string, updates: Partial<Registration>) => void;
-  deleteRegistration: (regId: string) => void;
+  updateEvent: (eventId: string, updates: Partial<Event>) => Promise<void>;
+  deleteEvent: (eventId: string) => Promise<boolean>;
+  submitRegistration: (eventId: string, formData: { name: string; email: string; phone: string; responses: Record<string, any>; source?: string }) => Promise<Registration>;
+  updateRegistration: (regId: string, updates: Partial<Registration>) => Promise<void>;
+  deleteRegistration: (regId: string) => Promise<void>;
   inviteUser: (name: string, email: string, role: UserRole, department?: string, password?: string) => void;
   updateUserRole: (userId: string, role: UserRole) => void;
   resetToDefaults: () => void;
@@ -245,36 +248,58 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [selectedRegistrationId]);
 
-  // Initial cloud sync fetch on mount
+  // Cloud sync fetch on mount and periodic polling to stay in sync across devices
   useEffect(() => {
     let isMounted = true;
-    fetchRemoteEvents().then(remoteEvts => {
-      if (isMounted && remoteEvts && remoteEvts.length > 0) {
-        setEvents(prev => {
-          const merged = [...prev];
-          remoteEvts.forEach(re => {
-            const idx = merged.findIndex(e => e.id === re.id);
-            if (idx >= 0) merged[idx] = { ...merged[idx], ...re };
-            else merged.push(re);
-          });
-          return merged;
-        });
-      }
-    });
 
-    fetchRemoteRegistrations().then(remoteRegs => {
-      if (isMounted && remoteRegs && remoteRegs.length > 0) {
-        setRegistrations(prev => {
-          const merged = [...prev];
-          remoteRegs.forEach(rr => {
-            if (!merged.some(r => r.id === rr.id)) merged.push(rr);
-          });
-          return merged;
-        });
-      }
-    });
+    const syncWithCloud = async () => {
+      try {
+        const [evtsRes, regsRes] = await Promise.all([
+          fetchRemoteEvents(),
+          fetchRemoteRegistrations()
+        ]);
 
-    return () => { isMounted = false; };
+        if (!isMounted) return;
+
+        if (evtsRes.error) {
+          console.warn('[Supabase Cloud Sync Poll Notice - Events]:', evtsRes.error);
+        } else if (evtsRes.data) {
+          setEvents(prev => {
+            const map = new Map<string, Event>();
+            // Keep existing local events
+            prev.forEach(e => map.set(e.id, e));
+            // Overwrite/merge with remote database events
+            evtsRes.data!.forEach(re => map.set(re.id, { ...(map.get(re.id) || {}), ...re }));
+            return Array.from(map.values());
+          });
+        }
+
+        if (regsRes.error) {
+          console.warn('[Supabase Cloud Sync Poll Notice - Registrations]:', regsRes.error);
+        } else if (regsRes.data) {
+          setRegistrations(prev => {
+            const map = new Map<string, Registration>();
+            prev.forEach(r => map.set(r.id, r));
+            regsRes.data!.forEach(rr => map.set(rr.id, { ...(map.get(rr.id) || {}), ...rr }));
+            return Array.from(map.values());
+          });
+        }
+      } catch (err) {
+        console.warn('Cloud sync interval warning:', err);
+      }
+    };
+
+    syncWithCloud();
+    const interval = setInterval(syncWithCloud, 6000); // 6s real-time auto-sync
+
+    const handleFocus = () => syncWithCloud();
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Read URL search params on mount or change (?event=slug or ?code=regCode)
@@ -417,8 +442,9 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const startNewEventWizard = () => {
     setWizardStep(1);
+    const newId = generateUUID();
     setWizardDraft({
-      id: `evt-${Date.now()}`,
+      id: newId,
       org_id: organization.id,
       name: '',
       slug: '',
@@ -431,7 +457,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       end_time: '1:00 PM',
       status: 'draft',
       views_count: 0,
-      created_by: currentUser?.id || 'user-001',
+      created_by: currentUser?.id || 'd79ebd86-73b7-4f55-9108-cdda19919cf0',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       form_schema: [
@@ -482,8 +508,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }));
   };
 
-  const saveWizardDraft = () => {
-    const draftId = wizardDraft.id || `evt-${Date.now()}`;
+  const saveWizardDraft = async (): Promise<Event> => {
+    const draftId = (wizardDraft.id && wizardDraft.id.length > 20 && !wizardDraft.id.startsWith('evt-')) 
+      ? wizardDraft.id 
+      : generateUUID();
     const cleanSlug = wizardDraft.slug || (wizardDraft.name ? wizardDraft.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `event-${Date.now()}`);
     
     const finalized: Event = {
@@ -499,7 +527,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       start_time: wizardDraft.start_time || '10:00 AM',
       end_time: wizardDraft.end_time || '1:00 PM',
       status: 'draft',
-      created_by: currentUser?.id || 'user-001',
+      created_by: currentUser?.id || 'd79ebd86-73b7-4f55-9108-cdda19919cf0',
       created_at: wizardDraft.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
       views_count: wizardDraft.views_count || 0,
@@ -529,12 +557,24 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
 
     setSelectedEventId(finalized.id);
-    showToast('Saved as draft');
     setScreen('03_events_list');
+
+    // Await cloud sync and check for failure
+    const { error } = await syncEventToCloud(finalized);
+    if (error) {
+      console.error('[Supabase Cloud Sync Error - Draft]:', error);
+      showToast(`⚠️ Cloud save failed: ${error.message || 'Database error'}. Saved to local cache.`);
+    } else {
+      showToast('Draft saved to Cloud successfully');
+    }
+
+    return finalized;
   };
 
-  const publishWizardEvent = (): Event => {
-    const draftId = wizardDraft.id || `evt-${Date.now()}`;
+  const publishWizardEvent = async (): Promise<Event> => {
+    const draftId = (wizardDraft.id && wizardDraft.id.length > 20 && !wizardDraft.id.startsWith('evt-')) 
+      ? wizardDraft.id 
+      : generateUUID();
     const cleanSlug = wizardDraft.slug || (wizardDraft.name ? wizardDraft.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `event-${Date.now()}`);
 
     const publishedEvent: Event = {
@@ -550,7 +590,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       start_time: wizardDraft.start_time || '10:00 AM',
       end_time: wizardDraft.end_time || '1:00 PM',
       status: 'active',
-      created_by: currentUser?.id || 'user-001',
+      created_by: currentUser?.id || 'd79ebd86-73b7-4f55-9108-cdda19919cf0',
       created_at: wizardDraft.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
       views_count: wizardDraft.views_count || 1,
@@ -582,8 +622,8 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       org_id: organization.id,
-      user_id: currentUser?.id || 'user-001',
-      user_name: currentUser?.name || 'Staff User',
+      user_id: currentUser?.id || 'd79ebd86-73b7-4f55-9108-cdda19919cf0',
+      user_name: currentUser?.name || 'Super Admin',
       action: 'event.published',
       entity_type: 'event',
       entity_id: publishedEvent.id,
@@ -594,15 +634,20 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     setSelectedEventId(publishedEvent.id);
     setScreen('09_publish_confirm');
-    showToast(`🎉 "${publishedEvent.name}" is now live!`);
     
-    // Sync to Supabase Cloud asynchronously
-    syncEventToCloud(publishedEvent);
+    // Await cloud sync and check for failure
+    const { error } = await syncEventToCloud(publishedEvent);
+    if (error) {
+      console.error('[Supabase Cloud Sync Error - Publish]:', error);
+      showToast(`⚠️ Cloud save failed: ${error.message || 'Database error'}. Saved to local cache.`);
+    } else {
+      showToast(`🎉 "${publishedEvent.name}" is published and live in Cloud!`);
+    }
     
     return publishedEvent;
   };
 
-  const updateEvent = (eventId: string, updates: Partial<Event>) => {
+  const updateEvent = async (eventId: string, updates: Partial<Event>): Promise<void> => {
     let updatedEvt: Event | undefined;
     setEvents(prev => prev.map(e => {
       if (e.id === eventId) {
@@ -612,22 +657,33 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return e;
     }));
     if (updatedEvt) {
-      syncEventToCloud(updatedEvt);
+      const { error } = await syncEventToCloud(updatedEvt);
+      if (error) {
+        console.error('[Supabase Cloud Sync Error - Update]:', error);
+        showToast(`⚠️ Cloud update failed: ${error.message || 'Database error'}. Updated locally.`);
+      } else {
+        showToast('Event updated in Cloud');
+      }
     }
-    showToast('Event updated successfully');
   };
 
-  const deleteEvent = (eventId: string): boolean => {
+  const deleteEvent = async (eventId: string): Promise<boolean> => {
     setEvents(prev => prev.filter(e => e.id !== eventId));
     setRegistrations(prev => prev.filter(r => r.event_id !== eventId));
-    showToast('Event deleted');
+    const { error } = await deleteEventFromCloud(eventId);
+    if (error) {
+      console.error('[Supabase Cloud Sync Error - Delete]:', error);
+      showToast(`⚠️ Cloud deletion failed: ${error.message || 'Database error'}`);
+    } else {
+      showToast('Event deleted from Cloud');
+    }
     return true;
   };
 
-  const submitRegistration = (
+  const submitRegistration = async (
     eventId: string,
     formData: { name: string; email: string; phone: string; responses: Record<string, any>; source?: string }
-  ): Registration => {
+  ): Promise<Registration> => {
     const targetEvt = events.find(e => e.id === eventId);
     const prefix = targetEvt?.name
       ? targetEvt.name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3)
@@ -638,7 +694,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const regCode = `${prefix}-${year}-${seq}`;
 
     const newReg: Registration = {
-      id: `reg-${Date.now()}`,
+      id: generateUUID(),
       event_id: eventId,
       registration_code: regCode,
       name: formData.name,
@@ -663,25 +719,46 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return e;
     }));
 
-    // Sync registration to Cloud database asynchronously
-    syncRegistrationToCloud(newReg);
+    // Await cloud sync for registration and handle error
+    const { error } = await syncRegistrationToCloud(newReg);
+    if (error) {
+      console.error('[Supabase Registration Cloud Sync Error]:', error);
+      showToast(`⚠️ Registration pass generated, but Cloud sync failed: ${error.message || 'Database error'}`);
+    }
 
     return newReg;
   };
 
-  const updateRegistration = (regId: string, updates: Partial<Registration>) => {
+  const updateRegistration = async (regId: string, updates: Partial<Registration>): Promise<void> => {
+    let updatedReg: Registration | undefined;
     setRegistrations(prev => prev.map(r => {
       if (r.id === regId) {
-        return { ...r, ...updates };
+        updatedReg = { ...r, ...updates };
+        return updatedReg;
       }
       return r;
     }));
-    showToast('Registration updated');
+
+    if (updatedReg) {
+      const { error } = await syncRegistrationToCloud(updatedReg);
+      if (error) {
+        console.error('[Supabase Registration Update Cloud Sync Error]:', error);
+        showToast(`⚠️ Cloud update failed: ${error.message || 'Database error'}`);
+      } else {
+        showToast('Registration updated in Cloud');
+      }
+    }
   };
 
-  const deleteRegistration = (regId: string) => {
+  const deleteRegistration = async (regId: string): Promise<void> => {
     setRegistrations(prev => prev.filter(r => r.id !== regId));
-    showToast('Registration removed');
+    const { error } = await deleteRegistrationFromCloud(regId);
+    if (error) {
+      console.error('[Supabase Registration Delete Cloud Sync Error]:', error);
+      showToast(`⚠️ Cloud delete failed: ${error.message || 'Database error'}`);
+    } else {
+      showToast('Registration deleted from Cloud');
+    }
   };
 
   const inviteUser = (

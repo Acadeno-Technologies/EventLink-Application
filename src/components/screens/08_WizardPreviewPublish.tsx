@@ -47,7 +47,7 @@ export const WizardPreviewPublishScreen: React.FC = () => {
   const hasFields = fields.length > 0;
   const isReadyToPublish = hasBasicInfo && hasFields;
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!isReadyToPublish) return;
     setIsPublishing(true);
 
@@ -62,10 +62,11 @@ export const WizardPreviewPublishScreen: React.FC = () => {
       // Confetti fallback
     }
 
-    setTimeout(() => {
+    try {
+      await publishWizardEvent();
+    } finally {
       setIsPublishing(false);
-      publishWizardEvent();
-    }, 800);
+    }
   };
 
   return (
