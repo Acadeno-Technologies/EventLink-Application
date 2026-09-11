@@ -91,7 +91,7 @@ export const WizardBasicInfoScreen: React.FC = () => {
 
   return (
     <AdminLayout activeNav="events">
-      <div className="space-y-4 max-w-[1060px] mx-auto">
+      <div className="space-y-4 w-full">
         
         {/* Top Header Section with Right Decorative Illustration */}
         <div className="flex items-center justify-between gap-4 pb-0.5">

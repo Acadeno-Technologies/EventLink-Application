@@ -139,7 +139,7 @@ export const WizardFormBuilderScreen: React.FC = () => {
 
   return (
     <AdminLayout activeNav="events">
-      <div className="space-y-6 max-w-[1240px] mx-auto">
+      <div className="space-y-6 w-full">
         
         {/* Top Header Section with Right Decorative Illustration */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-1">

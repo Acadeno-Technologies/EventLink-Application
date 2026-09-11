@@ -70,7 +70,7 @@ export const WizardPreviewPublishScreen: React.FC = () => {
 
   return (
     <AdminLayout activeNav="events">
-      <div className="space-y-6 max-w-[1240px] mx-auto">
+      <div className="space-y-6 w-full">
         
         {/* Header */}
         <div className="pb-1">
