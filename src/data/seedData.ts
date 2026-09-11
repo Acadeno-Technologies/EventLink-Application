@@ -1,7 +1,7 @@
 import { Organization, User, Event, Registration, AuditLog, ThemeTemplate } from '../types';
 
 export const initialOrganization: Organization = {
-  id: 'org-csez-001',
+  id: 'f56b03a9-9097-4638-8c4a-6f68227b2789',
   name: 'ACADENO Technologies Pvt. Ltd. – CSEZ Unit',
   slug: 'acadeno',
   logo_url: 'https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150&auto=format&fit=crop&q=80',
@@ -11,50 +11,14 @@ export const initialOrganization: Organization = {
 
 export const initialUsers: User[] = [
   {
-    id: 'user-001',
-    org_id: 'org-csez-001',
+    id: 'd79ebd86-73b7-4f55-9108-cdda19919cf0',
+    org_id: 'f56b03a9-9097-4638-8c4a-6f68227b2789',
     name: 'Super Admin',
     email: 'admin@acadeno.in',
     password: 'Acadeno2026!',
     role: 'super_admin',
     status: 'active',
     department: 'Executive Administration',
-    last_login_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'user-002',
-    org_id: 'org-csez-001',
-    name: 'Arathy',
-    email: 'arathy@acadeno.in',
-    password: 'Acadeno2026!',
-    role: 'super_admin',
-    status: 'active',
-    department: 'Administration',
-    last_login_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'user-003',
-    org_id: 'org-csez-001',
-    name: 'Anu Varma',
-    email: 'anu@acadeno.in',
-    password: 'Acadeno2026!',
-    role: 'event_manager',
-    status: 'active',
-    department: 'Event Operations',
-    last_login_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'user-004',
-    org_id: 'org-csez-001',
-    name: 'Rahul K.',
-    email: 'rahul@acadeno.in',
-    password: 'Acadeno2026!',
-    role: 'staff',
-    status: 'active',
-    department: 'Registration & Check-In Desk',
     last_login_at: new Date().toISOString(),
     created_at: new Date().toISOString(),
   }

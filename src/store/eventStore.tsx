@@ -78,7 +78,7 @@ if (typeof window !== 'undefined') {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('acadeno_') && !k.startsWith('acadeno_v2_clean_')) {
+      if (k && k.startsWith('acadeno_') && !k.startsWith('acadeno_v4_clean_')) {
         keysToRemove.push(k);
       }
     }
@@ -88,7 +88,7 @@ if (typeof window !== 'undefined') {
   }
 }
 
-const STORAGE_KEY_PREFIX = 'acadeno_v2_clean_';
+const STORAGE_KEY_PREFIX = 'acadeno_v4_clean_';
 
 export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentScreen, setCurrentScreen] = useState<ScreenId>(() => {

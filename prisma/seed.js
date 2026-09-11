@@ -41,24 +41,6 @@ async function main() {
       email: 'admin@acadeno.in',
       role: 'super_admin',
       status: 'active'
-    },
-    {
-      name: 'Arathy',
-      email: 'arathy@acadeno.in',
-      role: 'super_admin',
-      status: 'active'
-    },
-    {
-      name: 'Anu Varma',
-      email: 'anu@acadeno.in',
-      role: 'event_manager',
-      status: 'active'
-    },
-    {
-      name: 'Rahul K.',
-      email: 'rahul@acadeno.in',
-      role: 'staff',
-      status: 'active'
     }
   ];
 
