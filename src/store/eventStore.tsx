@@ -19,6 +19,10 @@ import {
   syncRegistrationToCloud, 
   fetchRemoteEvents, 
   fetchRemoteRegistrations,
+  fetchRemoteUsers,
+  syncUserToCloud,
+  deleteUserFromCloud,
+  loginRemote,
   deleteEventFromCloud,
   deleteRegistrationFromCloud,
   generateUUID,
@@ -59,15 +63,16 @@ interface EventContextType {
   publishWizardEvent: () => Promise<Event>;
   
   // Actions
-  login: (email: string, password?: string, role?: UserRole) => boolean;
+  login: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateEvent: (eventId: string, updates: Partial<Event>) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<boolean>;
   submitRegistration: (eventId: string, formData: { name: string; email: string; phone: string; responses: Record<string, any>; source?: string }) => Promise<Registration>;
   updateRegistration: (regId: string, updates: Partial<Registration>) => Promise<void>;
   deleteRegistration: (regId: string) => Promise<void>;
-  inviteUser: (name: string, email: string, role: UserRole, department?: string, password?: string) => void;
-  updateUserRole: (userId: string, role: UserRole) => void;
+  inviteUser: (name: string, email: string, role: UserRole, department?: string, password?: string) => Promise<void>;
+  updateUserRole: (userId: string, role: UserRole) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
   resetToDefaults: () => void;
 
   // Notification / Toast
@@ -161,9 +166,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const syncWithCloud = async () => {
       try {
-        const [evtsRes, regsRes] = await Promise.all([
+        const [evtsRes, regsRes, usersRes] = await Promise.all([
           fetchRemoteEvents(),
-          fetchRemoteRegistrations()
+          fetchRemoteRegistrations(),
+          fetchRemoteUsers(),
         ]);
 
         if (!isMounted) return;
@@ -178,6 +184,12 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           console.warn('[Neon Sync Poll - Registrations]:', regsRes.error);
         } else if (regsRes.data) {
           setRegistrations(regsRes.data);
+        }
+
+        if (usersRes.error) {
+          console.warn('[Neon Sync Poll - Users]:', usersRes.error);
+        } else if (usersRes.data && usersRes.data.length > 0) {
+          setUsers(usersRes.data);
         }
       } catch (err) {
         console.warn('Neon database polling warning:', err);
@@ -307,39 +319,65 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     showToast(`Switched role to: ${role.replace('_', ' ').toUpperCase()}`);
   };
 
-  const login = (email: string, passwordInput?: string, role?: UserRole) => {
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (user) {
-      if (passwordInput && user.password && user.password !== passwordInput) {
-        showToast('Incorrect password. Please verify your credentials.');
-        return false;
+  const login = async (
+    email: string, 
+    passwordInput?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = (passwordInput || '').trim();
+
+    // 1. Authenticate via Neon API
+    try {
+      const { data, error } = await loginRemote(cleanEmail, cleanPassword);
+      if (data && data.ok && data.user) {
+        const loggedInUser: User = data.user;
+        setCurrentUser(loggedInUser);
+        setCurrentRole(loggedInUser.role);
+        setUsers(prev => {
+          const exists = prev.some(u => u.id === loggedInUser.id || u.email.toLowerCase() === cleanEmail);
+          if (!exists) return [...prev, loggedInUser];
+          return prev.map(u => u.email.toLowerCase() === cleanEmail ? { ...u, ...loggedInUser } : u);
+        });
+        setScreen('02_dashboard');
+        showToast(`Welcome back, ${loggedInUser.name}!`);
+        return { success: true };
       }
-      setCurrentUser(user);
-      setCurrentRole(user.role);
-      setScreen('02_dashboard');
-      showToast(`Welcome back, ${user.name}!`);
-      return true;
-    } else {
-      const fallbackRole = role || 'super_admin';
-      const newUser: User = {
-        id: `user-${Date.now()}`,
-        org_id: organization.id,
-        name: email.split('@')[0].toUpperCase(),
-        email: email,
-        password: passwordInput || 'Acadeno2026!',
-        role: fallbackRole,
-        status: 'active',
-        department: 'Operations',
-        last_login_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      };
-      setUsers(prev => [newUser, ...prev]);
-      setCurrentUser(newUser);
-      setCurrentRole(fallbackRole);
-      setScreen('02_dashboard');
-      showToast(`Logged in as ${newUser.name}`);
-      return true;
+
+      if (error) {
+        const errMsg = error.message || 'Invalid credentials. Access is restricted to authorized administrators and assigned staff.';
+        showToast(errMsg);
+        return { success: false, error: errMsg };
+      }
+    } catch (apiErr) {
+      console.warn('Neon remote login check fallback:', apiErr);
     }
+
+    // 2. Strict client-side verification against authorized users only
+    const user = users.find(u => u.email.toLowerCase() === cleanEmail);
+    if (!user) {
+      const errMsg = 'Invalid email or password. Access is restricted to authorized administrators and assigned staff.';
+      showToast(errMsg);
+      return { success: false, error: errMsg };
+    }
+
+    if (user.status === 'disabled') {
+      const errMsg = 'Your account has been deactivated. Please contact your Super Admin.';
+      showToast(errMsg);
+      return { success: false, error: errMsg };
+    }
+
+    const expectedPassword = user.password || 'Acadeno2026!';
+    if (cleanPassword && cleanPassword !== expectedPassword) {
+      const errMsg = 'Incorrect password. Please verify your credentials.';
+      showToast(errMsg);
+      return { success: false, error: errMsg };
+    }
+
+    setCurrentUser(user);
+    setCurrentRole(user.role);
+    setScreen('02_dashboard');
+    showToast(`Welcome back, ${user.name}!`);
+    return { success: true };
   };
 
   const logout = () => {
@@ -681,7 +719,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  const inviteUser = (
+  const inviteUser = async (
     name: string, 
     email: string, 
     role: UserRole, 
@@ -689,29 +727,58 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     password?: string
   ) => {
     const tempPassword = password || 'Acadeno2026!';
+    const cleanEmail = email.trim().toLowerCase();
     const newUser: User = {
-      id: `user-${Date.now()}`,
+      id: generateUUID(),
       org_id: organization.id,
-      name,
-      email,
+      name: name.trim(),
+      email: cleanEmail,
       role,
       status: 'active',
-      department: department || 'General',
+      department: department || (role === 'super_admin' ? 'Executive Administration' : 'Operations'),
       password: tempPassword,
       created_at: new Date().toISOString()
     };
-    setUsers(prev => [...prev, newUser]);
+    setUsers(prev => {
+      const filtered = prev.filter(u => u.email.toLowerCase() !== cleanEmail);
+      return [...filtered, newUser];
+    });
     showToast(`Staff member "${name}" created with password: ${tempPassword}`);
+
+    // Persist to Neon Postgres
+    const { error } = await syncUserToCloud(newUser);
+    if (error) {
+      console.error('[Neon User Sync Error]:', error);
+      showToast(`⚠️ Neon user save failed: ${error.message || 'Database error'}`);
+    } else {
+      showToast(`Staff member "${name}" saved to Neon database.`);
+    }
   };
 
-  const updateUserRole = (userId: string, role: UserRole) => {
+  const updateUserRole = async (userId: string, role: UserRole) => {
+    let updatedUser: User | undefined;
     setUsers(prev => prev.map(u => {
       if (u.id === userId) {
-        return { ...u, role };
+        updatedUser = { ...u, role };
+        return updatedUser;
       }
       return u;
     }));
-    showToast('User role updated');
+    if (updatedUser) {
+      showToast(`User role updated to: ${role.replace('_', ' ').toUpperCase()}`);
+      await syncUserToCloud(updatedUser);
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    setUsers(prev => prev.filter(u => u.id !== userId));
+    const { error } = await deleteUserFromCloud(userId);
+    if (error) {
+      console.error('[Neon User Delete Error]:', error);
+      showToast(`⚠️ Neon user deletion failed: ${error.message || 'Database error'}`);
+    } else {
+      showToast('Staff member removed from Neon database');
+    }
   };
 
   const resetToDefaults = () => {
@@ -765,6 +832,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         deleteRegistration,
         inviteUser,
         updateUserRole,
+        deleteUser,
         resetToDefaults,
         toastMessage,
         showToast

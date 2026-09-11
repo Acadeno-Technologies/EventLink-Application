@@ -50,9 +50,15 @@ export async function ensureNeonSeed(prisma) {
         org_id: DEFAULT_ORG_ID,
         name: 'Super Admin',
         email: 'admin@acadeno.in',
+        password_hash: 'Acadeno2026!',
         role: 'super_admin',
         status: 'active',
       },
+    });
+  } else if (!existingExpectedUser.password_hash) {
+    await prisma.user.update({
+      where: { id: DEFAULT_USER_ID },
+      data: { password_hash: 'Acadeno2026!' },
     });
   }
 }

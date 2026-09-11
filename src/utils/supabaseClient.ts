@@ -106,3 +106,26 @@ export async function deleteRegistrationFromCloud(regId: string): Promise<{ succ
   const result = await apiRequest<{ success: boolean }>(`/api/registrations/${regId}`, { method: 'DELETE' });
   return { success: !result.error, error: result.error };
 }
+
+export async function fetchRemoteUsers(): Promise<{ data: any[] | null; error: any }> {
+  return apiRequest<any[]>('/api/users');
+}
+
+export async function syncUserToCloud(user: any): Promise<{ data: any | null; error: any }> {
+  return apiRequest<any>('/api/users', {
+    method: 'PUT',
+    body: JSON.stringify(user),
+  });
+}
+
+export async function deleteUserFromCloud(userId: string): Promise<{ success: boolean; error: any }> {
+  const result = await apiRequest<{ success: boolean }>(`/api/users/${userId}`, { method: 'DELETE' });
+  return { success: !result.error, error: result.error };
+}
+
+export async function loginRemote(email: string, password: string): Promise<{ data: { ok: boolean; user: any } | null; error: any }> {
+  return apiRequest<{ ok: boolean; user: any }>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}

@@ -14,11 +14,14 @@ import {
   Users,
   KeyRound,
   AlertCircle,
-  CheckCircle2
+  Copy,
+  Check,
+  ChevronDown
 } from 'lucide-react';
+import { User } from '../../types';
 
 export const LoginScreen: React.FC = () => {
-  const { login } = useEventStore();
+  const { login, users, showToast } = useEventStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,19 +30,37 @@ export const LoginScreen: React.FC = () => {
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
+  const [selectedUserIndex, setSelectedUserIndex] = useState(0);
+
+  const activeAuthorizedUsers: User[] = users.length > 0 ? users : [
+    {
+      id: 'd79ebd86-73b7-4f55-9108-cdda19919cf0',
+      org_id: 'f56b03a9-9097-4638-8c4a-6f68227b2789',
+      name: 'Super Admin',
+      email: 'admin@acadeno.in',
+      password: 'Acadeno2026!',
+      role: 'super_admin',
+      status: 'active',
+      department: 'Executive Administration',
+      created_at: new Date().toISOString()
+    }
+  ];
+
+  const activeCredentialUser = activeAuthorizedUsers[selectedUserIndex] || activeAuthorizedUsers[0];
 
   const validateEmailFormat = (emailStr: string) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return emailRegex.test(emailStr.trim());
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
 
     const cleanEmail = email.trim();
     if (!validateEmailFormat(cleanEmail)) {
-      setLoginError('Please enter a valid email address (e.g. arathy@acadeno.in).');
+      setLoginError('Please enter a valid email address (e.g. admin@acadeno.in).');
       return;
     }
 
@@ -50,13 +71,31 @@ export const LoginScreen: React.FC = () => {
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      const success = login(cleanEmail, password);
-      if (!success) {
-        setLoginError('Incorrect password. Please verify your credentials.');
+    try {
+      const result = await login(cleanEmail, password);
+      if (!result.success) {
+        setLoginError(result.error || 'Invalid credentials. Access is restricted to authorized administrators and assigned staff.');
       }
-    }, 350);
+    } catch (err: any) {
+      setLoginError(err?.message || 'Authentication error. Please verify your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleQuickFill = (user: User) => {
+    setEmail(user.email);
+    setPassword(user.password || 'Acadeno2026!');
+    setLoginError(null);
+    showToast(`Filled credentials for ${user.name}`);
+  };
+
+  const handleCopyCredentials = (user: User) => {
+    const text = `ACADENO EventLink Login\nEmail: ${user.email}\nPassword: ${user.password || 'Acadeno2026!'}\nRole: ${user.role.toUpperCase()}`;
+    navigator.clipboard.writeText(text);
+    setCopiedUserId(user.id);
+    showToast(`Copied credentials for ${user.name}`);
+    setTimeout(() => setCopiedUserId(null), 2500);
   };
 
   return (
@@ -160,7 +199,7 @@ export const LoginScreen: React.FC = () => {
       <div className="w-full lg:w-1/2 min-h-[520px] lg:min-h-screen bg-[#F8FAFC] p-6 sm:p-10 lg:p-14 flex flex-col items-center justify-center relative">
         
         {/* Authentication Card Wrapper */}
-        <div className="w-full max-w-[440px] flex flex-col z-10">
+        <div className="w-full max-w-[460px] flex flex-col z-10">
           
           {/* Header */}
           <div className="text-center mb-6">
@@ -176,9 +215,12 @@ export const LoginScreen: React.FC = () => {
           <div className="w-full bg-white rounded-2xl p-6 sm:p-8 shadow-xs border border-slate-200/80">
             
             {loginError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 animate-shake shadow-2xs">
-                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
-                <span className="font-semibold">{loginError}</span>
+              <div className="mb-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5 animate-shake shadow-2xs">
+                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <div className="font-bold">Access Denied</div>
+                  <div className="text-[11px] leading-relaxed opacity-95">{loginError}</div>
+                </div>
               </div>
             )}
 
@@ -196,7 +238,7 @@ export const LoginScreen: React.FC = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="arathy@acadeno.in"
+                    placeholder="admin@acadeno.in"
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
                   />
                 </div>
@@ -292,6 +334,82 @@ export const LoginScreen: React.FC = () => {
               </button>
             </form>
 
+            {/* Credential Helper Bar (Matches Design Spec) */}
+            <div className="mt-6 pt-5 border-t border-slate-100">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center justify-between">
+                <span>Authorized Credentials</span>
+                <span className="text-[9px] text-blue-600 font-semibold">Click account to autofill</span>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div 
+                    onClick={() => handleQuickFill(activeCredentialUser)}
+                    className="flex items-center gap-3 cursor-pointer group flex-1 min-w-0"
+                    title="Click to fill into form"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                      {activeCredentialUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                          {activeCredentialUser.name}
+                        </span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
+                          {activeCredentialUser.status}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                        <span className="text-slate-600">{activeCredentialUser.email}</span> • <span>{activeCredentialUser.department || 'Executive Administration'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleCopyCredentials(activeCredentialUser)}
+                      className="h-7 px-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 hover:text-blue-600 transition-colors flex items-center gap-1 text-[10px] font-semibold"
+                      title="Copy Credentials"
+                    >
+                      {copiedUserId === activeCredentialUser.id ? (
+                        <Check className="w-3 h-3 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                      <span>{copiedUserId === activeCredentialUser.id ? 'Copied' : 'Copy'}</span>
+                    </button>
+
+                    {activeAuthorizedUsers.length > 1 && (
+                      <select
+                        value={selectedUserIndex}
+                        onChange={(e) => {
+                          const idx = Number(e.target.value);
+                          setSelectedUserIndex(idx);
+                          handleQuickFill(activeAuthorizedUsers[idx]);
+                        }}
+                        className="h-7 px-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-700 cursor-pointer focus:outline-none"
+                      >
+                        {activeAuthorizedUsers.map((u, idx) => (
+                          <option key={u.id} value={idx}>
+                            {u.role.replace('_', ' ')}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] pt-2 border-t border-slate-200/60 font-mono">
+                  <span className="text-slate-400 font-sans text-[10px] font-bold uppercase tracking-wider">PASSWORD:</span>
+                  <span className="text-blue-600 font-bold tracking-wide">
+                    {activeCredentialUser.password || 'Acadeno2026!'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -301,4 +419,5 @@ export const LoginScreen: React.FC = () => {
     </div>
   );
 };
+
 

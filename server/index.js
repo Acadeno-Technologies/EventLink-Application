@@ -117,6 +117,21 @@ function mapRegistration(row) {
   };
 }
 
+function mapUser(row) {
+  return {
+    id: row.id,
+    org_id: row.org_id,
+    name: row.name,
+    email: row.email,
+    password: row.password_hash || 'Acadeno2026!',
+    role: row.role || 'staff',
+    status: row.status || 'active',
+    department: row.role === 'super_admin' ? 'Executive Administration' : 'Operations',
+    last_login_at: toIso(row.last_login_at),
+    created_at: toIso(row.created_at),
+  };
+}
+
 async function upsertEvent(event) {
   const eventUuid = isValidUUID(event.id) ? event.id : crypto.randomUUID();
   const orgUuid = isValidUUID(event.org_id) ? event.org_id : DEFAULT_ORG_ID;
@@ -352,6 +367,121 @@ app.delete('/api/registrations/:id', async (req, res) => {
       return res.json({ success: true });
     }
     await prisma.registration.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.json({ success: true });
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Authentication & Staff User Management (Neon DB)
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const user = await prisma.user.findFirst({
+      where: {
+        email: { equals: cleanEmail, mode: 'insensitive' },
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({ 
+        error: 'Invalid credentials. Access is restricted to authorized administrators and assigned staff.' 
+      });
+    }
+
+    if (user.status === 'disabled') {
+      return res.status(403).json({ 
+        error: 'Your account has been deactivated. Please contact your Super Admin.' 
+      });
+    }
+
+    const storedPassword = user.password_hash || 'Acadeno2026!';
+    if (storedPassword !== password) {
+      return res.status(401).json({ 
+        error: 'Incorrect password. Please verify your credentials.' 
+      });
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { last_login_at: new Date() },
+    });
+
+    res.json({ ok: true, user: mapUser(updated) });
+  } catch (error) {
+    console.error('[Neon Login Error]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/users', async (_req, res) => {
+  try {
+    const rows = await prisma.user.findMany({
+      orderBy: { created_at: 'asc' },
+    });
+    res.json(rows.map(mapUser));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/users', async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const cleanEmail = String(payload.email || '').trim().toLowerCase();
+    if (!cleanEmail) {
+      return res.status(400).json({ error: 'User email is required' });
+    }
+
+    const userUuid = isValidUUID(payload.id) ? payload.id : crypto.randomUUID();
+    const orgUuid = isValidUUID(payload.org_id) ? payload.org_id : DEFAULT_ORG_ID;
+    const role = ['super_admin', 'event_manager', 'staff'].includes(payload.role) ? payload.role : 'staff';
+    const status = ['active', 'invited', 'disabled'].includes(payload.status) ? payload.status : 'active';
+    const passwordHash = payload.password || payload.password_hash || 'Acadeno2026!';
+
+    const saved = await prisma.user.upsert({
+      where: { email: cleanEmail },
+      update: {
+        name: payload.name || cleanEmail.split('@')[0],
+        role,
+        status,
+        password_hash: passwordHash,
+      },
+      create: {
+        id: userUuid,
+        org_id: orgUuid,
+        name: payload.name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        role,
+        status,
+        password_hash: passwordHash,
+      },
+    });
+
+    res.json(mapUser(saved));
+  } catch (error) {
+    console.error('[Neon upsert user]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    if (!isValidUUID(req.params.id)) {
+      return res.json({ success: true });
+    }
+    if (req.params.id === DEFAULT_USER_ID) {
+      return res.status(400).json({ error: 'Cannot delete default Super Admin account' });
+    }
+    await prisma.user.delete({ where: { id: req.params.id } });
     res.json({ success: true });
   } catch (error) {
     if (error.code === 'P2025') {

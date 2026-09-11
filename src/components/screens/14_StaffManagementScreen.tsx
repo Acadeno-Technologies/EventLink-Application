@@ -25,7 +25,8 @@ import {
   Users,
   Key,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  Trash2
 } from 'lucide-react';
 
 export const StaffManagementScreen: React.FC = () => {
@@ -36,6 +37,7 @@ export const StaffManagementScreen: React.FC = () => {
     auditLogs, 
     inviteUser, 
     updateUserRole, 
+    deleteUser,
     showToast 
   } = useEventStore();
 
@@ -203,15 +205,31 @@ export const StaffManagementScreen: React.FC = () => {
                     </button>
 
                     {isSuperAdmin ? (
-                      <select
-                        value={u.role}
-                        onChange={(e) => updateUserRole(u.id, e.target.value as UserRole)}
-                        className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 capitalize focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
-                      >
-                        <option value="super_admin">Super Admin</option>
-                        <option value="event_manager">Event Manager</option>
-                        <option value="staff">Staff</option>
-                      </select>
+                      <div className="flex items-center gap-1.5">
+                        <select
+                          value={u.role}
+                          onChange={(e) => updateUserRole(u.id, e.target.value as UserRole)}
+                          className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 capitalize focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+                        >
+                          <option value="super_admin">Super Admin</option>
+                          <option value="event_manager">Event Manager</option>
+                          <option value="staff">Staff</option>
+                        </select>
+
+                        {u.email !== 'admin@acadeno.in' && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`Remove staff access for ${u.name}?`)) {
+                                deleteUser(u.id);
+                              }
+                            }}
+                            className="h-9 w-9 rounded-xl border border-slate-200 hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors"
+                            title="Remove Staff Access"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     ) : (
                       <span className="h-9 px-3.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 capitalize flex items-center">
                         {u.role.replace('_', ' ')}
