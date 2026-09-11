@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { 
@@ -13,7 +13,8 @@ import {
   FileSpreadsheet, 
   CheckCircle2,
   ExternalLink,
-  QrCode
+  QrCode,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export const WizardSettingsScreen: React.FC = () => {
@@ -37,6 +38,8 @@ export const WizardSettingsScreen: React.FC = () => {
     require_consent: true,
     consent_text: 'I agree to ACADENO event communications under the India DPDP Act 2023.'
   };
+
+  const [isCustomCap, setIsCustomCap] = useState(![100, 250, 500, 1000].includes(settings.max_registrations || 0));
 
   const handleUpdateSettings = (key: string, value: any) => {
     updateWizardDraft({
@@ -150,7 +153,7 @@ export const WizardSettingsScreen: React.FC = () => {
             </div>
 
             {/* BOX 2: Capacity & Booking Limits */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3.5">
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#1463FF]" />
@@ -163,27 +166,113 @@ export const WizardSettingsScreen: React.FC = () => {
                 </span>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-[#101B33]">
-                  Maximum Registrations (Seat Cap)
-                </label>
-                
-                <div className="flex items-center gap-2.5">
-                  {[100, 250, 500, 1000].map((cap) => (
-                    <button
-                      key={cap}
-                      type="button"
-                      onClick={() => handleUpdateSettings('max_registrations', cap)}
-                      className={`w-20 sm:w-24 h-10 rounded-xl text-xs sm:text-sm font-semibold border transition-all cursor-pointer flex items-center justify-center ${
-                        settings.max_registrations === cap
-                          ? 'bg-[#F0F5FF] border-[#1463FF] text-[#1463FF] font-bold shadow-2xs ring-1 ring-[#1463FF]'
-                          : 'bg-white border-[#DCE5F0] text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      {cap}
-                    </button>
-                  ))}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-[#101B33]">
+                    Maximum Registrations (Seat Cap)
+                  </label>
+                  <span className="text-xs font-bold text-[#1463FF] bg-[#F0F5FF] px-2.5 py-0.5 rounded-md border border-[#1463FF]/20">
+                    {settings.max_registrations ? `${settings.max_registrations.toLocaleString()} Seats Allowed` : 'No Limit'}
+                  </span>
                 </div>
+                
+                {/* 5-Option Selector (4 Presets + Custom Button) */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                  {[100, 250, 500, 1000].map((cap) => {
+                    const isSelected = settings.max_registrations === cap && !isCustomCap;
+                    return (
+                      <button
+                        key={cap}
+                        type="button"
+                        onClick={() => {
+                          setIsCustomCap(false);
+                          handleUpdateSettings('max_registrations', cap);
+                        }}
+                        className={`h-10 rounded-xl text-xs sm:text-sm font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-[#F0F5FF] border-[#1463FF] text-[#1463FF] shadow-2xs ring-2 ring-[#1463FF]/20'
+                            : 'bg-white border-[#DCE5F0] text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                        }`}
+                      >
+                        <span>{cap}</span>
+                      </button>
+                    );
+                  })}
+
+                  {/* Dedicated Custom Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomCap(true)}
+                    className={`col-span-2 sm:col-span-1 h-10 rounded-xl text-xs sm:text-sm font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      isCustomCap || ![100, 250, 500, 1000].includes(settings.max_registrations || 0)
+                        ? 'bg-[#F0F5FF] border-[#1463FF] text-[#1463FF] shadow-2xs ring-2 ring-[#1463FF]/20'
+                        : 'bg-white border-[#DCE5F0] text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                    }`}
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    <span>Custom</span>
+                  </button>
+                </div>
+
+                {/* Customized Field Box with Steppers */}
+                {(isCustomCap || ![100, 250, 500, 1000].includes(settings.max_registrations || 0)) && (
+                  <div className="bg-[#F8FAFC] border border-[#DCE5F0] rounded-xl p-3.5 space-y-2.5 animate-fade-in">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11.5px] font-bold text-slate-800 flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-[#1463FF]" />
+                        <span>Enter Customized Seat Capacity:</span>
+                      </label>
+                      <span className="text-[10.5px] font-medium text-slate-500">
+                        1 to 100,000 participants
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="number"
+                          min="1"
+                          max="100000"
+                          value={settings.max_registrations || ''}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            handleUpdateSettings('max_registrations', isNaN(val) ? 0 : val);
+                          }}
+                          placeholder="Type custom seat count (e.g. 75, 150, 350, 2500)..."
+                          className="w-full h-10 pl-3.5 pr-14 bg-white border border-[#1463FF] rounded-xl text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/20 shadow-xs"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[#1463FF] uppercase pointer-events-none">
+                          Seats
+                        </span>
+                      </div>
+
+                      {/* Quick Stepper Adjustments */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = settings.max_registrations || 0;
+                          handleUpdateSettings('max_registrations', Math.max(1, current - 25));
+                        }}
+                        className="h-10 px-3.5 bg-white hover:bg-slate-100 border border-[#DCE5F0] rounded-xl text-xs font-bold text-slate-700 cursor-pointer shadow-xs transition-colors"
+                        title="Decrease by 25"
+                      >
+                        -25
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = settings.max_registrations || 0;
+                          handleUpdateSettings('max_registrations', current + 25);
+                        }}
+                        className="h-10 px-3.5 bg-white hover:bg-slate-100 border border-[#DCE5F0] rounded-xl text-xs font-bold text-slate-700 cursor-pointer shadow-xs transition-colors"
+                        title="Increase by 25"
+                      >
+                        +25
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-[11px] text-[#7184A3] pt-0.5">
                   Prevents overbooking during high-volume participant traffic and QR registration scans.
                 </p>
