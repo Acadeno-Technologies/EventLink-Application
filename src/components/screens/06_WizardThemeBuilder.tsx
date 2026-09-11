@@ -635,10 +635,10 @@ export const WizardThemeBuilderScreen: React.FC = () => {
           {/* ========================================================================= */}
           {/* RIGHT COLUMN: LIVE PARTICIPANT PREVIEW CARD (lg:col-span-5)               */}
           {/* ========================================================================= */}
-          <div className="lg:col-span-5 bg-white rounded-2xl border border-[#DCE5F0] p-5 sm:p-6 shadow-[0_2px_12px_rgba(7,26,51,0.03)] flex flex-col items-center justify-between">
+          <div className="lg:col-span-5 bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-4.5 shadow-[0_2px_12px_rgba(7,26,51,0.03)] flex flex-col items-center justify-between">
             
             {/* Card Header Tag */}
-            <div className="w-full flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
+            <div className="w-full flex items-center justify-between mb-2 border-b border-slate-100 pb-2">
               <div className="flex items-center gap-1.5">
                 <Eye className="w-4 h-4 text-[#1463FF]" />
                 <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
