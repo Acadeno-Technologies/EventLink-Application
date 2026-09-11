@@ -72,38 +72,38 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         </button>
       </div>
 
-      {/* Compact Fixed Sidebar Navigation (195-200px) */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-[195px] min-w-[195px] max-w-[195px] bg-[#071A33] text-white flex flex-col justify-between transition-transform duration-300 md:static md:translate-x-0 border-r border-[#102A4E] shadow-xl md:shadow-none select-none ${
+      {/* Sidebar Navigation (240px width) */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-60 min-w-60 max-w-60 bg-[#071A33] text-white flex flex-col justify-between transition-transform duration-300 md:static md:translate-x-0 border-r border-[#102A4E] shadow-xl md:shadow-none select-none ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
 
         {/* Top: Logo & Navigation Links */}
-        <div className="p-3.5 pt-4 relative z-10">
+        <div className="p-4 pt-5 relative z-10">
           
-          {/* Compact White Rounded Logo Card */}
+          {/* White Rounded Logo Card */}
           <div 
             onClick={() => { setScreen('02_dashboard'); setIsMobileMenuOpen(false); }}
-            className="bg-white rounded-xl p-2.5 mb-4 flex items-center justify-center gap-2 cursor-pointer group shadow-2xs border border-slate-100/10 hover:shadow-xs transition-all"
+            className="bg-white rounded-xl p-3 mb-5 flex items-center justify-center gap-2.5 cursor-pointer group shadow-2xs border border-slate-100/10 hover:shadow-xs transition-all"
           >
             {/* Custom Vibrant Modern 'A' Glyph */}
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#1463FF] via-[#2B7FFF] to-[#38BDF8] flex items-center justify-center text-white shadow-2xs group-hover:scale-105 transition-transform shrink-0">
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1463FF] via-[#2B7FFF] to-[#38BDF8] flex items-center justify-center text-white shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
                 <path d="M12 2.5L3.5 21.5h4.2l1.9-4.2h5.8l1.9 4.2h4.2L12 2.5zm-1.1 11.2l2.1-4.8 2.1 4.8h-4.2z" />
               </svg>
             </div>
             
             <div className="flex flex-col text-left">
-              <span className="text-[11px] font-black text-[#071A33] tracking-wider leading-tight uppercase font-sans">
+              <span className="text-xs font-black text-[#071A33] tracking-wider leading-tight uppercase font-sans">
                 ACADENO
               </span>
-              <span className="text-[8px] font-extrabold text-[#1463FF] tracking-widest uppercase leading-none">
+              <span className="text-[9px] font-extrabold text-[#1463FF] tracking-widest uppercase leading-none">
                 EVENTLINK
               </span>
             </div>
           </div>
 
           {/* Navigation Menu Items */}
-          <nav className="space-y-1">
+          <nav className="space-y-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeNav === item.id;
@@ -115,13 +115,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                     setScreen(item.screen);
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all cursor-pointer select-none ${
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer select-none ${
                     isActive
-                      ? 'bg-[#1463FF] text-white shadow-[0_3px_10px_rgba(20,99,255,0.35)] font-bold'
+                      ? 'bg-[#1463FF] text-white shadow-[0_3px_12px_rgba(20,99,255,0.35)] font-bold'
                       : 'text-slate-400 hover:text-slate-100 hover:bg-white/5'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                   <span className="truncate">{item.label}</span>
                 </button>
               );
@@ -130,19 +130,19 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
         </div>
 
-        {/* Bottom Section: Compact User Profile Card, Sign Out & Company Name */}
-        <div className="p-3 relative z-10 space-y-2.5 border-t border-[#102A4E]">
+        {/* Bottom Section: User Profile Card, Sign Out & Company Name */}
+        <div className="p-4 relative z-10 space-y-3 border-t border-[#102A4E]">
           
           {/* User Profile Info */}
-          <div className="flex items-center gap-2.5 px-0.5">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0 shadow-2xs ring-1 ring-white/10">
+          <div className="flex items-center gap-3 px-0.5">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs ring-1 ring-white/10">
               {currentUser?.name?.charAt(0) || 'S'}
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-bold text-slate-100 truncate">
+              <span className="text-xs font-bold text-slate-100 truncate">
                 {currentUser?.name || 'Super Admin'}
               </span>
-              <span className="text-[9.5px] text-slate-400 capitalize truncate font-medium">
+              <span className="text-[10px] text-slate-400 capitalize truncate font-medium">
                 {currentUser?.role?.replace('_', ' ') || 'Super Admin'}
               </span>
             </div>
@@ -151,14 +151,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           {/* Sign Out Button */}
           <button
             onClick={logout}
-            className="w-full bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white py-1.5 px-2.5 rounded-lg flex items-center justify-center gap-1.5 border border-slate-700/60 text-[11px] font-semibold transition-all cursor-pointer shadow-2xs"
+            className="w-full bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white py-2 px-3 rounded-lg flex items-center justify-center gap-2 border border-slate-700/60 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
           >
-            <LogOut className="w-3 h-3 text-slate-400" />
+            <LogOut className="w-3.5 h-3.5 text-slate-400" />
             <span>Sign Out</span>
           </button>
 
           {/* Footer Company Subtext */}
-          <div className="text-[9px] text-slate-500 px-1 text-center font-medium select-none">
+          <div className="text-[9.5px] text-slate-500 px-1 text-center font-medium select-none">
             ACADENO Technologies
           </div>
 
