@@ -238,9 +238,8 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 e.slug.toLowerCase() === decoded.slug.toLowerCase() ||
                 e.name.toLowerCase() === decoded.name.toLowerCase()
               );
-              if (existingIdx >= 0) {
-                merged[existingIdx] = { ...merged[existingIdx], ...decoded, id: merged[existingIdx].id };
-              } else {
+              // Only add decoded fallback if event does not exist in Neon database
+              if (existingIdx < 0) {
                 merged = [decoded, ...merged];
               }
             }
@@ -338,9 +337,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 e.name.toLowerCase() === decodedEvt.name.toLowerCase()
               );
               if (matchIdx >= 0) {
-                const updated = [...prev];
-                updated[matchIdx] = { ...updated[matchIdx], ...decodedEvt, id: updated[matchIdx].id };
-                return updated;
+                return prev; // Never overwrite real database event with fallback dummy data
               }
               return [decodedEvt, ...prev];
             });
@@ -371,21 +368,13 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // Selected event & registrations helper
   const selectedEvent = useMemo(() => {
-    // 1. Try match by selectedEventId
-    if (selectedEventId) {
-      const byId = events.find(e => e.id === selectedEventId);
-      if (byId) return byId;
-      const bySlug = events.find(e => e.slug.toLowerCase() === selectedEventId.toLowerCase());
-      if (bySlug) return bySlug;
-    }
-
-    // 2. Try match from URL query parameters if present
+    // 1. First priority: match URL query parameter against real database events
     if (typeof window !== 'undefined' && window.location.search) {
       const params = new URLSearchParams(window.location.search);
       const eventParam = params.get('event') || params.get('e') || params.get('event_id') || params.get('slug');
       const nameParam = params.get('name') || params.get('title');
 
-      if (eventParam || nameParam || params.get('d') || params.get('data')) {
+      if (eventParam || nameParam) {
         const match = events.find(e => 
           (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) ||
           (eventParam && e.id.toLowerCase() === eventParam.toLowerCase()) ||
@@ -393,13 +382,27 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           (eventParam && e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase())
         );
         if (match) return match;
+      }
+    }
 
+    // 2. Second priority: match by selectedEventId from state
+    if (selectedEventId) {
+      const byId = events.find(e => e.id === selectedEventId);
+      if (byId) return byId;
+      const bySlug = events.find(e => e.slug.toLowerCase() === selectedEventId.toLowerCase());
+      if (bySlug) return bySlug;
+    }
+
+    // 3. Third priority: decode from URL query parameters (for offline or standalone shared links)
+    if (typeof window !== 'undefined' && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('event') || params.get('name') || params.get('d') || params.get('data')) {
         const decoded = decodeEventFromUrlParams(params, organization.id);
         if (decoded) return decoded;
       }
     }
 
-    // 3. Fallback to first available event in list
+    // 4. Fallback to first available event in list
     return events.length > 0 ? events[0] : undefined;
   }, [events, selectedEventId, organization.id]);
   const selectedRegistration = registrations.find(r => r.id === selectedRegistrationId) || (registrations.length > 0 ? registrations[0] : undefined);
