@@ -4,10 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "node server/index.js",
+    "dev:web": "vite",
+    "start": "node server/index.js",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -17,6 +21,8 @@
     "@supabase/supabase-js": "^2.116.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "lucide-react": "^1.42.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.8",
@@ -35,6 +41,7 @@
     "@vitejs/plugin-react": "^6.1.0",
     "autoprefixer": "^10.5.5",
     "oxlint": "^1.79.0",
+    "concurrently": "^9.2.1",
     "postcss": "^8.5.28",
     "prisma": "^6.4.1",
     "tailwindcss": "^4.3.3",

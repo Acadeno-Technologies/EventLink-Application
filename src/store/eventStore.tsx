@@ -264,7 +264,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!isMounted) return;
 
         if (evtsRes.error) {
-          console.warn('[Supabase Cloud Sync Poll Notice - Events]:', evtsRes.error);
+          console.warn('[Neon Sync Poll - Events]:', evtsRes.error);
         } else if (evtsRes.data) {
           setEvents(prev => {
             const map = new Map<string, Event>();
@@ -277,7 +277,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
 
         if (regsRes.error) {
-          console.warn('[Supabase Cloud Sync Poll Notice - Registrations]:', regsRes.error);
+          console.warn('[Neon Sync Poll - Registrations]:', regsRes.error);
         } else if (regsRes.data) {
           setRegistrations(prev => {
             const map = new Map<string, Registration>();
@@ -588,10 +588,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Await cloud sync and check for failure
     const { error } = await syncEventToCloud(finalized);
     if (error) {
-      console.error('[Supabase Cloud Sync Error - Draft]:', error);
-      showToast(`⚠️ Cloud save failed: ${error.message || 'Database error'}. Saved to local cache.`);
+      console.error('[Neon Sync Error - Draft]:', error);
+      showToast(`⚠️ Neon save failed: ${error.message || 'Database error'}. Saved to local cache.`);
     } else {
-      showToast('Draft saved to Cloud successfully');
+      showToast('Draft saved to Neon successfully');
     }
 
     return finalized;
@@ -664,10 +664,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Await cloud sync and check for failure
     const { error } = await syncEventToCloud(publishedEvent);
     if (error) {
-      console.error('[Supabase Cloud Sync Error - Publish]:', error);
-      showToast(`⚠️ Cloud save failed: ${error.message || 'Database error'}. Saved to local cache.`);
+      console.error('[Neon Sync Error - Publish]:', error);
+      showToast(`⚠️ Neon save failed: ${error.message || 'Database error'}. Saved to local cache.`);
     } else {
-      showToast(`🎉 "${publishedEvent.name}" is published and live in Cloud!`);
+      showToast(`🎉 "${publishedEvent.name}" is published and saved to Neon.`);
     }
     
     return publishedEvent;
@@ -685,10 +685,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (updatedEvt) {
       const { error } = await syncEventToCloud(updatedEvt);
       if (error) {
-        console.error('[Supabase Cloud Sync Error - Update]:', error);
-        showToast(`⚠️ Cloud update failed: ${error.message || 'Database error'}. Updated locally.`);
+        console.error('[Neon Sync Error - Update]:', error);
+        showToast(`⚠️ Neon update failed: ${error.message || 'Database error'}. Updated locally.`);
       } else {
-        showToast('Event updated in Cloud');
+        showToast('Event updated in Neon');
       }
     }
   };
@@ -698,10 +698,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setRegistrations(prev => prev.filter(r => r.event_id !== eventId));
     const { error } = await deleteEventFromCloud(eventId);
     if (error) {
-      console.error('[Supabase Cloud Sync Error - Delete]:', error);
-      showToast(`⚠️ Cloud deletion failed: ${error.message || 'Database error'}`);
+      console.error('[Neon Sync Error - Delete]:', error);
+      showToast(`⚠️ Neon deletion failed: ${error.message || 'Database error'}`);
     } else {
-      showToast('Event deleted from Cloud');
+      showToast('Event deleted from Neon');
     }
     return true;
   };
@@ -760,8 +760,8 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Await cloud sync for registration with auto-healing parent event sync
     const { error } = await syncRegistrationToCloud(newReg, targetEvt);
     if (error) {
-      console.error('[Supabase Registration Cloud Sync Error]:', error);
-      showToast(`⚠️ Registration pass generated, but Cloud sync failed: ${error.message || 'Database error'}`);
+      console.error('[Neon Registration Sync Error]:', error);
+      showToast(`⚠️ Registration pass generated, but Neon sync failed: ${error.message || 'Database error'}`);
     }
 
     return newReg;
@@ -780,10 +780,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (updatedReg) {
       const { error } = await syncRegistrationToCloud(updatedReg);
       if (error) {
-        console.error('[Supabase Registration Update Cloud Sync Error]:', error);
-        showToast(`⚠️ Cloud update failed: ${error.message || 'Database error'}`);
+        console.error('[Neon Registration Update Sync Error]:', error);
+        showToast(`⚠️ Neon update failed: ${error.message || 'Database error'}`);
       } else {
-        showToast('Registration updated in Cloud');
+        showToast('Registration updated in Neon');
       }
     }
   };
@@ -792,10 +792,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setRegistrations(prev => prev.filter(r => r.id !== regId));
     const { error } = await deleteRegistrationFromCloud(regId);
     if (error) {
-      console.error('[Supabase Registration Delete Cloud Sync Error]:', error);
-      showToast(`⚠️ Cloud delete failed: ${error.message || 'Database error'}`);
+      console.error('[Neon Registration Delete Sync Error]:', error);
+      showToast(`⚠️ Neon delete failed: ${error.message || 'Database error'}`);
     } else {
-      showToast('Registration deleted from Cloud');
+      showToast('Registration deleted from Neon');
     }
   };
 

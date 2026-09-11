@@ -1,15 +1,13 @@
 services:
   - type: web
     name: acadeno-eventlink
-    env: static
-    buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    runtime: node
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
     envVars:
-      - key: VITE_SUPABASE_URL
-        value: https://pvsnehkntsbljgqagkbi.supabase.co
-      - key: VITE_SUPABASE_ANON_KEY
-        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2c25laGtudHNibGpncWFna2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMzUyNDcsImV4cCI6MjEwNDYxMTI0N30.ZECkP606S1eGlt_UAq4qhVffuTm66jQlSw8zMOB2rmE
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
