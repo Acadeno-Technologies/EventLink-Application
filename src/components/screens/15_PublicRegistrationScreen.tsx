@@ -407,7 +407,10 @@ export const PublicRegistrationScreen: React.FC = () => {
 
         {/* Form Body */}
         <div className="p-6 sm:p-8">
-          <p className="text-xs text-slate-600 leading-relaxed mb-6 font-medium">
+          <p 
+            className="text-xs leading-relaxed mb-6 font-medium"
+            style={{ color: theme.colors.text || '#475569', opacity: 0.85 }}
+          >
             {evt.short_description || 'Hands-on session on practical AI automation for daily work.'}
           </p>
 
@@ -431,7 +434,10 @@ export const PublicRegistrationScreen: React.FC = () => {
               return (
                 <div key={f.id} className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-slate-800">
+                    <label 
+                      className="block text-xs font-bold"
+                      style={{ color: theme.colors.text || '#1E293B' }}
+                    >
                       {f.label} {f.required && <span className="text-rose-500">*</span>}
                     </label>
 

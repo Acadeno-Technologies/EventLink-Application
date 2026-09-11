@@ -221,71 +221,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
           {/* ========================================================================= */}
           <div className="lg:col-span-7 space-y-6">
             
-            {/* SECTION 1 — THEMATIC TEMPLATES */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-6 shadow-[0_2px_12px_rgba(7,26,51,0.04)] space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
-                    Thematic Templates
-                  </h3>
-                  <p className="text-xs text-[#7184A3] mt-0.5">
-                    Choose a ready-made theme or customize it to match your event style.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="px-3 py-1.5 rounded-xl border border-[#DCE5F0] bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
-                >
-                  <Eye className="w-3.5 h-3.5 text-[#1463FF]" />
-                  <span>Preview</span>
-                </button>
-              </div>
 
-              {/* 7 Theme Cards in Clean Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {presets.map((p) => {
-                  const isSelected = currentTheme.template === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => handleSelectPreset(p.id)}
-                      className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden cursor-pointer flex items-center justify-between gap-3 ${
-                        isSelected
-                          ? 'border-[#1463FF] bg-[#F8FAFC] ring-2 ring-[#1463FF]/15 shadow-2xs'
-                          : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div 
-                          className="w-5 h-5 rounded-lg shrink-0 border border-white shadow-2xs" 
-                          style={{ backgroundColor: p.previewColor }} 
-                        />
-                        <div className="min-w-0">
-                          <div className="font-bold text-xs text-[#101B33] truncate">
-                            {p.label}
-                          </div>
-                          <div className="text-[11px] text-[#7184A3] truncate font-medium mt-0.5">
-                            {p.desc}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Radio Selection Indicator */}
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                        isSelected
-                          ? 'border-[#1463FF] bg-[#1463FF]'
-                          : 'border-slate-300 bg-white'
-                      }`}>
-                        {isSelected && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
 
             {/* SECTION 2 — CUSTOM COLORS & BRANDING */}
             <div className="bg-white rounded-2xl border border-[#DCE5F0] p-6 shadow-[0_2px_12px_rgba(7,26,51,0.04)] space-y-4">
@@ -679,14 +615,23 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 </div>
 
                 {/* White Registration Form Card */}
-                <div className="bg-white rounded-t-3xl p-5 -mt-3 shadow-md flex-1 flex flex-col justify-between space-y-4">
+                <div 
+                  className="bg-white rounded-t-3xl p-5 -mt-3 shadow-md flex-1 flex flex-col justify-between space-y-4"
+                  style={{ color: currentTheme.colors.text || '#101B33' }}
+                >
                   
                   <div className="space-y-3">
                     <div>
-                      <h5 className="text-xs font-bold text-[#101B33]">
+                      <h5 
+                        className="text-xs font-bold transition-colors"
+                        style={{ color: currentTheme.colors.text || '#101B33' }}
+                      >
                         Register for this event
                       </h5>
-                      <p className="text-[10px] text-[#7184A3] mt-0.5">
+                      <p 
+                        className="text-[10px] mt-0.5 transition-colors"
+                        style={{ color: currentTheme.colors.text || '#7184A3', opacity: 0.75 }}
+                      >
                         Fill in the details below to secure your spot.
                       </p>
                     </div>
@@ -694,38 +639,50 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     {/* Dummy/Actual Form Fields */}
                     <div className="space-y-2">
                       <div>
-                        <label className="block text-[10px] font-bold text-[#101B33] mb-1">
+                        <label 
+                          className="block text-[10px] font-bold mb-1 transition-colors"
+                          style={{ color: currentTheme.colors.text || '#101B33' }}
+                        >
                           Full Name <span className="text-[#E5484D]">*</span>
                         </label>
                         <input
                           type="text"
                           disabled
                           placeholder="Enter your full name"
-                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] text-slate-700 placeholder-[#91A4C0]"
+                          style={{ color: currentTheme.colors.text || '#334155' }}
+                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] placeholder-[#91A4C0]"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-[#101B33] mb-1">
+                        <label 
+                          className="block text-[10px] font-bold mb-1 transition-colors"
+                          style={{ color: currentTheme.colors.text || '#101B33' }}
+                        >
                           Email Address <span className="text-[#E5484D]">*</span>
                         </label>
                         <input
                           type="email"
                           disabled
                           placeholder="you@example.com"
-                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] text-slate-700 placeholder-[#91A4C0]"
+                          style={{ color: currentTheme.colors.text || '#334155' }}
+                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] placeholder-[#91A4C0]"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-[#101B33] mb-1">
+                        <label 
+                          className="block text-[10px] font-bold mb-1 transition-colors"
+                          style={{ color: currentTheme.colors.text || '#101B33' }}
+                        >
                           Mobile Number <span className="text-[#E5484D]">*</span>
                         </label>
                         <input
                           type="text"
                           disabled
                           placeholder="+91 98765 43210"
-                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] text-slate-700 placeholder-[#91A4C0]"
+                          style={{ color: currentTheme.colors.text || '#334155' }}
+                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] placeholder-[#91A4C0]"
                         />
                       </div>
                     </div>
@@ -745,8 +702,11 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
 
-                    <div className="text-[10px] text-center text-[#7184A3]">
-                      Already have an account? <span className="text-[#1463FF] font-semibold hover:underline cursor-pointer">Sign In</span>
+                    <div 
+                      className="text-[10px] text-center font-medium transition-colors"
+                      style={{ color: currentTheme.colors.text || '#7184A3', opacity: 0.8 }}
+                    >
+                      Already have an account? <span className="font-bold underline cursor-pointer" style={{ color: currentTheme.colors.button || '#1463FF', opacity: 1 }}>Sign In</span>
                     </div>
                   </div>
 

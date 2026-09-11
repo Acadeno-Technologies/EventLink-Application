@@ -278,23 +278,33 @@ export const WizardPreviewPublishScreen: React.FC = () => {
               </div>
 
               {/* Form Schema Content */}
-              <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+              <div 
+                className="p-5 space-y-4 flex-1 flex flex-col justify-between"
+                style={{ color: theme.colors.text || '#0F172A' }}
+              >
                 <div>
-                  <div className="text-xs text-slate-600 leading-relaxed mb-4">
+                  <div 
+                    className="text-xs leading-relaxed mb-4"
+                    style={{ color: theme.colors.text || '#475569', opacity: 0.85 }}
+                  >
                     {wizardDraft.short_description || 'Hands-on workshop on practical AI automation.'}
                   </div>
 
                   <div className="space-y-3">
                     {fields.map((f) => (
                       <div key={f.id} className="space-y-1">
-                        <label className="block text-xs font-bold text-slate-800">
+                        <label 
+                          className="block text-xs font-bold"
+                          style={{ color: theme.colors.text || '#1E293B' }}
+                        >
                           {f.label} {f.required && <span className="text-rose-500">*</span>}
                         </label>
                         <input
                           type="text"
                           disabled
                           placeholder={f.placeholder || `Enter ${f.label}`}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-700"
+                          style={{ color: theme.colors.text || '#334155' }}
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs"
                         />
                       </div>
                     ))}
