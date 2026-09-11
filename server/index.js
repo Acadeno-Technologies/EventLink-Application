@@ -12,7 +12,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist');
 
 app.use(cors({ origin: true }));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 function isValidUUID(str) {
   return typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -63,7 +64,7 @@ function mapEvent(row) {
     name: row.name,
     slug: row.slug,
     short_description: row.short_description || '',
-    banner_url: row.banner_url || '',
+    banner_url: row.banner_url || row.theme?.banner_url || '',
     venue: row.venue || '',
     start_date: dateOnly(row.start_date),
     end_date: dateOnly(row.end_date || row.start_date),
@@ -80,6 +81,7 @@ function mapEvent(row) {
       colors: {},
       typography: {},
       layout: 'centered',
+      banner_url: row.banner_url || null,
     },
     settings: {
       registration_opens_at: toIso(row.registration_opens_at) || '',
@@ -123,24 +125,36 @@ function mapUser(row) {
     org_id: row.org_id,
     name: row.name,
     email: row.email,
-    password: row.password_hash || 'Acadeno2026!',
-    role: row.role || 'staff',
-    status: row.status || 'active',
-    department: row.role === 'super_admin' ? 'Executive Administration' : 'Operations',
+    role: row.role,
+    status: row.status,
+    department: 'Executive Administration',
     last_login_at: toIso(row.last_login_at),
     created_at: toIso(row.created_at),
   };
 }
 
 async function upsertEvent(event) {
-  const eventUuid = isValidUUID(event.id) ? event.id : crypto.randomUUID();
   const orgUuid = isValidUUID(event.org_id) ? event.org_id : DEFAULT_ORG_ID;
   const userUuid = isValidUUID(event.created_by) ? event.created_by : DEFAULT_USER_ID;
   const rawSlug =
     event.slug ||
     (event.name ? String(event.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `event-${Date.now()}`);
-  const slug = await uniqueEventSlug(orgUuid, rawSlug, eventUuid);
+
+  let existingEvent = null;
+  if (isValidUUID(event.id)) {
+    existingEvent = await prisma.event.findUnique({ where: { id: event.id } });
+  }
+  if (!existingEvent && rawSlug) {
+    existingEvent = await prisma.event.findFirst({
+      where: { org_id: orgUuid, slug: rawSlug.toLowerCase() },
+    });
+  }
+
+  const eventUuid = existingEvent ? existingEvent.id : (isValidUUID(event.id) ? event.id : crypto.randomUUID());
+  const slug = rawSlug.toLowerCase();
   const status = mapEventStatus(event.status);
+  const bannerUrl = event.banner_url || event.theme?.banner_url || null;
+  const venue = event.venue || 'Virtual / Online';
 
   const saved = await prisma.event.upsert({
     where: { id: eventUuid },
@@ -149,8 +163,8 @@ async function upsertEvent(event) {
       name: event.name || 'Untitled Event',
       slug,
       short_description: event.short_description || '',
-      banner_url: event.banner_url || null,
-      venue: event.venue || 'Virtual / Online',
+      banner_url: bannerUrl,
+      venue,
       start_date: new Date(dateOnly(event.start_date)),
       end_date: new Date(dateOnly(event.end_date || event.start_date)),
       start_time: event.start_time || '10:00 AM',
@@ -173,8 +187,8 @@ async function upsertEvent(event) {
       name: event.name || 'Untitled Event',
       slug,
       short_description: event.short_description || '',
-      banner_url: event.banner_url || null,
-      venue: event.venue || 'Virtual / Online',
+      banner_url: bannerUrl,
+      venue,
       start_date: new Date(dateOnly(event.start_date)),
       end_date: new Date(dateOnly(event.end_date || event.start_date)),
       start_time: event.start_time || '10:00 AM',
@@ -209,25 +223,26 @@ async function upsertEvent(event) {
     });
   }
 
-  if (event.theme) {
+  if (event.theme || bannerUrl) {
+    const themeObj = event.theme || {};
     await prisma.eventTheme.upsert({
       where: { event_id: eventUuid },
       update: {
-        template: event.theme.template || 'workshop',
-        colors: event.theme.colors || {},
-        typography: event.theme.typography || {},
-        layout: event.theme.layout || 'centered',
-        logo_url: event.theme.logo_url || null,
-        banner_url: event.theme.banner_url || null,
+        template: themeObj.template || 'workshop',
+        colors: themeObj.colors || {},
+        typography: themeObj.typography || {},
+        layout: themeObj.layout || 'centered',
+        logo_url: themeObj.logo_url || null,
+        banner_url: bannerUrl,
       },
       create: {
         event_id: eventUuid,
-        template: event.theme.template || 'workshop',
-        colors: event.theme.colors || {},
-        typography: event.theme.typography || {},
-        layout: event.theme.layout || 'centered',
-        logo_url: event.theme.logo_url || null,
-        banner_url: event.theme.banner_url || null,
+        template: themeObj.template || 'workshop',
+        colors: themeObj.colors || {},
+        typography: themeObj.typography || {},
+        layout: themeObj.layout || 'centered',
+        logo_url: themeObj.logo_url || null,
+        banner_url: bannerUrl,
       },
     });
   }

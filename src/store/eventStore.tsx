@@ -703,7 +703,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       updated_at: new Date().toISOString(),
       views_count: wizardDraft.views_count || 1,
       form_schema: wizardDraft.form_schema || [],
-      theme: wizardDraft.theme || themePresets.workshop,
+      theme: {
+        ...(wizardDraft.theme || themePresets.workshop),
+        banner_url: wizardDraft.banner_url || wizardDraft.theme?.banner_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80',
+      },
       settings: wizardDraft.settings || {
         max_registrations: 100,
         require_payment: false,
@@ -718,7 +721,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     setEvents(prev => {
-      const idx = prev.findIndex(e => e.id === publishedEvent.id);
+      const idx = prev.findIndex(e => e.id === publishedEvent.id || e.slug.toLowerCase() === publishedEvent.slug.toLowerCase());
       if (idx >= 0) {
         const copy = [...prev];
         copy[idx] = publishedEvent;
