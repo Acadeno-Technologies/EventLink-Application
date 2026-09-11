@@ -269,16 +269,16 @@ export const WizardThemeBuilderScreen: React.FC = () => {
         </div>
 
         {/* Main Grid: Left Column Cards + Right Column Live Preview Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
           
           {/* ========================================================================= */}
           {/* LEFT COLUMN: 3 INDIVIDUAL CUSTOMIZATION CARDS (lg:col-span-7)              */}
           {/* ========================================================================= */}
-          <div className="lg:col-span-7 flex flex-col justify-between gap-3 h-full">
+          <div className="lg:col-span-7 space-y-4">
             
             {/* CARD 1 — CUSTOM COLORS & BRANDING */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-4.5 shadow-[0_2px_12px_rgba(7,26,51,0.03)] space-y-2.5">
-              <div className="border-b border-slate-100 pb-2">
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_2px_12px_rgba(7,26,51,0.03)] space-y-3">
+              <div className="border-b border-slate-100 pb-2.5">
                 <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
                   Custom Colors & Branding
                 </h3>
@@ -287,26 +287,26 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 
                 {/* 1. Primary Header Color */}
-                <div className="space-y-1">
-                  <label className="block text-xs sm:text-[12px] font-bold text-[#101B33] truncate">
+                <div className="space-y-1.5">
+                  <label className="block text-xs sm:text-[12.5px] font-bold text-[#101B33] truncate">
                     Primary Header
                   </label>
-                  <div className="flex items-center justify-between h-9 px-2.5 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-2 focus-within:ring-[#1463FF]/10 transition-all cursor-pointer">
+                  <div className="flex items-center justify-between h-10 px-2.5 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-2 focus-within:ring-[#1463FF]/10 transition-all cursor-pointer">
                     <div className="flex items-center min-w-0 mr-1 flex-1">
                       <input
                         type="color"
                         value={currentTheme.colors.primary}
                         onChange={(e) => handleUpdateColors('primary', e.target.value)}
-                        className="w-4.5 h-4.5 rounded-md cursor-pointer border-0 p-0 mr-2 bg-transparent shrink-0"
+                        className="w-5 h-5 rounded-md cursor-pointer border-0 p-0 mr-2 bg-transparent shrink-0"
                       />
                       <input
                         type="text"
                         value={currentTheme.colors.primary}
                         onChange={(e) => handleUpdateColors('primary', e.target.value)}
-                        className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
+                        className="w-full text-xs sm:text-[12.5px] font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
                       />
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0 pointer-events-none" />
@@ -314,23 +314,23 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 </div>
 
                 {/* 2. Accent Button Color */}
-                <div className="space-y-1">
-                  <label className="block text-xs sm:text-[12px] font-bold text-[#101B33] truncate">
+                <div className="space-y-1.5">
+                  <label className="block text-xs sm:text-[12.5px] font-bold text-[#101B33] truncate">
                     Accent Button
                   </label>
-                  <div className="flex items-center justify-between h-9 px-2.5 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-2 focus-within:ring-[#1463FF]/10 transition-all cursor-pointer">
+                  <div className="flex items-center justify-between h-10 px-2.5 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-2 focus-within:ring-[#1463FF]/10 transition-all cursor-pointer">
                     <div className="flex items-center min-w-0 mr-1 flex-1">
                       <input
                         type="color"
                         value={currentTheme.colors.button}
                         onChange={(e) => handleUpdateColors('button', e.target.value)}
-                        className="w-4.5 h-4.5 rounded-md cursor-pointer border-0 p-0 mr-2 bg-transparent shrink-0"
+                        className="w-5 h-5 rounded-md cursor-pointer border-0 p-0 mr-2 bg-transparent shrink-0"
                       />
                       <input
                         type="text"
                         value={currentTheme.colors.button}
                         onChange={(e) => handleUpdateColors('button', e.target.value)}
-                        className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
+                        className="w-full text-xs sm:text-[12.5px] font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
                       />
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0 pointer-events-none" />
@@ -338,23 +338,23 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 </div>
 
                 {/* 3. Page Background Color */}
-                <div className="space-y-1">
-                  <label className="block text-xs sm:text-[12px] font-bold text-[#101B33] truncate">
+                <div className="space-y-1.5">
+                  <label className="block text-xs sm:text-[12.5px] font-bold text-[#101B33] truncate">
                     Page Background
                   </label>
-                  <div className="flex items-center justify-between h-9 px-2.5 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-2 focus-within:ring-[#1463FF]/10 transition-all cursor-pointer">
+                  <div className="flex items-center justify-between h-10 px-2.5 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-2 focus-within:ring-[#1463FF]/10 transition-all cursor-pointer">
                     <div className="flex items-center min-w-0 mr-1 flex-1">
                       <input
                         type="color"
                         value={currentTheme.colors.background}
                         onChange={(e) => handleUpdateColors('background', e.target.value)}
-                        className="w-4.5 h-4.5 rounded-md cursor-pointer border-0 p-0 mr-2 bg-transparent shrink-0"
+                        className="w-5 h-5 rounded-md cursor-pointer border-0 p-0 mr-2 bg-transparent shrink-0"
                       />
                       <input
                         type="text"
                         value={currentTheme.colors.background}
                         onChange={(e) => handleUpdateColors('background', e.target.value)}
-                        className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
+                        className="w-full text-xs sm:text-[12.5px] font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
                       />
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0 pointer-events-none" />
@@ -362,23 +362,23 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 </div>
 
                 {/* 4. Text & Heading Color */}
-                <div className="space-y-1">
-                  <label className="block text-xs sm:text-[12px] font-bold text-[#101B33] truncate">
+                <div className="space-y-1.5">
+                  <label className="block text-xs sm:text-[12.5px] font-bold text-[#101B33] truncate">
                     Text & Heading
                   </label>
-                  <div className="flex items-center justify-between h-9 px-2.5 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-2 focus-within:ring-[#1463FF]/10 transition-all cursor-pointer">
+                  <div className="flex items-center justify-between h-10 px-2.5 bg-white border border-[#DCE5F0] rounded-xl focus-within:border-[#1463FF] focus-within:ring-2 focus-within:ring-[#1463FF]/10 transition-all cursor-pointer">
                     <div className="flex items-center min-w-0 mr-1 flex-1">
                       <input
                         type="color"
                         value={currentTheme.colors.text}
                         onChange={(e) => handleUpdateColors('text', e.target.value)}
-                        className="w-4.5 h-4.5 rounded-md cursor-pointer border-0 p-0 mr-2 bg-transparent shrink-0"
+                        className="w-5 h-5 rounded-md cursor-pointer border-0 p-0 mr-2 bg-transparent shrink-0"
                       />
                       <input
                         type="text"
                         value={currentTheme.colors.text}
                         onChange={(e) => handleUpdateColors('text', e.target.value)}
-                        className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
+                        className="w-full text-xs sm:text-[12.5px] font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
                       />
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0 pointer-events-none" />
@@ -389,7 +389,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
             </div>
 
             {/* CARD 2 — BANNER IMAGE & BRANDING LOGO */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-4.5 shadow-[0_2px_12px_rgba(7,26,51,0.03)] space-y-2.5">
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_2px_12px_rgba(7,26,51,0.03)] space-y-3">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <div>
                   <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
@@ -426,34 +426,34 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                         });
                       }}
                       placeholder="https://images.unsplash.com/... or direct image link"
-                      className="w-full h-9.5 pl-10 pr-4 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] font-medium"
+                      className="w-full h-10 pl-10 pr-4 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] font-medium"
                     />
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-center">
                   
                   {/* Upload Box */}
-                  <label className="sm:col-span-8 bg-[#F8FAFC] hover:bg-[#F1F5F9] border-2 border-dashed border-[#CBD5E1] hover:border-[#1463FF] rounded-xl px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition-all">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-[#EFF6FF] text-[#1463FF] flex items-center justify-center shrink-0 border border-blue-100">
+                  <label className="sm:col-span-8 bg-[#F8FAFC] hover:bg-[#F1F5F9] border-2 border-dashed border-[#CBD5E1] hover:border-[#1463FF] rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition-all">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] text-[#1463FF] flex items-center justify-center shrink-0 border border-blue-100">
                         {isUploadingBanner ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Upload className="w-3.5 h-3.5" />
+                          <Upload className="w-4 h-4" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs sm:text-[12.5px] font-bold text-[#101B33] truncate">
+                        <div className="text-xs sm:text-[13px] font-bold text-[#101B33] truncate">
                           {isUploadingBanner ? 'Uploading...' : 'Upload banner image'}
                         </div>
-                        <div className="text-[10.5px] text-[#7184A3] font-medium truncate">
+                        <div className="text-[11px] text-[#7184A3] font-medium truncate mt-0.5">
                           Recommended: 1920 × 640 (JPG, PNG)
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-white hover:bg-slate-50 text-slate-700 border border-[#DCE5F0] text-xs font-semibold px-2.5 py-1 rounded-lg transition-all shrink-0 shadow-2xs">
+                    <div className="bg-white hover:bg-slate-50 text-slate-700 border border-[#DCE5F0] text-xs font-semibold px-3 py-1.5 rounded-lg transition-all shrink-0 shadow-2xs">
                       Browse
                     </div>
                     <input
@@ -466,7 +466,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                   </label>
 
                   {/* Banner Thumbnail */}
-                  <div className="sm:col-span-4 relative h-[52px] rounded-xl overflow-hidden border border-[#DCE5F0] shadow-2xs bg-slate-900 group">
+                  <div className="sm:col-span-4 relative h-[58px] rounded-xl overflow-hidden border border-[#DCE5F0] shadow-2xs bg-slate-900 group">
                     <img
                       src={currentBanner}
                       alt="Banner preview"
@@ -486,7 +486,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                           }
                         });
                       }}
-                      className="w-5 h-5 bg-white/95 hover:bg-white text-slate-600 hover:text-rose-600 rounded-full flex items-center justify-center shadow-md border border-slate-200 absolute top-1 right-1 transition-colors cursor-pointer"
+                      className="w-5 h-5 bg-white/95 hover:bg-white text-slate-600 hover:text-rose-600 rounded-full flex items-center justify-center shadow-md border border-slate-200 absolute top-1.5 right-1.5 transition-colors cursor-pointer"
                       title="Delete banner"
                     >
                       <Trash2 className="w-2.5 h-2.5" />
@@ -497,8 +497,8 @@ export const WizardThemeBuilderScreen: React.FC = () => {
               )}
 
               {/* Sample Covers Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto select-none no-scrollbar pt-0.5">
-                <span className="text-[11px] text-[#7184A3] font-bold uppercase tracking-wider shrink-0">
+              <div className="flex items-center gap-2 overflow-x-auto select-none no-scrollbar pt-1">
+                <span className="text-xs text-[#7184A3] font-bold uppercase tracking-wider shrink-0">
                   SAMPLE COVERS:
                 </span>
                 {bannerPresets.map((preset, idx) => {
@@ -516,7 +516,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                           }
                         });
                       }}
-                      className={`text-xs font-semibold px-2.5 py-0.5 rounded-lg border transition-all shrink-0 cursor-pointer ${
+                      className={`text-xs sm:text-[12.5px] font-semibold px-3 py-1 rounded-xl border transition-all shrink-0 cursor-pointer ${
                         isSelected
                           ? 'bg-[#F0F5FF] border-[#1463FF] text-[#1463FF] font-bold shadow-2xs'
                           : 'bg-white border-[#DCE5F0] text-slate-600 hover:bg-slate-50 hover:text-slate-900'
@@ -530,9 +530,10 @@ export const WizardThemeBuilderScreen: React.FC = () => {
 
             </div>
 
+            {/* CARD 3 — TYPOGRAPHY & FONT FAMILY */}
             {/* CARD 3 — TYPOGRAPHY & FONT FAMILY WITH SEARCH & APPLY */}
-            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-4 sm:p-4.5 shadow-[0_2px_12px_rgba(7,26,51,0.03)] flex-1 flex flex-col justify-between space-y-2.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_2px_12px_rgba(7,26,51,0.03)] space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
                 <div>
                   <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
                     Typography & Font Family
@@ -550,13 +551,13 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     value={fontSearch}
                     onChange={(e) => setFontSearch(e.target.value)}
                     placeholder="Search fonts (e.g. Roboto, Serif...)"
-                    className="w-full sm:w-56 h-8 pl-8 pr-7 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:border-[#1463FF] focus:ring-2 focus:ring-[#1463FF]/10 transition-all font-medium"
+                    className="w-full sm:w-56 h-8.5 pl-8 pr-7 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:border-[#1463FF] focus:ring-2 focus:ring-[#1463FF]/10 transition-all font-medium"
                   />
                   {fontSearch && (
                     <button
                       type="button"
                       onClick={() => setFontSearch('')}
-                      className="w-4 h-4 text-slate-400 hover:text-slate-600 absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer"
+                      className="w-4 h-4 text-slate-400 hover:text-slate-600 absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer"
                       title="Clear search"
                     >
                       <X className="w-3 h-3" />
@@ -566,7 +567,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
               </div>
 
               {/* Font Options Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1 content-start max-h-56 overflow-y-auto pr-0.5 no-scrollbar">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-h-56 overflow-y-auto pr-0.5 no-scrollbar">
                 {filteredFonts.map((font) => {
                   const isSelected = currentTheme.typography.fontFamily.toLowerCase() === font.id.toLowerCase();
                   return (
@@ -574,7 +575,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       key={font.id}
                       type="button"
                       onClick={() => handleUpdateFont(font.id)}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
                         isSelected
                           ? 'border-[#1463FF] bg-[#F0F5FF]/70 ring-2 ring-[#1463FF]/15 shadow-2xs'
                           : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
@@ -582,23 +583,23 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     >
                       <div className="min-w-0">
                         <div 
-                          className="text-xs sm:text-[12.5px] font-bold text-[#101B33] truncate"
+                          className="text-xs sm:text-[13px] font-bold text-[#101B33] truncate"
                           style={{ fontFamily: font.id }}
                         >
                           {font.label}
                         </div>
-                        <div className="text-[10px] text-[#7184A3] font-medium mt-0.5 truncate">
+                        <div className="text-[10.5px] text-[#7184A3] font-medium mt-0.5 truncate">
                           {font.desc}
                         </div>
                       </div>
 
-                      <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                         isSelected
                           ? 'border-[#1463FF] bg-[#1463FF]'
                           : 'border-slate-300 bg-white'
                       }`}>
                         {isSelected && (
-                          <div className="w-1 h-1 rounded-full bg-white" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
                         )}
                       </div>
                     </button>
@@ -610,18 +611,18 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleUpdateFont(fontSearch.trim())}
-                    className="p-2.5 rounded-xl border-2 border-dashed border-[#1463FF]/40 bg-[#F0F5FF]/40 hover:bg-[#F0F5FF] text-left transition-all cursor-pointer flex items-center justify-between gap-2 col-span-2 sm:col-span-4"
+                    className="p-3 rounded-xl border-2 border-dashed border-[#1463FF]/40 bg-[#F0F5FF]/40 hover:bg-[#F0F5FF] text-left transition-all cursor-pointer flex items-center justify-between gap-2 col-span-2 sm:col-span-4"
                   >
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-[#1463FF] flex items-center gap-1.5 truncate">
+                      <div className="text-xs sm:text-[13px] font-bold text-[#1463FF] flex items-center gap-1.5 truncate">
                         <Sparkles className="w-3.5 h-3.5 shrink-0" />
                         <span>Apply Google Font: "{fontSearch.trim()}"</span>
                       </div>
-                      <div className="text-[10px] text-slate-500 font-medium mt-0.5">
+                      <div className="text-[10.5px] text-slate-500 font-medium mt-0.5">
                         Load and apply this custom Google Font style directly to your event.
                       </div>
                     </div>
-                    <div className="bg-[#1463FF] text-white text-[10.5px] font-bold px-2.5 py-1 rounded-lg shrink-0 shadow-2xs">
+                    <div className="bg-[#1463FF] text-white text-[11px] font-bold px-3 py-1 rounded-lg shrink-0 shadow-2xs">
                       Apply Font
                     </div>
                   </button>
