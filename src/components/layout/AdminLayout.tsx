@@ -156,7 +156,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full animate-fade-in">
+        <main className="flex-1 p-4 sm:p-5 lg:p-6 w-full animate-fade-in">
           {(pageTitle || headerAction) && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200/80">
               <div>
