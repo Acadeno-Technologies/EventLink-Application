@@ -64,12 +64,27 @@ export const WizardBasicInfoScreen: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  // Helper to automatically convert entered text to Title/Camel Case (capitalizing first letters)
+  const toTitleCase = (val: string) => {
+    if (!val) return '';
+    return val.replace(/(^|\s|\-)([a-z])/g, (_, boundary, char) => boundary + char.toUpperCase());
+  };
+
   const handleNameChange = (val: string) => {
-    const slugVal = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const formattedName = toTitleCase(val);
+    const slugVal = formattedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     updateWizardDraft({ 
-      name: val,
+      name: formattedName,
       slug: wizardDraft.slug && wizardDraft.slug !== '' ? wizardDraft.slug : slugVal
     });
+  };
+
+  const handleVenueChange = (val: string) => {
+    if (val.trim().startsWith('http://') || val.trim().startsWith('https://')) {
+      updateWizardDraft({ venue: val });
+    } else {
+      updateWizardDraft({ venue: toTitleCase(val) });
+    }
   };
 
   const handleBlur = () => {
@@ -299,7 +314,7 @@ export const WizardBasicInfoScreen: React.FC = () => {
                 type="text"
                 required
                 value={wizardDraft.venue || ''}
-                onChange={(e) => updateWizardDraft({ venue: e.target.value })}
+                onChange={(e) => handleVenueChange(e.target.value)}
                 onBlur={handleBlur}
                 placeholder="e.g. ACADENO Conference Hall, Kozhikode or Google Meet Link"
                 className="w-full h-10 pl-9 pr-3 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-[13px] text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-2 focus:ring-[#1463FF]/15 focus:border-[#1463FF] transition-all font-medium"
