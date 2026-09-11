@@ -103,13 +103,50 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
       const screenParam = params.get('screen') as ScreenId | null;
       if (screenParam) return screenParam;
+
+      // If user has an active session, restore last screen or go to dashboard
+      const savedUser = localStorage.getItem('acadeno_session_user');
+      const savedScreen = localStorage.getItem('acadeno_current_screen') as ScreenId | null;
+      if (savedUser) {
+        if (savedScreen && savedScreen !== '01_login') {
+          return savedScreen;
+        }
+        return '02_dashboard';
+      }
     }
     return '01_login';
   });
 
-  const [currentRole, setCurrentRole] = useState<UserRole>('super_admin');
+  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('acadeno_session_user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.role) return parsed.role;
+        }
+      } catch (e) {}
+    }
+    return 'super_admin';
+  });
+
   const [users, setUsers] = useState<User[]>(initialUsers);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('acadeno_session_user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.email) return parsed;
+        }
+      } catch (e) {
+        console.warn('Failed to restore user session:', e);
+      }
+    }
+    return null;
+  });
+
   const [organization, setOrganization] = useState<Organization>(initialOrganization);
   const [events, setEvents] = useState<Event[]>(() => {
     if (typeof window !== 'undefined') {
@@ -142,6 +179,17 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
+
+  // Sync session user to local storage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (currentUser) {
+        localStorage.setItem('acadeno_session_user', JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem('acadeno_session_user');
+      }
+    }
+  }, [currentUser]);
 
   // Sync to local storage on changes
   useEffect(() => {
@@ -415,6 +463,9 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const setScreen = (screen: ScreenId) => {
     setCurrentScreen(screen);
+    if (typeof window !== 'undefined' && screen !== '01_login') {
+      localStorage.setItem('acadeno_current_screen', screen);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -488,6 +539,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const logout = () => {
     setCurrentUser(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('acadeno_session_user');
+      localStorage.removeItem('acadeno_current_screen');
+    }
     setScreen('01_login');
     showToast('Logged out successfully');
   };
