@@ -4,6 +4,9 @@ import { Event, Registration } from '../types';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+export const DEFAULT_ORG_ID = 'f56b03a9-9097-4638-8c4a-6f68227b2789';
+export const DEFAULT_USER_ID = 'd79ebd86-73b7-4f55-9108-cdda19919cf0';
+
 if (!supabaseUrl || !supabaseAnonKey) {
   const missing = [];
   if (!supabaseUrl) missing.push('VITE_SUPABASE_URL');
@@ -15,9 +18,34 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
-// Dev-only initialization diagnostic log
-if (import.meta.env.DEV && supabaseUrl) {
+// Dev-only initialization diagnostic log & startup seed health check
+if (import.meta.env.DEV && supabaseUrl && supabaseAnonKey) {
   console.log(`[Supabase] Initialized successfully. Connecting to: ${supabaseUrl}`);
+
+  // Query organizations and users for default seed rows to warn early if seed was never run
+  try {
+    const healthClient = createClient(supabaseUrl, supabaseAnonKey);
+    Promise.all([
+      healthClient.from('organizations').select('id').eq('id', DEFAULT_ORG_ID).maybeSingle(),
+      healthClient.from('users').select('id').eq('id', DEFAULT_USER_ID).maybeSingle()
+    ]).then(([orgRes, userRes]) => {
+      const missing = [];
+      if (!orgRes.data) missing.push(`Organization ("${DEFAULT_ORG_ID}")`);
+      if (!userRes.data) missing.push(`User ("${DEFAULT_USER_ID}")`);
+
+      if (missing.length > 0) {
+        console.warn(
+          `⚠️ [Supabase Startup Warning] Default organization/user row not found in Supabase — event publishing will fail until you run the seed script (scripts/seed-check.sql).\nMissing: ${missing.join(', ')}`
+        );
+      } else {
+        console.log(`[Supabase Health Check] ✅ Verified default organization & super admin user seed records in database.`);
+      }
+    }).catch(err => {
+      console.warn('[Supabase Startup Health Check Error]:', err);
+    });
+  } catch (err) {
+    console.warn('[Supabase Startup Init Error]:', err);
+  }
 }
 
 let supabaseInstance: SupabaseClient | null = null;
@@ -60,8 +88,32 @@ function isValidUUID(str: string | undefined | null): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 }
 
-const DEFAULT_ORG_ID = 'f56b03a9-9097-4638-8c4a-6f68227b2789';
-const DEFAULT_USER_ID = 'd79ebd86-73b7-4f55-9108-cdda19919cf0';
+/**
+ * Formats Postgres errors (including 23503 foreign_key_violation) into clear, actionable messages.
+ */
+function formatPostgresError(error: any, context: 'event' | 'registration'): Error {
+  if (!error) return new Error('Unknown database error');
+
+  // Postgres Error 23503 = foreign_key_violation
+  if (
+    error.code === '23503' ||
+    (typeof error.message === 'string' && /foreign key|23503/i.test(error.message)) ||
+    (typeof error.details === 'string' && /foreign key|is not present in table/i.test(error.details))
+  ) {
+    if (context === 'event') {
+      return new Error(
+        'Organization or user record referenced by this event does not exist in the database — run the seed script (scripts/seed-check.sql).'
+      );
+    }
+    if (context === 'registration') {
+      return new Error(
+        'Event record referenced by this registration does not exist in the database — please ensure the event is published to Supabase first.'
+      );
+    }
+  }
+
+  return new Error(error.message || error.details || 'Database operation failed');
+}
 
 /**
  * Fetch all events from Supabase Cloud with attached forms & themes.
@@ -81,7 +133,7 @@ export async function fetchRemoteEvents(): Promise<{ data: Event[] | null; error
 
     if (error) {
       console.error('[Supabase fetchRemoteEvents Error]:', error);
-      return { data: null, error };
+      return { data: null, error: formatPostgresError(error, 'event') };
     }
 
     if (!data) return { data: [], error: null };
@@ -154,7 +206,7 @@ export async function syncEventToCloud(event: Event): Promise<{ data: Event | nu
     const userUuid = isValidUUID(event.created_by) ? event.created_by : DEFAULT_USER_ID;
 
     // 1. Upsert parent Event row
-    const { data: eventData, error: eventError } = await client
+    const { error: eventError } = await client
       .from('events')
       .upsert({
         id: eventUuid,
@@ -175,13 +227,12 @@ export async function syncEventToCloud(event: Event): Promise<{ data: Event | nu
         created_by: userUuid,
         created_at: event.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString()
-      }, { onConflict: 'id' })
-      .select()
-      .single();
+      }, { onConflict: 'id' });
 
     if (eventError) {
-      console.error('[Supabase syncEventToCloud Error]:', eventError);
-      return { data: null, error: eventError };
+      const formattedErr = formatPostgresError(eventError, 'event');
+      console.error('[Supabase syncEventToCloud Error]:', formattedErr.message, eventError);
+      return { data: null, error: formattedErr };
     }
 
     // 2. Upsert child EventForm
@@ -197,8 +248,9 @@ export async function syncEventToCloud(event: Event): Promise<{ data: Event | nu
         }, { onConflict: 'event_id' });
 
       if (formError) {
-        console.error('[Supabase syncEventToCloud Form Error]:', formError);
-        return { data: null, error: formError };
+        const formattedErr = formatPostgresError(formError, 'event');
+        console.error('[Supabase syncEventToCloud Form Error]:', formattedErr.message, formError);
+        return { data: null, error: formattedErr };
       }
     }
 
@@ -218,8 +270,9 @@ export async function syncEventToCloud(event: Event): Promise<{ data: Event | nu
         }, { onConflict: 'event_id' });
 
       if (themeError) {
-        console.error('[Supabase syncEventToCloud Theme Error]:', themeError);
-        return { data: null, error: themeError };
+        const formattedErr = formatPostgresError(themeError, 'event');
+        console.error('[Supabase syncEventToCloud Theme Error]:', formattedErr.message, themeError);
+        return { data: null, error: formattedErr };
       }
     }
 
@@ -252,7 +305,7 @@ export async function fetchRemoteRegistrations(): Promise<{ data: Registration[]
 
     if (error) {
       console.error('[Supabase fetchRemoteRegistrations Error]:', error);
-      return { data: null, error };
+      return { data: null, error: formatPostgresError(error, 'registration') };
     }
 
     if (!data) return { data: [], error: null };
@@ -320,8 +373,9 @@ export async function syncRegistrationToCloud(reg: Registration): Promise<{ data
       }, { onConflict: 'id' });
 
     if (error) {
-      console.error('[Supabase syncRegistrationToCloud Error]:', error);
-      return { data: null, error };
+      const formattedErr = formatPostgresError(error, 'registration');
+      console.error('[Supabase syncRegistrationToCloud Error]:', formattedErr.message, error);
+      return { data: null, error: formattedErr };
     }
 
     return { data: { ...reg, id: regUuid }, error: null };
@@ -341,7 +395,7 @@ export async function deleteEventFromCloud(eventId: string): Promise<{ success: 
     const { error } = await client.from('events').delete().eq('id', eventId);
     if (error) {
       console.error('[Supabase deleteEventFromCloud Error]:', error);
-      return { success: false, error };
+      return { success: false, error: formatPostgresError(error, 'event') };
     }
     return { success: true, error: null };
   } catch (err: any) {
@@ -360,7 +414,7 @@ export async function deleteRegistrationFromCloud(regId: string): Promise<{ succ
     const { error } = await client.from('registrations').delete().eq('id', regId);
     if (error) {
       console.error('[Supabase deleteRegistrationFromCloud Error]:', error);
-      return { success: false, error };
+      return { success: false, error: formatPostgresError(error, 'registration') };
     }
     return { success: true, error: null };
   } catch (err: any) {
