@@ -139,39 +139,13 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   });
 
   const [organization, setOrganization] = useState<Organization>(initialOrganization);
-  const [events, setEvents] = useState<Event[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('acadeno_events');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch (e) {
-        console.warn('Failed to load events from cache:', e);
-      }
-    }
-    return [];
-  });
-  const [registrations, setRegistrations] = useState<Registration[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('acadeno_registrations');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch (e) {
-        console.warn('Failed to load registrations from cache:', e);
-      }
-    }
-    return [];
-  });
+  const [events, setEvents] = useState<Event[]>([]);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
 
-  // Sync session user to local storage
+  // Sync session user to local storage for persistent login session
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if (currentUser) {
@@ -182,26 +156,13 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [currentUser]);
 
-  // Sync to local storage on changes
+  // Ensure any legacy cached events/registrations in localStorage are cleared
   useEffect(() => {
-    if (typeof window !== 'undefined' && events.length > 0) {
-      try {
-        localStorage.setItem('acadeno_events', JSON.stringify(events));
-      } catch (e) {
-        console.warn('Failed to cache events:', e);
-      }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('acadeno_events');
+      localStorage.removeItem('acadeno_registrations');
     }
-  }, [events]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && registrations.length > 0) {
-      try {
-        localStorage.setItem('acadeno_registrations', JSON.stringify(registrations));
-      } catch (e) {
-        console.warn('Failed to cache registrations:', e);
-      }
-    }
-  }, [registrations]);
+  }, []);
 
   // Wizard state
   const [wizardStep, setWizardStep] = useState<number>(1);
@@ -262,49 +223,41 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         if (evtsRes.error) {
           console.warn('[Neon Sync Poll - Events]:', evtsRes.error);
-        } else if (evtsRes.data && evtsRes.data.length > 0) {
-          setEvents(prev => {
-            const remoteEvents = evtsRes.data!;
-            const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-            const hasUrlEvent = urlParams && (urlParams.get('event') || urlParams.get('name') || urlParams.get('title') || urlParams.get('d') || urlParams.get('data'));
-            
-            let merged = [...remoteEvents];
+        } else if (Array.isArray(evtsRes.data)) {
+          const remoteEvents = evtsRes.data;
+          const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+          const hasUrlEvent = urlParams && (urlParams.get('event') || urlParams.get('name') || urlParams.get('title') || urlParams.get('d') || urlParams.get('data'));
+          
+          let merged = [...remoteEvents];
 
-            if (hasUrlEvent) {
-              const decoded = decodeEventFromUrlParams(urlParams, organization.id);
-              if (decoded) {
-                const existingIdx = merged.findIndex(e => 
-                  e.id === decoded.id || 
-                  e.slug.toLowerCase() === decoded.slug.toLowerCase() ||
-                  e.name.toLowerCase() === decoded.name.toLowerCase()
-                );
-                if (existingIdx >= 0) {
-                  merged[existingIdx] = { ...merged[existingIdx], ...decoded, id: merged[existingIdx].id };
-                } else {
-                  merged = [decoded, ...merged];
-                }
+          if (hasUrlEvent) {
+            const decoded = decodeEventFromUrlParams(urlParams, organization.id);
+            if (decoded) {
+              const existingIdx = merged.findIndex(e => 
+                e.id === decoded.id || 
+                e.slug.toLowerCase() === decoded.slug.toLowerCase() ||
+                e.name.toLowerCase() === decoded.name.toLowerCase()
+              );
+              if (existingIdx >= 0) {
+                merged[existingIdx] = { ...merged[existingIdx], ...decoded, id: merged[existingIdx].id };
+              } else {
+                merged = [decoded, ...merged];
               }
             }
+          }
 
-            // Also keep any locally created events that haven't synced yet
-            const localOnly = prev.filter(p => !merged.some(m => m.id === p.id || m.slug.toLowerCase() === p.slug.toLowerCase()));
-            return [...localOnly, ...merged];
-          });
+          setEvents(merged);
         }
 
         if (regsRes.error) {
           console.warn('[Neon Sync Poll - Registrations]:', regsRes.error);
-        } else if (regsRes.data) {
-          setRegistrations(prev => {
-            const remoteRegs = regsRes.data!;
-            const localOnly = prev.filter(p => !remoteRegs.some(r => r.id === p.id || r.registration_code.toLowerCase() === p.registration_code.toLowerCase()));
-            return [...localOnly, ...remoteRegs];
-          });
+        } else if (Array.isArray(regsRes.data)) {
+          setRegistrations(regsRes.data);
         }
 
         if (usersRes.error) {
           console.warn('[Neon Sync Poll - Users]:', usersRes.error);
-        } else if (usersRes.data && usersRes.data.length > 0) {
+        } else if (Array.isArray(usersRes.data) && usersRes.data.length > 0) {
           setUsers(usersRes.data);
         }
       } catch (err) {
