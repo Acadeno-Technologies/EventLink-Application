@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { RegistrationClosedScreen } from './17_RegistrationClosedScreen';
+import { toTitleCase, toSentenceCase } from '../../utils/textUtils';
 
 export const PublicRegistrationScreen: React.FC = () => {
   const { 
@@ -69,10 +70,6 @@ export const PublicRegistrationScreen: React.FC = () => {
   }
 
   const evt = selectedEvent;
-  const currentCount = eventRegistrations.length;
-  const maxCap = evt.settings?.max_registrations || 100;
-  const spotsRemaining = Math.max(0, maxCap - currentCount);
-  const seatsFilledPct = maxCap > 0 ? Math.min(100, Math.round((currentCount / maxCap) * 100)) : 0;
 
   const theme = evt.theme || {
     colors: {
@@ -147,6 +144,18 @@ export const PublicRegistrationScreen: React.FC = () => {
     // If it's email, trim spaces
     if (fieldType === 'email' || fieldId === 'f_email') {
       setFormData(prev => ({ ...prev, [fieldId]: String(val).trim() }));
+      return;
+    }
+
+    // If it's textarea / bio / notes, convert using sentence case
+    if (fieldType === 'textarea' || /bio|notes|about|reason|describe/i.test(fieldId)) {
+      setFormData(prev => ({ ...prev, [fieldId]: typeof val === 'string' ? toSentenceCase(val) : val }));
+      return;
+    }
+
+    // For all general text inputs (Full Name, College, Company, Designation, City, etc.), convert small letters to Title Case
+    if (typeof val === 'string' && fieldType !== 'number' && fieldType !== 'date' && fieldType !== 'file') {
+      setFormData(prev => ({ ...prev, [fieldId]: toTitleCase(val) }));
       return;
     }
 
@@ -391,20 +400,6 @@ export const PublicRegistrationScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Spots Remaining Progress Bar */}
-        <div className="px-6 py-3.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs">
-          <div>
-            <span className="font-bold text-slate-700">{spotsRemaining} spots remaining</span>
-            <span className="text-slate-400 ml-1">({currentCount} of {maxCap} reserved)</span>
-          </div>
-          <div className="w-28 bg-slate-200 rounded-full h-2.5 overflow-hidden">
-            <div 
-              className="bg-[#FF7A00] h-full rounded-full transition-all duration-500" 
-              style={{ width: `${seatsFilledPct}%` }}
-            />
-          </div>
-        </div>
-
         {/* Form Body */}
         <div className="p-6 sm:p-8">
           <p 
@@ -477,7 +472,7 @@ export const PublicRegistrationScreen: React.FC = () => {
                     <textarea
                       rows={3}
                       value={val}
-                      onChange={(e) => handleFieldChange(f.id, e.target.value)}
+                      onChange={(e) => handleFieldChange(f.id, e.target.value, 'textarea')}
                       placeholder={f.placeholder || 'Enter your response...'}
                       className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-all"
                     />
@@ -601,7 +596,7 @@ export const PublicRegistrationScreen: React.FC = () => {
                     <input
                       type={f.type === 'number' ? 'number' : 'text'}
                       value={val}
-                      onChange={(e) => handleFieldChange(f.id, e.target.value)}
+                      onChange={(e) => handleFieldChange(f.id, e.target.value, f.type || 'text')}
                       placeholder={f.placeholder || `Enter ${f.label.toLowerCase()}`}
                       className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-all font-medium"
                     />

@@ -17,6 +17,8 @@ import {
   Link2
 } from 'lucide-react';
 
+import { toTitleCase, toSentenceCase, format12to24, format24to12 } from '../../utils/textUtils';
+
 export const WizardBasicInfoScreen: React.FC = () => {
   const { 
     wizardDraft, 
@@ -62,12 +64,6 @@ export const WizardBasicInfoScreen: React.FC = () => {
       setIsUploadingBanner(false);
     };
     reader.readAsDataURL(file);
-  };
-
-  // Helper to automatically convert entered text to Title/Camel Case (capitalizing first letters)
-  const toTitleCase = (val: string) => {
-    if (!val) return '';
-    return val.replace(/(^|\s|\-)([a-z])/g, (_, boundary, char) => boundary + char.toUpperCase());
   };
 
   const handleNameChange = (val: string) => {
@@ -225,7 +221,7 @@ export const WizardBasicInfoScreen: React.FC = () => {
               rows={3}
               maxLength={300}
               value={wizardDraft.short_description || ''}
-              onChange={(e) => updateWizardDraft({ short_description: e.target.value })}
+              onChange={(e) => updateWizardDraft({ short_description: toSentenceCase(e.target.value) })}
               onBlur={handleBlur}
               placeholder="Provide a compelling 1-2 sentence overview of what attendees will gain..."
               className="w-full h-[78px] min-h-[78px] max-h-[100px] p-3 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-[12.5px] text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-2 focus:ring-[#1463FF]/15 focus:border-[#1463FF] transition-all font-medium resize-y"
@@ -257,44 +253,48 @@ export const WizardBasicInfoScreen: React.FC = () => {
 
             {/* Time Range (Start & End - 25% each) */}
             <div className="sm:col-span-6">
-              <label className="text-[11.5px] font-bold text-[#071A33] mb-1 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#1463FF]" />
-                <span>Time Range (Start & End)</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11.5px] font-bold text-[#071A33] flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#1463FF]" />
+                  <span>Time Range (Start & End)</span>
+                </label>
+                <span className="text-[11px] font-bold text-[#1463FF] bg-[#EFF6FF] px-2 py-0.5 rounded-md border border-blue-100 font-mono">
+                  {wizardDraft.start_time || '10:00 AM'} – {wizardDraft.end_time || '01:00 PM'}
+                </span>
+              </div>
               <div className="grid grid-cols-2 gap-2.5">
+                {/* Start Time Picker */}
                 <div className="relative">
-                  <select
-                    value={wizardDraft.start_time || '10:00 AM'}
-                    onChange={(e) => updateWizardDraft({ start_time: e.target.value })}
+                  <input
+                    type="time"
+                    aria-label="Event Start Time"
+                    value={format12to24(wizardDraft.start_time || '10:00 AM')}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        updateWizardDraft({ start_time: format24to12(e.target.value) });
+                      }
+                    }}
                     onBlur={handleBlur}
-                    className="w-full h-10 pl-3 pr-7 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-[12.5px] text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#1463FF]/15 focus:border-[#1463FF] transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="08:00 AM">08:00 AM</option>
-                    <option value="09:00 AM">09:00 AM</option>
-                    <option value="09:30 AM">09:30 AM</option>
-                    <option value="10:00 AM">10:00 AM</option>
-                    <option value="10:30 AM">10:30 AM</option>
-                    <option value="11:00 AM">11:00 AM</option>
-                    <option value="02:00 PM">02:00 PM</option>
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    className="w-full h-10 px-3 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-[13px] text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#1463FF]/15 focus:border-[#1463FF] transition-all cursor-pointer"
+                    title="Choose start time"
+                  />
                 </div>
 
+                {/* End Time Picker */}
                 <div className="relative">
-                  <select
-                    value={wizardDraft.end_time || '1:00 PM'}
-                    onChange={(e) => updateWizardDraft({ end_time: e.target.value })}
+                  <input
+                    type="time"
+                    aria-label="Event End Time"
+                    value={format12to24(wizardDraft.end_time || '01:00 PM')}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        updateWizardDraft({ end_time: format24to12(e.target.value) });
+                      }
+                    }}
                     onBlur={handleBlur}
-                    className="w-full h-10 pl-3 pr-7 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-[12.5px] text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#1463FF]/15 focus:border-[#1463FF] transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="11:30 AM">11:30 AM</option>
-                    <option value="12:00 PM">12:00 PM</option>
-                    <option value="12:30 PM">12:30 PM</option>
-                    <option value="1:00 PM">1:00 PM</option>
-                    <option value="02:00 PM">02:00 PM</option>
-                    <option value="05:00 PM">05:00 PM</option>
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    className="w-full h-10 px-3 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-[13px] text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#1463FF]/15 focus:border-[#1463FF] transition-all cursor-pointer"
+                    title="Choose end time"
+                  />
                 </div>
               </div>
             </div>

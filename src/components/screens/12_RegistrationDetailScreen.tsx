@@ -3,6 +3,7 @@ import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { generateQrDataUrl } from '../../utils/qrUtils';
 import { Registration, RegistrationStatus, AttendanceStatus } from '../../types';
+import { toTitleCase } from '../../utils/textUtils';
 import { 
   Printer, 
   ArrowLeft, 
@@ -534,7 +535,7 @@ arathy@acadeno.in`;
                     type="text"
                     required
                     value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
+                    onChange={(e) => setEditName(toTitleCase(e.target.value))}
                     placeholder="Enter full name"
                     className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />

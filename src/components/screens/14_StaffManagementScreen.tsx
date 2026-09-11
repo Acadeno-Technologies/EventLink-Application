@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { UserRole, User } from '../../types';
+import { toTitleCase } from '../../utils/textUtils';
 import { 
   UserCog, 
   Plus, 
@@ -307,7 +308,7 @@ export const StaffManagementScreen: React.FC = () => {
                   type="text"
                   required
                   value={inviteName}
-                  onChange={(e) => setInviteName(e.target.value)}
+                  onChange={(e) => setInviteName(toTitleCase(e.target.value))}
                   placeholder="e.g. Meera Nair"
                   className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white text-xs sm:text-sm"
                 />

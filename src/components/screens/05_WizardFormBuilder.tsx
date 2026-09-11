@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { FormField } from '../../types';
+import { toTitleCase } from '../../utils/textUtils';
 import { 
   ArrowLeft,
   ArrowRight,
@@ -349,7 +350,7 @@ export const WizardFormBuilderScreen: React.FC = () => {
                     <input
                       type="text"
                       value={editingField.label}
-                      onChange={(e) => handleUpdateEditingField({ label: e.target.value })}
+                      onChange={(e) => handleUpdateEditingField({ label: toTitleCase(e.target.value) })}
                       className="w-full h-10 px-3.5 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
                     />
                   </div>
@@ -362,8 +363,8 @@ export const WizardFormBuilderScreen: React.FC = () => {
                     <input
                       type="text"
                       value={editingField.placeholder || ''}
-                      onChange={(e) => handleUpdateEditingField({ placeholder: e.target.value })}
-                      placeholder="e.g. Enter value..."
+                      onChange={(e) => handleUpdateEditingField({ placeholder: toTitleCase(e.target.value) })}
+                      placeholder="e.g. Enter Value..."
                       className="w-full h-10 px-3.5 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
                     />
                   </div>
@@ -376,7 +377,7 @@ export const WizardFormBuilderScreen: React.FC = () => {
                     <input
                       type="text"
                       value={editingField.section || ''}
-                      onChange={(e) => handleUpdateEditingField({ section: e.target.value })}
+                      onChange={(e) => handleUpdateEditingField({ section: toTitleCase(e.target.value) })}
                       placeholder="e.g. Personal Info, Workshop Options"
                       className="w-full h-10 px-3.5 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
                     />
@@ -420,7 +421,7 @@ export const WizardFormBuilderScreen: React.FC = () => {
                             <input
                               type="text"
                               value={opt}
-                              onChange={(e) => handleUpdateOption(optIdx, e.target.value)}
+                              onChange={(e) => handleUpdateOption(optIdx, toTitleCase(e.target.value))}
                               className="flex-1 h-9 px-3 bg-white border border-[#DCE5F0] rounded-lg text-xs text-slate-900 font-medium"
                             />
                             <button
