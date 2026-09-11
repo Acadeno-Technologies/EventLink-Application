@@ -566,7 +566,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
 
               {/* Inner Smartphone Screen */}
               <div 
-                className="rounded-[26px] overflow-hidden min-h-[520px] flex flex-col shadow-inner transition-colors duration-300 relative"
+                className="rounded-[26px] overflow-hidden min-h-[530px] p-2.5 sm:p-3 flex flex-col justify-start shadow-inner transition-colors duration-300 relative"
                 style={{
                   backgroundColor: currentTheme.colors.background || '#F8FAFC',
                   color: currentTheme.colors.text || '#0F172A',
@@ -574,140 +574,144 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                 }}
               >
                 
-                {/* Event Banner Image */}
-                <div className="w-full h-32 relative overflow-hidden bg-slate-950 shrink-0">
-                  <img 
-                    src={currentBanner} 
-                    alt="Event banner" 
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
-                    }}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
+                {/* Floating Event Ticket / Registration Card */}
+                <div className="w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-black/5 flex flex-col transition-all">
                   
-                  {/* Top Bar inside Phone */}
-                  <div className="absolute top-2.5 left-3 right-3 flex items-center justify-between text-white/90 text-xs">
-                    <Menu className="w-4 h-4 cursor-pointer" />
-                    <Trash2 className="w-3.5 h-3.5 cursor-pointer opacity-80 hover:opacity-100" />
-                  </div>
-                </div>
-
-                {/* Event Information Hero */}
-                <div 
-                  className="px-5 py-4 text-white relative transition-colors duration-300"
-                  style={{ backgroundColor: currentTheme.colors.primary || '#2563EB' }}
-                >
-                  <h4 className="text-base font-extrabold leading-tight mb-2">
-                    {wizardDraft.name || 'ACADENO Event'}
-                  </h4>
-                  
-                  <div className="space-y-1 text-white/90 text-[11px] font-medium">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3 h-3" />
-                      <span>{wizardDraft.start_date || '11 Sep 2026'} | {wizardDraft.start_time || '10:00 AM'} - {wizardDraft.end_time || '1:00 PM'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3 h-3" />
-                      <span>{wizardDraft.venue || 'ACADENO Conference Hall'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* White Registration Form Card */}
-                <div 
-                  className="bg-white rounded-t-3xl p-5 -mt-3 shadow-md flex-1 flex flex-col justify-between space-y-4"
-                  style={{ color: currentTheme.colors.text || '#101B33' }}
-                >
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <h5 
-                        className="text-xs font-bold transition-colors"
-                        style={{ color: currentTheme.colors.text || '#101B33' }}
-                      >
-                        Register for this event
-                      </h5>
-                      <p 
-                        className="text-[10px] mt-0.5 transition-colors"
-                        style={{ color: currentTheme.colors.text || '#7184A3', opacity: 0.75 }}
-                      >
-                        Fill in the details below to secure your spot.
-                      </p>
-                    </div>
-
-                    {/* Dummy/Actual Form Fields */}
-                    <div className="space-y-2">
-                      <div>
-                        <label 
-                          className="block text-[10px] font-bold mb-1 transition-colors"
-                          style={{ color: currentTheme.colors.text || '#101B33' }}
-                        >
-                          Full Name <span className="text-[#E5484D]">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          disabled
-                          placeholder="Enter your full name"
-                          style={{ color: currentTheme.colors.text || '#334155' }}
-                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] placeholder-[#91A4C0]"
-                        />
-                      </div>
-
-                      <div>
-                        <label 
-                          className="block text-[10px] font-bold mb-1 transition-colors"
-                          style={{ color: currentTheme.colors.text || '#101B33' }}
-                        >
-                          Email Address <span className="text-[#E5484D]">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          disabled
-                          placeholder="you@example.com"
-                          style={{ color: currentTheme.colors.text || '#334155' }}
-                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] placeholder-[#91A4C0]"
-                        />
-                      </div>
-
-                      <div>
-                        <label 
-                          className="block text-[10px] font-bold mb-1 transition-colors"
-                          style={{ color: currentTheme.colors.text || '#101B33' }}
-                        >
-                          Mobile Number <span className="text-[#E5484D]">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          disabled
-                          placeholder="+91 98765 43210"
-                          style={{ color: currentTheme.colors.text || '#334155' }}
-                          className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] placeholder-[#91A4C0]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Register Button & Footer Link */}
-                  <div className="pt-2 space-y-2.5">
-                    <button
-                      type="button"
-                      style={{
-                        backgroundColor: currentTheme.colors.button || '#FF8A00',
-                        color: currentTheme.colors.buttonText || '#FFFFFF',
+                  {/* Event Banner Image */}
+                  <div className="w-full h-28 relative overflow-hidden bg-slate-950 shrink-0">
+                    <img 
+                      src={currentBanner} 
+                      alt="Event banner" 
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
                       }}
-                      className="w-full h-10 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
-                    >
-                      <span>Register Now</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-
-                    <div 
-                      className="text-[10px] text-center font-medium transition-colors"
-                      style={{ color: currentTheme.colors.text || '#7184A3', opacity: 0.8 }}
-                    >
-                      Already have an account? <span className="font-bold underline cursor-pointer" style={{ color: currentTheme.colors.button || '#1463FF', opacity: 1 }}>Sign In</span>
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
+                    
+                    {/* Top Bar inside Phone */}
+                    <div className="absolute top-2 left-2.5 right-2.5 flex items-center justify-between text-white/90 text-xs">
+                      <Menu className="w-3.5 h-3.5 cursor-pointer" />
+                      <Trash2 className="w-3 h-3 cursor-pointer opacity-80 hover:opacity-100" />
                     </div>
+                  </div>
+
+                  {/* Event Information Hero */}
+                  <div 
+                    className="px-4 py-3 text-white relative transition-colors duration-300"
+                    style={{ backgroundColor: currentTheme.colors.primary || '#2563EB' }}
+                  >
+                    <h4 className="text-sm font-extrabold leading-tight mb-1.5">
+                      {wizardDraft.name || 'ACADENO Event'}
+                    </h4>
+                    
+                    <div className="space-y-0.5 text-white/90 text-[10.5px] font-medium">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3" />
+                        <span>{wizardDraft.start_date || '11 Sep 2026'} | {wizardDraft.start_time || '10:00 AM'} - {wizardDraft.end_time || '1:00 PM'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3 h-3" />
+                        <span>{wizardDraft.venue || 'ACADENO Conference Hall'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Registration Form Body */}
+                  <div 
+                    className="p-4 flex-1 flex flex-col justify-between space-y-3.5 bg-white"
+                    style={{ color: currentTheme.colors.text || '#101B33' }}
+                  >
+                    <div className="space-y-2.5">
+                      <div>
+                        <h5 
+                          className="text-xs font-bold transition-colors"
+                          style={{ color: currentTheme.colors.text || '#101B33' }}
+                        >
+                          Register for this event
+                        </h5>
+                        <p 
+                          className="text-[10px] mt-0.5 transition-colors"
+                          style={{ color: currentTheme.colors.text || '#7184A3', opacity: 0.75 }}
+                        >
+                          Fill in the details below to secure your spot.
+                        </p>
+                      </div>
+
+                      {/* Form Fields */}
+                      <div className="space-y-2">
+                        <div>
+                          <label 
+                            className="block text-[10px] font-bold mb-1 transition-colors"
+                            style={{ color: currentTheme.colors.text || '#101B33' }}
+                          >
+                            Full Name <span className="text-[#E5484D]">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            disabled
+                            placeholder="Enter your full name"
+                            style={{ color: currentTheme.colors.text || '#334155' }}
+                            className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] placeholder-[#91A4C0]"
+                          />
+                        </div>
+
+                        <div>
+                          <label 
+                            className="block text-[10px] font-bold mb-1 transition-colors"
+                            style={{ color: currentTheme.colors.text || '#101B33' }}
+                          >
+                            Email Address <span className="text-[#E5484D]">*</span>
+                          </label>
+                          <input
+                            type="email"
+                            disabled
+                            placeholder="you@example.com"
+                            style={{ color: currentTheme.colors.text || '#334155' }}
+                            className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] placeholder-[#91A4C0]"
+                          />
+                        </div>
+
+                        <div>
+                          <label 
+                            className="block text-[10px] font-bold mb-1 transition-colors"
+                            style={{ color: currentTheme.colors.text || '#101B33' }}
+                          >
+                            Mobile Number <span className="text-[#E5484D]">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            disabled
+                            placeholder="+91 98765 43210"
+                            style={{ color: currentTheme.colors.text || '#334155' }}
+                            className="w-full h-8 px-2.5 bg-white border border-[#DCE5F0] rounded-lg text-[11px] placeholder-[#91A4C0]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Register Button & Footer Link */}
+                    <div className="pt-1.5 space-y-2">
+                      <button
+                        type="button"
+                        style={{
+                          backgroundColor: currentTheme.colors.button || '#FF8A00',
+                          color: currentTheme.colors.buttonText || '#FFFFFF',
+                        }}
+                        className="w-full h-9 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <span>Register Now</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+
+                      <div 
+                        className="text-[9.5px] text-center font-medium transition-colors"
+                        style={{ color: currentTheme.colors.text || '#7184A3', opacity: 0.8 }}
+                      >
+                        Already have an account? <span className="font-bold underline cursor-pointer" style={{ color: currentTheme.colors.button || '#1463FF', opacity: 1 }}>Sign In</span>
+                      </div>
+                    </div>
+
                   </div>
 
                 </div>

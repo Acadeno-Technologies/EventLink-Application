@@ -225,27 +225,28 @@ export const WizardPreviewPublishScreen: React.FC = () => {
               : 'rounded-2xl p-4 bg-slate-800 border border-slate-700 shadow-2xl'
           }`}>
             <div 
-              className="rounded-[20px] overflow-hidden min-h-[550px] shadow-sm flex flex-col"
+              className="rounded-[20px] overflow-hidden min-h-[550px] p-3 sm:p-4 shadow-sm flex flex-col justify-start transition-colors duration-300"
               style={{
                 backgroundColor: theme.colors.background,
                 color: theme.colors.text,
                 fontFamily: theme.typography.fontFamily,
               }}
             >
-              {/* Optional Event Banner Image */}
-              {(wizardDraft.banner_url || wizardDraft.theme?.banner_url) && (
-                <div className="w-full h-32 sm:h-36 relative overflow-hidden bg-slate-950 border-b border-white/10">
-                  <img 
-                    src={wizardDraft.banner_url || wizardDraft.theme?.banner_url} 
-                    alt={wizardDraft.name || 'Event Cover'} 
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
-                    }}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                </div>
-              )}
+              <div className="w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-black/5 flex flex-col">
+                {/* Optional Event Banner Image */}
+                {(wizardDraft.banner_url || wizardDraft.theme?.banner_url) && (
+                  <div className="w-full h-32 sm:h-36 relative overflow-hidden bg-slate-950 border-b border-white/10">
+                    <img 
+                      src={wizardDraft.banner_url || wizardDraft.theme?.banner_url} 
+                      alt={wizardDraft.name || 'Event Cover'} 
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';
+                      }}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  </div>
+                )}
 
               {/* Header Hero */}
               <div 
@@ -331,6 +332,7 @@ export const WizardPreviewPublishScreen: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
 
         </div>
 
