@@ -12,7 +12,11 @@ import {
   ArrowLeft, 
   FileSpreadsheet, 
   CheckCircle2,
-  Lock
+  Calendar,
+  Lock,
+  Sparkles,
+  ExternalLink,
+  QrCode
 } from 'lucide-react';
 
 export const WizardSettingsScreen: React.FC = () => {
@@ -21,7 +25,6 @@ export const WizardSettingsScreen: React.FC = () => {
     updateWizardDraft, 
     setWizardStep, 
     setScreen, 
-    saveWizardDraft 
   } = useEventStore();
 
   const settings = wizardDraft.settings || {
@@ -49,225 +52,359 @@ export const WizardSettingsScreen: React.FC = () => {
 
   return (
     <AdminLayout activeNav="events">
-      <div className="space-y-6 w-full">
+      <div className="space-y-4 w-full">
         
-        {/* Header */}
-        <div className="pb-1">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#071A33] tracking-tight font-sans">
-            Create Event — Step 4: Settings & Limits
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            Configure operational windows, attendee capacity limits, and notification delivery triggers.
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-[#DCE5F0] shadow-[0_2px_12px_rgba(7,26,51,0.04)] p-6 sm:p-8 space-y-7">
-        
-        {/* Registration Window */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <CalendarClock className="w-4 h-4 text-blue-600" />
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Registration Operational Window</h3>
-              <p className="text-[11px] text-slate-400">Define the active window when attendees can submit their registration</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700">Registration Opens Date</label>
-              <input
-                type="date"
-                value={settings.registration_opens_at ? settings.registration_opens_at.split('T')[0] : '2026-09-10'}
-                onChange={(e) => handleUpdateSettings('registration_opens_at', e.target.value)}
-                className="w-full h-10 px-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
-              />
-              <p className="text-[11px] text-slate-400">Form is active starting at 00:00 on this date</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700">Registration Closes Date</label>
-              <input
-                type="date"
-                value={settings.registration_closes_at ? settings.registration_closes_at.split('T')[0] : '2026-09-18'}
-                onChange={(e) => handleUpdateSettings('registration_closes_at', e.target.value)}
-                className="w-full h-10 px-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
-              />
-              <p className="text-[11px] text-slate-400">Page automatically transitions to Closed state (Screen 17)</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Capacity & Ticket Limits */}
-        <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <Users className="w-4 h-4 text-blue-600" />
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Capacity & Booking Limits</h3>
-              <p className="text-[11px] text-slate-400">Set seat allocation limits to prevent venue overcrowding</p>
-            </div>
-          </div>
-
-          <div className="max-w-sm space-y-1.5">
-            <label className="block text-xs font-bold text-slate-700">Maximum Registrations (Seat Cap)</label>
-            <input
-              type="number"
-              min={1}
-              max={10000}
-              value={settings.max_registrations || 500}
-              onChange={(e) => handleUpdateSettings('max_registrations', parseInt(e.target.value) || 0)}
-              className="w-full h-10 px-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
-            />
-            <p className="text-[11px] text-slate-400">
-              Enforced atomically to prevent overbooking during high-volume QR scan traffic.
+        {/* Top Header Section with Right Decorative Illustration */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-0.5">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#101B33] tracking-tight font-sans">
+              Create Event — Step 4: Settings & Limits
+            </h1>
+            <p className="text-xs sm:text-sm text-[#7184A3] font-medium mt-0.5">
+              Configure operational windows, attendee capacity limits, and notification delivery triggers.
             </p>
           </div>
-        </div>
 
-        {/* After Registration Flow */}
-        <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <CheckCircle2 className="w-4 h-4 text-blue-600" />
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">After Registration Behavior</h3>
-              <p className="text-[11px] text-slate-400">Choose what the attendee sees immediately after submitting the form</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className={`flex items-start gap-3.5 p-4 rounded-xl border transition-all cursor-pointer ${
-              settings.after_registration === 'ticket'
-                ? 'border-blue-500 bg-blue-50/40 ring-2 ring-blue-500/10'
-                : 'border-slate-200/80 bg-slate-50/50 hover:bg-slate-50'
-            }`}>
-              <input
-                type="radio"
-                name="after_registration"
-                checked={settings.after_registration === 'ticket'}
-                onChange={() => handleUpdateSettings('after_registration', 'ticket')}
-                className="mt-0.5 text-blue-600 focus:ring-blue-500"
-              />
-              <div>
-                <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                  <span>Show Digital Ticket with Entry QR Code</span>
-                  <span className="text-[10px] font-semibold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full">
-                    Recommended
-                  </span>
+          {/* Right Decorative Calendar Illustration + Script Text */}
+          <div className="hidden lg:flex items-center gap-3 shrink-0 pr-2">
+            
+            {/* 3D Stylized Calendar Card */}
+            <div className="relative w-13 h-13 rounded-2xl bg-gradient-to-br from-[#38BDF8] via-[#1463FF] to-[#1E40AF] p-0.5 shadow-[0_6px_16px_rgba(20,99,255,0.2)] transform -rotate-3 hover:rotate-0 transition-transform">
+              <div className="w-full h-full bg-[#0B254D] rounded-[11px] p-1.5 flex flex-col justify-between overflow-hidden relative">
+                
+                {/* Spiral Ring Binder Pins */}
+                <div className="flex justify-around -mt-0.5">
+                  <div className="w-1.5 h-2 bg-slate-300 rounded-full" />
+                  <div className="w-1.5 h-2 bg-slate-300 rounded-full" />
+                  <div className="w-1.5 h-2 bg-slate-300 rounded-full" />
                 </div>
-                <div className="text-[11px] text-slate-500 mt-0.5">
-                  Generates an instant participant pass with scannable QR code and .ics calendar sync file.
+
+                {/* Calendar Grid Dots */}
+                <div className="grid grid-cols-4 gap-1.5 my-auto px-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 font-bold" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-300/80" />
+                </div>
+
+                {/* Floating Plus Badge */}
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#1463FF] border-2 border-white text-white flex items-center justify-center font-bold text-[10px] shadow-sm">
+                  +
                 </div>
               </div>
-            </label>
+            </div>
 
-            <label className={`flex items-start gap-3.5 p-4 rounded-xl border transition-all cursor-pointer ${
-              settings.after_registration === 'redirect'
-                ? 'border-blue-500 bg-blue-50/40 ring-2 ring-blue-500/10'
-                : 'border-slate-200/80 bg-slate-50/50 hover:bg-slate-50'
-            }`}>
-              <input
-                type="radio"
-                name="after_registration"
-                checked={settings.after_registration === 'redirect'}
-                onChange={() => handleUpdateSettings('after_registration', 'redirect')}
-                className="mt-0.5 text-blue-600 focus:ring-blue-500"
-              />
-              <div className="flex-1">
-                <div className="text-xs font-bold text-slate-900">Redirect to External Thank You URL</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">
-                  Redirect participant browser to a custom URL or thank you webpage upon submission.
+            {/* Handwritten Script Text */}
+            <div className="flex flex-col text-left select-none font-['Caveat',cursive] leading-tight">
+              <span className="text-sm sm:text-base font-bold text-slate-700">Plan</span>
+              <span className="text-sm sm:text-base font-bold text-[#1463FF]">Connect</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-500 italic">Make it Happen</span>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Main 2-Column Settings Card */}
+        <div className="bg-white rounded-2xl border border-[#DCE5F0] shadow-[0_2px_12px_rgba(7,26,51,0.03)] p-4 sm:p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            
+            {/* ========================================================================= */}
+            {/* LEFT COLUMN: REGISTRATION WINDOW, CAPACITY, AND DPDP CONSENT (lg:col-span-6)*/}
+            {/* ========================================================================= */}
+            <div className="lg:col-span-6 space-y-4">
+              
+              {/* Section 1: Registration Operational Window */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                  <CalendarClock className="w-4 h-4 text-[#1463FF]" />
+                  <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
+                    Registration Operational Window
+                  </h3>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-[#101B33]">
+                      Registration Opens Date
+                    </label>
+                    <input
+                      type="date"
+                      value={settings.registration_opens_at ? settings.registration_opens_at.split('T')[0] : '2026-09-10'}
+                      onChange={(e) => handleUpdateSettings('registration_opens_at', e.target.value)}
+                      className="w-full h-9 px-3 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
+                    />
+                    <p className="text-[10.5px] text-[#7184A3]">Form activates at 00:00 on this date</p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-[#101B33]">
+                      Registration Closes Date
+                    </label>
+                    <input
+                      type="date"
+                      value={settings.registration_closes_at ? settings.registration_closes_at.split('T')[0] : '2026-09-18'}
+                      onChange={(e) => handleUpdateSettings('registration_closes_at', e.target.value)}
+                      className="w-full h-9 px-3 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
+                    />
+                    <p className="text-[10.5px] text-[#7184A3]">Transitions to Closed state automatically</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Capacity & Booking Limits */}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                  <Users className="w-4 h-4 text-[#1463FF]" />
+                  <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
+                    Capacity & Booking Limits
+                  </h3>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-[#101B33]">
+                      Maximum Registrations (Seat Cap)
+                    </label>
+                    <span className="text-[11px] font-semibold text-[#1463FF]">
+                      Atomically Enforced
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={50000}
+                      value={settings.max_registrations || 500}
+                      onChange={(e) => handleUpdateSettings('max_registrations', parseInt(e.target.value) || 0)}
+                      className="w-36 h-9 px-3 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all"
+                    />
+                    <div className="flex items-center gap-1 overflow-x-auto select-none no-scrollbar">
+                      {[100, 250, 500, 1000].map((cap) => (
+                        <button
+                          key={cap}
+                          type="button"
+                          onClick={() => handleUpdateSettings('max_registrations', cap)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                            settings.max_registrations === cap
+                              ? 'bg-[#F0F5FF] border-[#1463FF] text-[#1463FF] font-bold'
+                              : 'bg-white border-[#DCE5F0] text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          {cap}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-[10.5px] text-[#7184A3]">
+                    Prevents overbooking during high-volume participant traffic and QR registration scans.
+                  </p>
+                </div>
+              </div>
+
+              {/* Section 3: India DPDP Act 2023 Consent */}
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#DCE5F0] space-y-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#101B33]">
+                  <ShieldCheck className="w-4 h-4 text-[#1463FF]" />
+                  <span>India Digital Personal Data Protection (DPDP) Act 2023</span>
+                </div>
+                <p className="text-[10.5px] text-[#7184A3]">
+                  Mandatory privacy notice displayed on the participant registration form:
+                </p>
+                <input
+                  type="text"
+                  value={settings.consent_text || ''}
+                  onChange={(e) => handleUpdateSettings('consent_text', e.target.value)}
+                  className="w-full h-8.5 px-3 bg-white border border-[#DCE5F0] rounded-lg text-xs text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF]"
+                />
+              </div>
+
+            </div>
+
+            {/* ========================================================================= */}
+            {/* RIGHT COLUMN: AFTER REGISTRATION & NOTIFICATION CHANNELS (lg:col-span-6)  */}
+            {/* ========================================================================= */}
+            <div className="lg:col-span-6 space-y-4">
+              
+              {/* Section 4: After Registration Behavior */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#1463FF]" />
+                  <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
+                    After Registration Behavior
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  
+                  {/* Option 1: Digital Ticket */}
+                  <label className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                    settings.after_registration === 'ticket'
+                      ? 'border-[#1463FF] bg-[#F0F5FF]/70 ring-2 ring-[#1463FF]/15 shadow-2xs'
+                      : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                  }`}>
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-blue-100 text-[#1463FF] flex items-center justify-center shrink-0">
+                        <QrCode className="w-3.5 h-3.5" />
+                      </div>
+                      <input
+                        type="radio"
+                        name="after_registration"
+                        checked={settings.after_registration === 'ticket'}
+                        onChange={() => handleUpdateSettings('after_registration', 'ticket')}
+                        className="text-[#1463FF] focus:ring-[#1463FF]"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-[#101B33] flex items-center gap-1.5">
+                        <span>Show Digital Pass</span>
+                        <span className="text-[9.5px] font-bold text-[#1463FF] bg-blue-100/80 px-1.5 py-0.5 rounded-md">
+                          Recommended
+                        </span>
+                      </div>
+                      <div className="text-[10.5px] text-[#7184A3] mt-0.5">
+                        Instant pass with scannable entry QR & .ics calendar sync.
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* Option 2: Redirect to URL */}
+                  <label className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                    settings.after_registration === 'redirect'
+                      ? 'border-[#1463FF] bg-[#F0F5FF]/70 ring-2 ring-[#1463FF]/15 shadow-2xs'
+                      : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                  }`}>
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </div>
+                      <input
+                        type="radio"
+                        name="after_registration"
+                        checked={settings.after_registration === 'redirect'}
+                        onChange={() => handleUpdateSettings('after_registration', 'redirect')}
+                        className="text-[#1463FF] focus:ring-[#1463FF]"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-[#101B33]">
+                        Redirect to URL
+                      </div>
+                      <div className="text-[10.5px] text-[#7184A3] mt-0.5">
+                        Redirect participant to custom thank you page upon submit.
+                      </div>
+                    </div>
+                  </label>
+
+                </div>
+
                 {settings.after_registration === 'redirect' && (
-                  <input
-                    type="url"
-                    placeholder="https://acadeno.com/thank-you"
-                    value={settings.redirect_url || ''}
-                    onChange={(e) => handleUpdateSettings('redirect_url', e.target.value)}
-                    className="mt-3 w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-                  />
+                  <div className="pt-1">
+                    <input
+                      type="url"
+                      placeholder="https://acadeno.com/thank-you"
+                      value={settings.redirect_url || ''}
+                      onChange={(e) => handleUpdateSettings('redirect_url', e.target.value)}
+                      className="w-full h-8.5 px-3 bg-white border border-[#DCE5F0] rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1463FF]/10 focus:border-[#1463FF] font-mono"
+                    />
+                  </div>
                 )}
               </div>
-            </label>
-          </div>
-        </div>
 
-        {/* Notification Triggers */}
-        <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <MessageSquare className="w-4 h-4 text-blue-600" />
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Confirmation & Delivery Channels</h3>
-              <p className="text-[11px] text-slate-400">Automated messaging sent when attendee registration is recorded</p>
+              {/* Section 5: Confirmation & Delivery Channels */}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                  <MessageSquare className="w-4 h-4 text-[#1463FF]" />
+                  <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
+                    Confirmation & Delivery Channels
+                  </h3>
+                </div>
+
+                <div className="space-y-2">
+                  
+                  {/* Email Channel */}
+                  <label className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    settings.send_email_confirmation
+                      ? 'border-[#1463FF]/40 bg-[#F0F5FF]/50'
+                      : 'border-[#DCE5F0] bg-white hover:bg-slate-50/50'
+                  }`}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-blue-100 text-[#1463FF] flex items-center justify-center shrink-0">
+                        <Mail className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-[#101B33] truncate">Instant Email Confirmation</div>
+                        <div className="text-[10px] text-[#7184A3] truncate">Automated ticket PDF pass attachment</div>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.send_email_confirmation}
+                      onChange={(e) => handleUpdateSettings('send_email_confirmation', e.target.checked)}
+                      className="w-4 h-4 rounded text-[#1463FF] focus:ring-[#1463FF] cursor-pointer"
+                    />
+                  </label>
+
+                  {/* WhatsApp Channel */}
+                  <label className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    settings.send_whatsapp_confirmation
+                      ? 'border-emerald-400/40 bg-emerald-50/40'
+                      : 'border-[#DCE5F0] bg-white hover:bg-slate-50/50'
+                  }`}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        <Smartphone className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-[#101B33] truncate">WhatsApp Pass Notification</div>
+                        <div className="text-[10px] text-[#7184A3] truncate">Meta Cloud API direct ticket message</div>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.send_whatsapp_confirmation}
+                      onChange={(e) => handleUpdateSettings('send_whatsapp_confirmation', e.target.checked)}
+                      className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                  </label>
+
+                  {/* Excel Export */}
+                  <label className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    settings.allow_excel_export
+                      ? 'border-slate-400/40 bg-slate-50/70'
+                      : 'border-[#DCE5F0] bg-white hover:bg-slate-50/50'
+                  }`}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-[#101B33] truncate">Live Excel/CSV Export</div>
+                        <div className="text-[10px] text-[#7184A3] truncate">Allow staff & organizers export access</div>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.allow_excel_export}
+                      onChange={(e) => handleUpdateSettings('allow_excel_export', e.target.checked)}
+                      className="w-4 h-4 rounded text-[#1463FF] focus:ring-[#1463FF] cursor-pointer"
+                    />
+                  </label>
+
+                </div>
+              </div>
+
             </div>
-          </div>
 
-          <div className="space-y-3">
-            <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/70 bg-slate-50/40 hover:bg-slate-50 cursor-pointer text-xs text-slate-800 transition-colors">
-              <input
-                type="checkbox"
-                checked={settings.send_email_confirmation}
-                onChange={(e) => handleUpdateSettings('send_email_confirmation', e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-              />
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                  <Mail className="w-3.5 h-3.5" />
-                </div>
-                <span className="font-semibold text-slate-800">Send instant confirmation email with ticket PDF pass attachment</span>
-              </div>
-            </label>
-
-            <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/70 bg-slate-50/40 hover:bg-slate-50 cursor-pointer text-xs text-slate-800 transition-colors">
-              <input
-                type="checkbox"
-                checked={settings.send_whatsapp_confirmation}
-                onChange={(e) => handleUpdateSettings('send_whatsapp_confirmation', e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-              />
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Smartphone className="w-3.5 h-3.5" />
-                </div>
-                <span className="font-semibold text-slate-800">Send WhatsApp template notification with direct pass link via Cloud API</span>
-              </div>
-            </label>
-
-            <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/70 bg-slate-50/40 hover:bg-slate-50 cursor-pointer text-xs text-slate-800 transition-colors">
-              <input
-                type="checkbox"
-                checked={settings.allow_excel_export}
-                onChange={(e) => handleUpdateSettings('allow_excel_export', e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-              />
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                </div>
-                <span className="font-semibold text-slate-800">Allow staff and organizers to export live registrations to Excel/CSV</span>
-              </div>
-            </label>
           </div>
         </div>
 
-        {/* Data Protection DPDP Act 2023 Consent */}
-        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-            <ShieldCheck className="w-4 h-4 text-blue-600" />
-            <span>India Digital Personal Data Protection (DPDP) Act 2023</span>
-          </div>
-          <p className="text-[11px] text-slate-500">
-            A mandatory consent banner will be displayed on the public registration form prior to submission.
-          </p>
-          <input
-            type="text"
-            value={settings.consent_text || ''}
-            onChange={(e) => handleUpdateSettings('consent_text', e.target.value)}
-            className="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          />
-        </div>
-
-        {/* Wizard Navigation */}
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+        {/* Separate Bottom Action Bar */}
+        <div className="flex items-center justify-between pt-1">
           <button
             type="button"
             onClick={() => { setWizardStep(3); setScreen('06_create_theme'); }}
@@ -280,7 +417,7 @@ export const WizardSettingsScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => { setWizardStep(5); setScreen('08_create_preview'); }}
-            className="h-11 px-6 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-xs sm:text-sm font-bold shadow-[0_4px_14px_rgba(20,99,255,0.3)] flex items-center gap-2 transition-all cursor-pointer"
+            className="h-11 px-7 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-xs sm:text-sm font-bold shadow-[0_4px_14px_rgba(20,99,255,0.25)] flex items-center gap-2 transition-all cursor-pointer"
           >
             <span>Next: Preview & Publish</span>
             <ArrowRight className="w-4 h-4" />
@@ -288,9 +425,6 @@ export const WizardSettingsScreen: React.FC = () => {
         </div>
 
       </div>
-
-    </div>
-  </AdminLayout>
-);
+    </AdminLayout>
+  );
 };
-
