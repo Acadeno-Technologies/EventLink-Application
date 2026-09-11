@@ -23,7 +23,9 @@ import {
   Menu,
   CheckCircle2,
   Smartphone,
-  ChevronDown
+  ChevronDown,
+  Search,
+  X
 } from 'lucide-react';
 
 export const WizardThemeBuilderScreen: React.FC = () => {
@@ -37,6 +39,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
 
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [fontSearch, setFontSearch] = useState('');
 
   const bannerPresets = [
     { label: 'AI & Tech', url: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1200&auto=format&fit=crop&q=80' },
@@ -79,12 +82,40 @@ export const WizardThemeBuilderScreen: React.FC = () => {
     { id: 'classic', label: 'Classic', desc: 'Timeless and sophisticated', previewColor: '#6366F1' },
   ];
 
-  const fontOptions = [
-    { id: 'Poppins', label: 'Poppins', desc: 'Modern & Clean' },
-    { id: 'Inter', label: 'Inter', desc: 'Professional' },
-    { id: 'Outfit', label: 'Outfit', desc: 'Stylish & Modern' },
-    { id: 'Playfair Display', label: 'Playfair Display', desc: 'Elegant & Classic' },
+  const allFontOptions = [
+    { id: 'Poppins', label: 'Poppins', desc: 'Modern & Clean', category: 'Sans-Serif' },
+    { id: 'Inter', label: 'Inter', desc: 'Professional', category: 'Sans-Serif' },
+    { id: 'Outfit', label: 'Outfit', desc: 'Stylish & Modern', category: 'Sans-Serif' },
+    { id: 'Playfair Display', label: 'Playfair Display', desc: 'Elegant & Classic', category: 'Serif' },
+    { id: 'Plus Jakarta Sans', label: 'Plus Jakarta Sans', desc: 'Clean & Tech', category: 'Sans-Serif' },
+    { id: 'Montserrat', label: 'Montserrat', desc: 'Bold & Geometric', category: 'Sans-Serif' },
+    { id: 'Roboto', label: 'Roboto', desc: 'Neutral & Versatile', category: 'Sans-Serif' },
+    { id: 'Cinzel', label: 'Cinzel', desc: 'Luxury & Regal', category: 'Serif' },
+    { id: 'Lora', label: 'Lora', desc: 'Editorial & Literary', category: 'Serif' },
+    { id: 'Space Grotesk', label: 'Space Grotesk', desc: 'Futuristic & Bold', category: 'Sans-Serif' },
+    { id: 'DM Sans', label: 'DM Sans', desc: 'Minimalist & Crisp', category: 'Sans-Serif' },
+    { id: 'Raleway', label: 'Raleway', desc: 'Artistic & Sleek', category: 'Sans-Serif' },
+    { id: 'Caveat', label: 'Caveat', desc: 'Handwritten & Fun', category: 'Script' },
+    { id: 'Oswald', label: 'Oswald', desc: 'Punchy & Condensed', category: 'Sans-Serif' },
+    { id: 'Merriweather', label: 'Merriweather', desc: 'Classic & Warm', category: 'Serif' },
+    { id: 'Fira Code', label: 'Fira Code', desc: 'Developer & Code', category: 'Monospace' },
   ];
+
+  // Helper to dynamically load any Google Font on-demand
+  const loadGoogleFont = (fontFamily: string) => {
+    try {
+      const fontId = `gfont-${fontFamily.replace(/\s+/g, '-').toLowerCase()}`;
+      if (!document.getElementById(fontId)) {
+        const link = document.createElement('link');
+        link.id = fontId;
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;500;600;700;800&display=swap`;
+        document.head.appendChild(link);
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const handleSelectPreset = (templateId: ThemeTemplate) => {
     const preset = themePresets[templateId] || themePresets.workshop;
@@ -114,6 +145,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
   };
 
   const handleUpdateFont = (fontFamily: string) => {
+    loadGoogleFont(fontFamily);
     updateWizardDraft({
       theme: {
         ...currentTheme,
@@ -123,7 +155,30 @@ export const WizardThemeBuilderScreen: React.FC = () => {
         }
       }
     });
+    showToast(`Font updated to "${fontFamily}"`);
   };
+
+  // Filtered font options based on search input
+  const filteredFonts = fontSearch.trim() === ''
+    ? (() => {
+        const topDefaults = allFontOptions.slice(0, 4);
+        const currentSelectedFont = currentTheme.typography.fontFamily;
+        if (currentSelectedFont && !topDefaults.some(f => f.id.toLowerCase() === currentSelectedFont.toLowerCase())) {
+          const matchingOption = allFontOptions.find(f => f.id.toLowerCase() === currentSelectedFont.toLowerCase()) || {
+            id: currentSelectedFont,
+            label: currentSelectedFont,
+            desc: 'Custom Applied',
+            category: 'Custom'
+          };
+          return [matchingOption, ...topDefaults.slice(0, 3)];
+        }
+        return topDefaults;
+      })()
+    : allFontOptions.filter(f => 
+        f.label.toLowerCase().includes(fontSearch.toLowerCase()) || 
+        f.desc.toLowerCase().includes(fontSearch.toLowerCase()) ||
+        f.category.toLowerCase().includes(fontSearch.toLowerCase())
+      );
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -476,19 +531,45 @@ export const WizardThemeBuilderScreen: React.FC = () => {
             </div>
 
             {/* CARD 3 — TYPOGRAPHY & FONT FAMILY */}
+            {/* CARD 3 — TYPOGRAPHY & FONT FAMILY WITH SEARCH & APPLY */}
             <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_2px_12px_rgba(7,26,51,0.03)] space-y-3">
-              <div className="border-b border-slate-100 pb-2">
-                <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
-                  Typography & Font Family
-                </h3>
-                <p className="text-xs text-[#7184A3] mt-0.5">
-                  Select a typography style that matches your event brand.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
+                <div>
+                  <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
+                    Typography & Font Family
+                  </h3>
+                  <p className="text-xs text-[#7184A3] mt-0.5">
+                    Select or search a typography style that matches your event brand.
+                  </p>
+                </div>
+
+                {/* Font Search Input */}
+                <div className="relative shrink-0">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={fontSearch}
+                    onChange={(e) => setFontSearch(e.target.value)}
+                    placeholder="Search fonts (e.g. Roboto, Serif...)"
+                    className="w-full sm:w-56 h-8.5 pl-8 pr-7 bg-[#F8FAFC] hover:bg-white focus:bg-white border border-[#DCE5F0] rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:border-[#1463FF] focus:ring-2 focus:ring-[#1463FF]/10 transition-all font-medium"
+                  />
+                  {fontSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setFontSearch('')}
+                      className="w-4 h-4 text-slate-400 hover:text-slate-600 absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer"
+                      title="Clear search"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {fontOptions.map((font) => {
-                  const isSelected = currentTheme.typography.fontFamily === font.id;
+              {/* Font Options Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-h-56 overflow-y-auto pr-0.5 no-scrollbar">
+                {filteredFonts.map((font) => {
+                  const isSelected = currentTheme.typography.fontFamily.toLowerCase() === font.id.toLowerCase();
                   return (
                     <button
                       key={font.id}
@@ -500,9 +581,16 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                           : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:bg-slate-50/50'
                       }`}
                     >
-                      <div>
-                        <div className="text-xs sm:text-[13px] font-bold text-[#101B33]">{font.label}</div>
-                        <div className="text-[10.5px] text-[#7184A3] font-medium mt-0.5">{font.desc}</div>
+                      <div className="min-w-0">
+                        <div 
+                          className="text-xs sm:text-[13px] font-bold text-[#101B33] truncate"
+                          style={{ fontFamily: font.id }}
+                        >
+                          {font.label}
+                        </div>
+                        <div className="text-[10.5px] text-[#7184A3] font-medium mt-0.5 truncate">
+                          {font.desc}
+                        </div>
                       </div>
 
                       <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
@@ -517,6 +605,28 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                     </button>
                   );
                 })}
+
+                {/* Custom Font Option if search query doesn't match any preset */}
+                {fontSearch.trim() !== '' && !filteredFonts.some(f => f.label.toLowerCase() === fontSearch.trim().toLowerCase()) && (
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateFont(fontSearch.trim())}
+                    className="p-3 rounded-xl border-2 border-dashed border-[#1463FF]/40 bg-[#F0F5FF]/40 hover:bg-[#F0F5FF] text-left transition-all cursor-pointer flex items-center justify-between gap-2 col-span-2 sm:col-span-4"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-xs sm:text-[13px] font-bold text-[#1463FF] flex items-center gap-1.5 truncate">
+                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                        <span>Apply Google Font: "{fontSearch.trim()}"</span>
+                      </div>
+                      <div className="text-[10.5px] text-slate-500 font-medium mt-0.5">
+                        Load and apply this custom Google Font style directly to your event.
+                      </div>
+                    </div>
+                    <div className="bg-[#1463FF] text-white text-[11px] font-bold px-3 py-1 rounded-lg shrink-0 shadow-2xs">
+                      Apply Font
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
 
