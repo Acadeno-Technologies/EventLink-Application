@@ -195,325 +195,326 @@ export const WizardFormBuilderScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* 3-Column Form Builder Workspace */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Main Unified Form Builder Card */}
+        <div className="bg-white rounded-2xl border border-[#DCE5F0] shadow-[0_2px_12px_rgba(7,26,51,0.03)] overflow-hidden flex flex-col">
           
-          {/* ========================================================================= */}
-          {/* COLUMN 1: ADD FIELD TYPES (~3.5 Cols)                                     */}
-          {/* ========================================================================= */}
-          <div className="lg:col-span-3 xl:col-span-3 bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_2px_12px_rgba(7,26,51,0.04)] space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
-                Add Field Types
-              </h3>
-              <span className="text-[11px] text-[#1463FF] font-semibold cursor-pointer">
-                Click to insert
-              </span>
-            </div>
-
-            {/* 10 Field Types Buttons */}
-            <div className="space-y-2">
-              {fieldTypes.map((ft) => {
-                const Icon = ft.icon;
-                return (
-                  <button
-                    key={ft.type}
-                    type="button"
-                    onClick={() => handleAddField(ft.type)}
-                    className="w-full text-left px-3 py-2 rounded-xl border border-[#DCE5F0] hover:border-[#1463FF] bg-white hover:bg-[#F8FAFC] text-slate-800 text-xs font-semibold transition-all flex items-center justify-between group cursor-pointer shadow-2xs"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-[#F8FAFC] border border-[#DCE5F0] flex items-center justify-center text-slate-500 group-hover:text-[#1463FF] group-hover:border-[#1463FF]/30 transition-colors">
-                        <Icon className="w-3.5 h-3.5" />
-                      </div>
-                      <span className="text-[#101B33] text-xs font-semibold">{ft.label}</span>
-                    </div>
-                    <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#1463FF] transition-colors" />
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Preset Question Sets */}
-            <div className="pt-3 border-t border-slate-100 space-y-2">
-              <div className="text-[11px] font-bold text-[#7184A3] uppercase tracking-wider">
-                Preset Question Sets
-              </div>
-              <div className="space-y-1.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleAddField('dropdown', 'Select Track / Workshop Stream', 'Event Options');
-                    handleAddField('radio', 'Prior Experience Level', 'Event Options');
-                  }}
-                  className="w-full text-left text-xs font-semibold text-[#1463FF] hover:underline cursor-pointer block leading-snug"
-                >
-                  + Add Workshop Track & Experience
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleAddField('dropdown', 'Dietary Preference (Veg / Non-Veg)', 'Logistics');
-                    handleAddField('number', 'Total Guest Count', 'Logistics');
-                  }}
-                  className="w-full text-left text-xs font-semibold text-[#1463FF] hover:underline cursor-pointer block leading-snug"
-                >
-                  + Add Food & Guest Counters
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          {/* ========================================================================= */}
-          {/* COLUMN 2: FORM STRUCTURE (Canvas, ~5-6 Cols)                              */}
-          {/* ========================================================================= */}
-          <div className="lg:col-span-5 xl:col-span-5 bg-white rounded-2xl border border-[#DCE5F0] p-6 shadow-[0_2px_12px_rgba(7,26,51,0.04)] flex flex-col justify-between min-h-[580px]">
-            <div>
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                <div>
+          {/* 3-Column Internal Layout with subtle vertical divider borders */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#DCE5F0] items-stretch flex-1 min-h-[580px]">
+            
+            {/* COLUMN 1: ADD FIELD TYPES (lg:col-span-3) */}
+            <div className="lg:col-span-3 p-5 sm:p-6 bg-[#FAFCFE] flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
-                    Form Structure ({fields.length} Fields)
+                    Add Field Types
                   </h3>
-                  <p className="text-[11px] text-[#7184A3] font-medium mt-0.5">
-                    Click a field to configure its properties
-                  </p>
+                  <span className="text-[11px] text-[#1463FF] font-semibold">
+                    Click to insert
+                  </span>
+                </div>
+
+                {/* 10 Field Types Buttons */}
+                <div className="space-y-1.5">
+                  {fieldTypes.map((ft) => {
+                    const Icon = ft.icon;
+                    return (
+                      <button
+                        key={ft.type}
+                        type="button"
+                        onClick={() => handleAddField(ft.type)}
+                        className="w-full text-left px-3 py-2 rounded-xl border border-[#DCE5F0] hover:border-[#1463FF] bg-white hover:bg-[#F8FAFC] text-slate-800 text-xs font-semibold transition-all flex items-center justify-between group cursor-pointer shadow-2xs"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-[#F8FAFC] border border-[#DCE5F0] flex items-center justify-center text-slate-500 group-hover:text-[#1463FF] group-hover:border-[#1463FF]/30 transition-colors">
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-[#101B33] text-xs font-semibold">{ft.label}</span>
+                        </div>
+                        <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#1463FF] transition-colors" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Field Cards Canvas */}
-              <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
-                {fields.map((field, idx) => {
-                  const isSelected = editingField?.id === field.id;
-
-                  return (
-                    <div
-                      key={field.id}
-                      onClick={() => setEditingField(field)}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
-                        isSelected
-                          ? 'border-[#1463FF] bg-[#F8FAFC] shadow-sm ring-2 ring-[#1463FF]/15'
-                          : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:shadow-2xs'
-                      }`}
-                    >
-                      {/* Left: Drag Handle & Field Meta */}
-                      <div className="flex items-center gap-3 min-w-0">
-                        {/* Drag Handle Icon */}
-                        <div className="text-slate-300 hover:text-slate-500 cursor-grab shrink-0">
-                          <GripVertical className="w-4 h-4" />
-                        </div>
-
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-xs sm:text-sm text-[#101B33] truncate">
-                              {field.label}
-                            </span>
-                            {field.required && (
-                              <span className="text-[#E5484D] font-bold text-xs">*</span>
-                            )}
-                          </div>
-                          <div className="text-[11px] text-[#7184A3] font-medium capitalize mt-0.5">
-                            {field.type} · {field.section || 'Personal Info'}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Right: Actions */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setEditingField(field); }}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-[#1463FF] hover:bg-slate-100 transition-colors cursor-pointer"
-                          title="Field Properties"
-                        >
-                          <Settings2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => handleDeleteField(field.id, e)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                          title="Delete Field"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {fields.length === 0 && (
-                  <div className="p-10 text-center border-2 border-dashed border-[#DCE5F0] rounded-xl text-slate-400 text-xs font-medium">
-                    No fields added yet. Click any field type on the left to add it to your form.
-                  </div>
-                )}
+              {/* Preset Question Sets */}
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <div className="text-[11px] font-bold text-[#7184A3] uppercase tracking-wider">
+                  Preset Question Sets
+                </div>
+                <div className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleAddField('dropdown', 'Select Track / Workshop Stream', 'Event Options');
+                      handleAddField('radio', 'Prior Experience Level', 'Event Options');
+                    }}
+                    className="w-full text-left text-xs font-semibold text-[#1463FF] hover:underline cursor-pointer block leading-snug"
+                  >
+                    + Add Workshop Track & Experience
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleAddField('dropdown', 'Dietary Preference (Veg / Non-Veg)', 'Logistics');
+                      handleAddField('number', 'Total Guest Count', 'Logistics');
+                    }}
+                    className="w-full text-left text-xs font-semibold text-[#1463FF] hover:underline cursor-pointer block leading-snug"
+                  >
+                    + Add Food & Guest Counters
+                  </button>
+                </div>
               </div>
+
             </div>
 
-            {/* Bottom Actions inside Form Structure Card */}
-            <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={() => { setWizardStep(1); setScreen('04_create_basic'); }}
-                className="h-11 px-5 rounded-xl border border-[#DCE5F0] bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
-              >
-                <ArrowLeft className="w-4 h-4 text-slate-400" />
-                <span>Back: Basic Info</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setWizardStep(3); setScreen('06_create_theme'); }}
-                className="h-11 px-6 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-xs sm:text-sm font-bold shadow-[0_4px_14px_rgba(20,99,255,0.3)] flex items-center gap-2 transition-all cursor-pointer"
-              >
-                <span>Next: Theme & Branding</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* ========================================================================= */}
-          {/* COLUMN 3: FIELD PROPERTIES (~3.5-4 Cols)                                  */}
-          {/* ========================================================================= */}
-          <div className="lg:col-span-4 xl:col-span-4 bg-white rounded-2xl border border-[#DCE5F0] p-6 shadow-[0_2px_12px_rgba(7,26,51,0.04)] min-h-[480px]">
-            {editingField ? (
-              <div className="space-y-4 animate-fade-in">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            {/* COLUMN 2: FORM STRUCTURE (Canvas, lg:col-span-5) */}
+            <div className="lg:col-span-5 p-5 sm:p-6 bg-white flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                   <div>
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
-                      Field Settings
+                      Form Structure ({fields.length} Fields)
                     </h3>
-                    <span className="text-[11px] text-slate-400 font-medium">Type: {editingField.type}</span>
+                    <p className="text-[11px] text-[#7184A3] font-medium mt-0.5">
+                      Click a field to configure its properties
+                    </p>
                   </div>
-                  <button 
-                    onClick={() => setEditingField(null)}
-                    className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
                 </div>
 
-                {/* Field Label */}
-                <div>
-                  <label className="block text-xs font-bold text-[#101B33] mb-1.5">
-                    Field Label <span className="text-[#E5484D]">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editingField.label}
-                    onChange={(e) => handleUpdateEditingField({ label: e.target.value })}
-                    className="w-full h-10 px-3.5 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
-                  />
-                </div>
+                {/* Field Cards Canvas */}
+                <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+                  {fields.map((field) => {
+                    const isSelected = editingField?.id === field.id;
 
-                {/* Placeholder */}
-                <div>
-                  <label className="block text-xs font-bold text-[#101B33] mb-1.5">
-                    Placeholder Text
-                  </label>
-                  <input
-                    type="text"
-                    value={editingField.placeholder || ''}
-                    onChange={(e) => handleUpdateEditingField({ placeholder: e.target.value })}
-                    placeholder="e.g. Enter value..."
-                    className="w-full h-10 px-3.5 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
-                  />
-                </div>
-
-                {/* Section Header */}
-                <div>
-                  <label className="block text-xs font-bold text-[#101B33] mb-1.5">
-                    Form Section Group
-                  </label>
-                  <input
-                    type="text"
-                    value={editingField.section || ''}
-                    onChange={(e) => handleUpdateEditingField({ section: e.target.value })}
-                    placeholder="e.g. Personal Info, Workshop Options"
-                    className="w-full h-10 px-3.5 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
-                  />
-                </div>
-
-                {/* Mandatory / Required Toggle */}
-                <div className="pt-1">
-                  <label className="flex items-center gap-2.5 p-3 rounded-xl border border-[#DCE5F0] bg-[#F8FAFC] cursor-pointer hover:bg-slate-100/60 transition-colors select-none">
-                    <input
-                      type="checkbox"
-                      checked={editingField.required}
-                      onChange={(e) => handleUpdateEditingField({ required: e.target.checked })}
-                      className="w-4 h-4 rounded text-[#1463FF] focus:ring-[#1463FF] border-slate-300"
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-[#101B33]">Mandatory Field</span>
-                      <span className="text-[10px] text-[#7184A3]">Attendees must fill this field before submitting</span>
-                    </div>
-                  </label>
-                </div>
-
-                {/* Options List for Dropdown / Radio / Checkbox */}
-                {['dropdown', 'radio', 'checkbox'].includes(editingField.type) && (
-                  <div className="pt-3 border-t border-slate-100 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-[#101B33]">
-                        Choice Options
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handleAddOption}
-                        className="text-xs font-bold text-[#1463FF] hover:underline cursor-pointer"
+                    return (
+                      <div
+                        key={field.id}
+                        onClick={() => setEditingField(field)}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
+                          isSelected
+                            ? 'border-[#1463FF] bg-[#F8FAFC] shadow-sm ring-2 ring-[#1463FF]/15'
+                            : 'border-[#DCE5F0] bg-white hover:border-slate-300 hover:shadow-2xs'
+                        }`}
                       >
-                        + Add Choice
-                      </button>
-                    </div>
+                        {/* Left: Drag Handle & Field Meta */}
+                        <div className="flex items-center gap-3 min-w-0">
+                          {/* Drag Handle Icon */}
+                          <div className="text-slate-300 hover:text-slate-500 cursor-grab shrink-0">
+                            <GripVertical className="w-4 h-4" />
+                          </div>
 
-                    <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                      {editingField.options?.map((opt, optIdx) => (
-                        <div key={optIdx} className="flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            value={opt}
-                            onChange={(e) => handleUpdateOption(optIdx, e.target.value)}
-                            className="flex-1 h-9 px-3 bg-white border border-[#DCE5F0] rounded-lg text-xs text-slate-900 font-medium"
-                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-xs sm:text-sm text-[#101B33] truncate">
+                                {field.label}
+                              </span>
+                              {field.required && (
+                                <span className="text-[#E5484D] font-bold text-xs">*</span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-[#7184A3] font-medium capitalize mt-0.5">
+                              {field.type} · {field.section || 'Personal Info'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right: Actions */}
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <button
                             type="button"
-                            onClick={() => handleDeleteOption(optIdx)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer"
+                            onClick={(e) => { e.stopPropagation(); setEditingField(field); }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-[#1463FF] hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Field Properties"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <Settings2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteField(field.id, e)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Delete Field"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      ))}
+                      </div>
+                    );
+                  })}
+
+                  {fields.length === 0 && (
+                    <div className="p-10 text-center border-2 border-dashed border-[#DCE5F0] rounded-xl text-slate-400 text-xs font-medium">
+                      No fields added yet. Click any field type on the left to add it to your form.
                     </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* COLUMN 3: FIELD PROPERTIES (lg:col-span-4) */}
+            <div className="lg:col-span-4 p-5 sm:p-6 bg-[#FAFCFE] flex flex-col justify-between min-h-[480px]">
+              {editingField ? (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#101B33]">
+                        Field Settings
+                      </h3>
+                      <span className="text-[11px] text-slate-400 font-medium">Type: {editingField.type}</span>
+                    </div>
+                    <button 
+                      onClick={() => setEditingField(null)}
+                      className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
 
-                {/* Done Button */}
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingField(null)}
-                    className="w-full h-10 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Apply Settings</span>
-                  </button>
-                </div>
+                  {/* Field Label */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#101B33] mb-1.5">
+                      Field Label <span className="text-[#E5484D]">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editingField.label}
+                      onChange={(e) => handleUpdateEditingField({ label: e.target.value })}
+                      className="w-full h-10 px-3.5 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
+                    />
+                  </div>
 
-              </div>
-            ) : (
-              /* Empty State matching Screenshot */
-              <div className="flex flex-col items-center justify-center text-center py-20 px-4 h-full">
-                <div className="w-14 h-14 rounded-2xl bg-[#EFF6FF] text-[#1463FF] border border-blue-100 flex items-center justify-center mx-auto mb-4 shadow-xs">
-                  <SlidersHorizontal className="w-6 h-6" />
+                  {/* Placeholder */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#101B33] mb-1.5">
+                      Placeholder Text
+                    </label>
+                    <input
+                      type="text"
+                      value={editingField.placeholder || ''}
+                      onChange={(e) => handleUpdateEditingField({ placeholder: e.target.value })}
+                      placeholder="e.g. Enter value..."
+                      className="w-full h-10 px-3.5 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
+                    />
+                  </div>
+
+                  {/* Section Header */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#101B33] mb-1.5">
+                      Form Section Group
+                    </label>
+                    <input
+                      type="text"
+                      value={editingField.section || ''}
+                      onChange={(e) => handleUpdateEditingField({ section: e.target.value })}
+                      placeholder="e.g. Personal Info, Workshop Options"
+                      className="w-full h-10 px-3.5 bg-white border border-[#DCE5F0] rounded-xl text-xs sm:text-sm text-slate-900 placeholder-[#91A4C0] focus:outline-none focus:ring-4 focus:ring-[#1463FF]/10 focus:border-[#1463FF] transition-all font-medium"
+                    />
+                  </div>
+
+                  {/* Mandatory / Required Toggle */}
+                  <div className="pt-1">
+                    <label className="flex items-center gap-2.5 p-3 rounded-xl border border-[#DCE5F0] bg-white cursor-pointer hover:bg-slate-50 transition-colors select-none">
+                      <input
+                        type="checkbox"
+                        checked={editingField.required}
+                        onChange={(e) => handleUpdateEditingField({ required: e.target.checked })}
+                        className="w-4 h-4 rounded text-[#1463FF] focus:ring-[#1463FF] border-slate-300"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-[#101B33]">Mandatory Field</span>
+                        <span className="text-[10px] text-[#7184A3]">Attendees must fill this field before submitting</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Options List for Dropdown / Radio / Checkbox */}
+                  {['dropdown', 'radio', 'checkbox'].includes(editingField.type) && (
+                    <div className="pt-3 border-t border-slate-100 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-[#101B33]">
+                          Choice Options
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleAddOption}
+                          className="text-xs font-bold text-[#1463FF] hover:underline cursor-pointer"
+                        >
+                          + Add Choice
+                        </button>
+                      </div>
+
+                      <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        {editingField.options?.map((opt, optIdx) => (
+                          <div key={optIdx} className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={opt}
+                              onChange={(e) => handleUpdateOption(optIdx, e.target.value)}
+                              className="flex-1 h-9 px-3 bg-white border border-[#DCE5F0] rounded-lg text-xs text-slate-900 font-medium"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteOption(optIdx)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Done Button */}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingField(null)}
+                      className="w-full h-10 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Apply Settings</span>
+                    </button>
+                  </div>
+
                 </div>
-                <h4 className="text-base font-bold text-[#101B33] mb-1.5">
-                  No field selected
-                </h4>
-                <p className="text-xs text-[#7184A3] max-w-xs leading-relaxed font-medium">
-                  Select any field in the canvas to adjust validation rules, placeholder text, and choices.
-                </p>
-              </div>
-            )}
+              ) : (
+                /* Empty State matching Screenshot */
+                <div className="flex flex-col items-center justify-center text-center py-20 px-4 h-full">
+                  <div className="w-14 h-14 rounded-2xl bg-[#EFF6FF] text-[#1463FF] border border-blue-100 flex items-center justify-center mx-auto mb-4 shadow-xs">
+                    <SlidersHorizontal className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-base font-bold text-[#101B33] mb-1.5">
+                    No field selected
+                  </h4>
+                  <p className="text-xs text-[#7184A3] max-w-xs leading-relaxed font-medium">
+                    Select any field in the canvas to adjust validation rules, placeholder text, and choices.
+                  </p>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* Unified Card Footer Actions */}
+          <div className="p-4 sm:p-5 bg-white border-t border-[#DCE5F0] flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => { setWizardStep(1); setScreen('04_create_basic'); }}
+              className="h-10 sm:h-11 px-5 rounded-xl border border-[#DCE5F0] bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-400" />
+              <span>Back: Basic Info</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setWizardStep(3); setScreen('06_create_theme'); }}
+              className="h-10 sm:h-11 px-6 rounded-xl bg-[#1463FF] hover:bg-[#0E4ED8] text-white text-xs sm:text-sm font-bold shadow-[0_4px_14px_rgba(20,99,255,0.3)] flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <span>Next: Theme & Branding</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
 
         </div>
