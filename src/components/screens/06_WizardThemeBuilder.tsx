@@ -163,14 +163,6 @@ export const WizardThemeBuilderScreen: React.FC = () => {
         {/* Top Header Section with Right Decorative Illustration */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-1">
           <div>
-            <button
-              type="button"
-              onClick={() => { setWizardStep(2); setScreen('05_create_form'); }}
-              className="text-xs font-semibold text-[#1463FF] hover:underline flex items-center gap-1.5 cursor-pointer mb-2 transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Events Directory</span>
-            </button>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#101B33] tracking-tight font-sans">
               Create Event — Step 3: Theme & Branding
             </h1>

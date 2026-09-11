@@ -52,16 +52,8 @@ export const WizardSettingsScreen: React.FC = () => {
     <AdminLayout activeNav="events">
       <div className="space-y-6 max-w-[960px] mx-auto">
         
-        {/* Header with Back Link */}
+        {/* Header */}
         <div className="pb-1">
-          <button
-            type="button"
-            onClick={() => { setWizardStep(3); setScreen('06_create_theme'); }}
-            className="text-xs font-semibold text-[#1463FF] hover:underline flex items-center gap-1.5 cursor-pointer mb-2 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Step 3: Theme & Branding</span>
-          </button>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#071A33] tracking-tight font-sans">
             Create Event — Step 4: Settings & Limits
           </h1>
