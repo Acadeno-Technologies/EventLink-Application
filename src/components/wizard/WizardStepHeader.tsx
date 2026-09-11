@@ -3,10 +3,7 @@ import { useEventStore } from '../../store/eventStore';
 import { ScreenId } from '../../types';
 import { 
   ChevronRight, 
-  Check,
-  CalendarDays, 
-  Settings, 
-  Send
+  Check 
 } from 'lucide-react';
 
 interface WizardStepHeaderProps {
@@ -29,8 +26,8 @@ export const WizardStepHeader: React.FC<WizardStepHeaderProps> = ({ currentStepN
   ];
 
   return (
-    <div className="bg-white rounded-2xl p-2.5 sm:p-3.5 shadow-[0_2px_12px_rgba(7,26,51,0.04)] border border-[#DCE5F0] mb-6">
-      <div className="flex items-center justify-between overflow-x-auto gap-2 no-scrollbar">
+    <div className="bg-white rounded-2xl p-2 sm:p-2.5 shadow-[0_2px_8px_rgba(7,26,51,0.03)] border border-[#DCE5F0] mb-4">
+      <div className="flex items-center justify-between overflow-x-auto gap-1.5 no-scrollbar select-none">
         {steps.map((step, idx) => {
           const isCurrent = step.number === currentStepNumber;
           const isCompleted = step.number < currentStepNumber;
@@ -43,34 +40,35 @@ export const WizardStepHeader: React.FC<WizardStepHeaderProps> = ({ currentStepN
                   setWizardStep(step.number);
                   setScreen(step.screen);
                 }}
-                className={`flex items-center gap-2.5 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-[13px] font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-xl text-[12px] font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   isCurrent
-                    ? 'bg-[#1463FF] text-white shadow-[0_4px_14px_rgba(20,99,255,0.35)] font-bold'
+                    ? 'bg-[#1463FF] text-white shadow-[0_3px_10px_rgba(20,99,255,0.3)] font-bold'
                     : isCompleted
                     ? 'bg-[#EBF3FF] text-[#1463FF] hover:bg-[#DDEBFF] font-semibold'
                     : 'bg-[#F1F5F9] text-slate-500 hover:bg-slate-200/80 hover:text-slate-800'
                 }`}
               >
-                {/* Step Badge */}
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 transition-colors ${
+                {/* Step Number / Check Badge */}
+                <div className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 transition-colors ${
                   isCurrent
-                    ? 'bg-white text-[#1463FF] shadow-xs'
+                    ? 'bg-white text-[#1463FF] shadow-2xs'
                     : isCompleted
                     ? 'bg-[#1463FF] text-white'
                     : 'bg-[#E2E8F0] text-slate-500'
                 }`}>
                   {isCompleted ? (
-                    <Check className="w-3 h-3 stroke-[3]" />
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
                   ) : (
                     step.number
                   )}
                 </div>
 
+                {/* Step Label */}
                 <span>{step.label}</span>
               </button>
 
               {idx < steps.length - 1 && (
-                <ChevronRight className="w-4 h-4 text-slate-300 shrink-0 select-none" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0 select-none" />
               )}
             </React.Fragment>
           );
