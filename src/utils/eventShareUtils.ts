@@ -16,17 +16,8 @@ export function encodeEventToShareUrl(event: Event | undefined | null, origin?: 
     slug = event.name ? event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'event';
   }
 
-  const queryParams = new URLSearchParams();
-  queryParams.set('event', slug || 'event');
-  if (event.name) queryParams.set('name', event.name);
-  if (event.start_date) queryParams.set('date', event.start_date);
-  if (event.venue) queryParams.set('venue', event.venue);
-  if (event.settings?.max_registrations) queryParams.set('cap', String(event.settings.max_registrations));
-  if (event.banner_url && !event.banner_url.startsWith('data:')) {
-    queryParams.set('banner', event.banner_url);
-  }
-
-  return `${base}/?${queryParams.toString()}`;
+  // Return clean, short, professional registration URL
+  return `${base}/?event=${encodeURIComponent(slug)}`;
 }
 
 /**
