@@ -1,5 +1,6 @@
 import React, { ReactNode, useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
+import acadenoLogoPng from '../../assets/acadeno-logo.png';
 import { 
   LayoutDashboard, 
   CalendarDays, 
@@ -51,15 +52,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           onClick={() => setScreen('02_dashboard')}
           className="flex items-center gap-2 cursor-pointer select-none"
         >
-          {/* Logo Mark */}
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#1463FF] via-[#2563EB] to-[#38BDF8] flex items-center justify-center text-white font-extrabold shadow-xs">
-            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
-              <path d="M12 2L2 22h4.5l2-4.5h7l2 4.5H22L12 2zm0 6.5l2.4 5.5h-4.8L12 8.5z" />
-            </svg>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[11px] font-black text-white tracking-wider leading-none">ACADENO</span>
-            <span className="text-[8px] font-extrabold text-[#1463FF] tracking-widest leading-tight">EVENTLINK</span>
+          <div className="h-8 px-2.5 py-1 bg-white rounded-lg flex items-center justify-center shadow-xs">
+            <img 
+              src={acadenoLogoPng} 
+              alt="ACADENO" 
+              className="h-6 w-auto object-contain" 
+            />
           </div>
         </div>
 
@@ -83,23 +81,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           {/* White Rounded Logo Card */}
           <div 
             onClick={() => { setScreen('02_dashboard'); setIsMobileMenuOpen(false); }}
-            className="bg-white rounded-xl p-3 mb-5 flex items-center justify-center gap-2.5 cursor-pointer group shadow-2xs border border-slate-100/10 hover:shadow-xs transition-all"
+            className="bg-white rounded-2xl p-3 mb-5 flex items-center justify-center cursor-pointer group shadow-sm border border-slate-100 hover:shadow-md transition-all"
           >
-            {/* Custom Vibrant Modern 'A' Glyph */}
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1463FF] via-[#2B7FFF] to-[#38BDF8] flex items-center justify-center text-white shadow-2xs group-hover:scale-105 transition-transform shrink-0">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-                <path d="M12 2.5L3.5 21.5h4.2l1.9-4.2h5.8l1.9 4.2h4.2L12 2.5zm-1.1 11.2l2.1-4.8 2.1 4.8h-4.2z" />
-              </svg>
-            </div>
-            
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-black text-[#071A33] tracking-wider leading-tight uppercase font-sans">
-                ACADENO
-              </span>
-              <span className="text-[9px] font-extrabold text-[#1463FF] tracking-widest uppercase leading-none">
-                EVENTLINK
-              </span>
-            </div>
+            <img 
+              src={acadenoLogoPng} 
+              alt="ACADENO Technologies" 
+              className="h-12 w-auto max-w-full object-contain group-hover:scale-105 transition-transform" 
+            />
           </div>
 
           {/* Navigation Menu Items */}
