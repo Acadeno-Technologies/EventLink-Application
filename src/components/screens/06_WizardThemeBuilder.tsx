@@ -221,11 +221,11 @@ export const WizardThemeBuilderScreen: React.FC = () => {
             {/* ========================================================================= */}
             {/* LEFT COLUMN: CUSTOMIZATION CONTROLS (lg:col-span-7)                       */}
             {/* ========================================================================= */}
-            <div className="lg:col-span-7 p-4 sm:p-5 lg:p-6 flex flex-col justify-between space-y-4">
+            <div className="lg:col-span-7 p-5 sm:p-6 flex flex-col justify-start space-y-5 sm:space-y-6">
               
               {/* SECTION 1 — CUSTOM COLORS & BRANDING */}
-              <div className="space-y-2.5">
-                <div className="border-b border-slate-100 pb-2">
+              <div className="space-y-3">
+                <div className="border-b border-slate-100 pb-2.5">
                   <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
                     Custom Colors & Branding
                   </h3>
