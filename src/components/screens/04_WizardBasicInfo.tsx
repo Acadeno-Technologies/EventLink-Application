@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
-import { WizardStepHeader } from '../wizard/WizardStepHeader';
 import { 
   Calendar, 
   CalendarDays, 
@@ -145,9 +144,6 @@ export const WizardBasicInfoScreen: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Compact Step Progress Bar (5 Steps) */}
-        <WizardStepHeader currentStepNumber={1} />
 
         {/* Main Compact Form Card */}
         <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(7,26,51,0.03)] border border-[#DCE5F0] space-y-4">

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
-import { WizardStepHeader } from '../wizard/WizardStepHeader';
 import confetti from 'canvas-confetti';
 import { 
   CheckCircle2, 
@@ -82,8 +81,6 @@ export const WizardPreviewPublishScreen: React.FC = () => {
             Review participant appearance, verify operational checklist, and launch live.
           </p>
         </div>
-
-        <WizardStepHeader currentStepNumber={5} />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           

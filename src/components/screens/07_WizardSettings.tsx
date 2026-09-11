@@ -1,7 +1,6 @@
 import React from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
-import { WizardStepHeader } from '../wizard/WizardStepHeader';
 import { 
   CalendarClock, 
   Users, 
@@ -61,8 +60,6 @@ export const WizardSettingsScreen: React.FC = () => {
             Configure operational windows, attendee capacity limits, and notification delivery triggers.
           </p>
         </div>
-
-        <WizardStepHeader currentStepNumber={4} />
 
         <div className="bg-white rounded-2xl border border-[#DCE5F0] shadow-[0_2px_12px_rgba(7,26,51,0.04)] p-6 sm:p-8 space-y-7">
         

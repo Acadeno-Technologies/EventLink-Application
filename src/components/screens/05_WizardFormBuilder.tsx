@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
-import { WizardStepHeader } from '../wizard/WizardStepHeader';
 import { FormField } from '../../types';
 import { 
   ArrowLeft,
@@ -195,9 +194,6 @@ export const WizardFormBuilderScreen: React.FC = () => {
 
           </div>
         </div>
-
-        {/* Step Progress Bar (Step 2 Active) */}
-        <WizardStepHeader currentStepNumber={2} />
 
         {/* 3-Column Form Builder Workspace */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
-import { WizardStepHeader } from '../wizard/WizardStepHeader';
 import { ThemeTemplate, EventTheme } from '../../types';
 import { themePresets } from '../../data/seedData';
 import { 
@@ -213,9 +212,6 @@ export const WizardThemeBuilderScreen: React.FC = () => {
 
           </div>
         </div>
-
-        {/* Step Progress Bar (Step 3 Active) */}
-        <WizardStepHeader currentStepNumber={3} />
 
         {/* Main Workspace (Two-Column Layout) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
