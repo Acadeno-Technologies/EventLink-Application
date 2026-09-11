@@ -19,7 +19,6 @@ import {
   Loader2, 
   Link2, 
   Trash2, 
-  ChevronDown,
   Layers,
   Menu,
   CheckCircle2,
@@ -254,7 +253,6 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       onChange={(e) => handleUpdateColors('primary', e.target.value)}
                       className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
                     />
-                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 pointer-events-none" />
                   </div>
                 </div>
 
@@ -276,7 +274,6 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       onChange={(e) => handleUpdateColors('button', e.target.value)}
                       className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
                     />
-                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 pointer-events-none" />
                   </div>
                 </div>
 
@@ -298,7 +295,6 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       onChange={(e) => handleUpdateColors('background', e.target.value)}
                       className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
                     />
-                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 pointer-events-none" />
                   </div>
                 </div>
 
@@ -320,7 +316,6 @@ export const WizardThemeBuilderScreen: React.FC = () => {
                       onChange={(e) => handleUpdateColors('text', e.target.value)}
                       className="w-full text-xs font-mono uppercase font-bold text-slate-800 bg-transparent focus:outline-none"
                     />
-                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 pointer-events-none" />
                   </div>
                 </div>
 
