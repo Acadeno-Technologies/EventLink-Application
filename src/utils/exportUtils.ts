@@ -39,15 +39,17 @@ function getPhone(reg: Registration, event?: Event) {
   return (reg.phone && reg.phone !== '+91 9846000000' && reg.phone !== '+91 98460 00000') ? reg.phone : '—';
 }
 
-export function exportRegistrationsToExcel(event: Event, registrations: Registration[], filenamePrefix?: string) {
+export function exportRegistrationsToExcel(event: Event | undefined | null, registrations: Registration[], filenamePrefix?: string, eventsList?: Event[]) {
   // Flatten dynamic responses for each registration
   const data = registrations.map((reg, index) => {
+    const matchedEvent = eventsList?.find(e => e.id === reg.event_id) || event;
     const row: Record<string, any> = {
       'Sl No': index + 1,
+      'Event Name': matchedEvent?.name || 'General Event',
       'Registration Code': reg.registration_code,
       'Full Name': reg.name,
       'Email Address': reg.email,
-      'Phone Number': getPhone(reg, event),
+      'Phone Number': getPhone(reg, matchedEvent || undefined),
       'Status': reg.status.toUpperCase(),
       'Attendance': reg.attendance_status.replace('_', ' ').toUpperCase(),
       'Payment Status': reg.payment_status.replace('_', ' ').toUpperCase(),
@@ -56,9 +58,9 @@ export function exportRegistrationsToExcel(event: Event, registrations: Registra
       'IP Address': reg.ip_address || 'N/A',
     };
 
-    // Add dynamic form field values
-    if (event.form_schema) {
-      event.form_schema.forEach(field => {
+    // Add dynamic form field values if available
+    if (matchedEvent?.form_schema) {
+      matchedEvent.form_schema.forEach(field => {
         const val = reg.responses ? reg.responses[field.id] : undefined;
         row[`Form: ${field.label}`] = Array.isArray(val) ? val.join(', ') : (val !== undefined ? val : '');
       });
@@ -77,26 +79,28 @@ export function exportRegistrationsToExcel(event: Event, registrations: Registra
   }));
   worksheet['!cols'] = colWidths;
 
-  const fname = `${filenamePrefix || event.slug}-registrations-${new Date().toISOString().split('T')[0]}.xlsx`;
+  const fname = `${filenamePrefix || (event?.slug || 'all-events')}-registrations-${new Date().toISOString().split('T')[0]}.xlsx`;
   XLSX.writeFile(workbook, fname);
 }
 
-export function exportRegistrationsToCsv(event: Event, registrations: Registration[]) {
+export function exportRegistrationsToCsv(event: Event | undefined | null, registrations: Registration[], eventsList?: Event[]) {
   const data = registrations.map((reg, index) => {
+    const matchedEvent = eventsList?.find(e => e.id === reg.event_id) || event;
     const row: Record<string, any> = {
       'Sl No': index + 1,
+      'Event Name': matchedEvent?.name || 'General Event',
       'Registration Code': reg.registration_code,
       'Full Name': reg.name,
       'Email': reg.email,
-      'Phone': getPhone(reg, event),
+      'Phone': getPhone(reg, matchedEvent || undefined),
       'Status': reg.status,
       'Attendance': reg.attendance_status,
       'Source': reg.source,
       'Submitted At': reg.submitted_at,
     };
 
-    if (event.form_schema) {
-      event.form_schema.forEach(field => {
+    if (matchedEvent?.form_schema) {
+      matchedEvent.form_schema.forEach(field => {
         const val = reg.responses ? reg.responses[field.id] : '';
         row[field.label] = Array.isArray(val) ? val.join('; ') : val;
       });
@@ -112,7 +116,7 @@ export function exportRegistrationsToCsv(event: Event, registrations: Registrati
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `${event.slug}-registrations.csv`);
+  link.setAttribute('download', `${event?.slug || 'all-events'}-registrations.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
