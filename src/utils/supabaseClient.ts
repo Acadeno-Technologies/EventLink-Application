@@ -4,6 +4,18 @@ import { Event, Registration } from '../types';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+export function extractProjectRef(url: string | undefined): string {
+  if (!url) return 'unconfigured';
+  try {
+    const host = new URL(url).hostname;
+    return host.split('.')[0] || 'unknown';
+  } catch {
+    const match = url.match(/https?:\/\/([^.]+)\.supabase\.co/i);
+    return match ? match[1] : 'unknown';
+  }
+}
+
+export const SUPABASE_PROJECT_REF = extractProjectRef(supabaseUrl);
 export const DEFAULT_ORG_ID = 'f56b03a9-9097-4638-8c4a-6f68227b2789';
 export const DEFAULT_USER_ID = 'd79ebd86-73b7-4f55-9108-cdda19919cf0';
 
@@ -20,7 +32,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Dev-only initialization diagnostic log & startup seed health check
 if (import.meta.env.DEV && supabaseUrl && supabaseAnonKey) {
-  console.log(`[Supabase] Initialized successfully. Connecting to: ${supabaseUrl}`);
+  console.log(`[Supabase] Project: ${SUPABASE_PROJECT_REF} — ${supabaseUrl}`);
 
   // Query organizations and users for default seed rows to warn early if seed was never run
   try {

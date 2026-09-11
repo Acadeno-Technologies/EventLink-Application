@@ -29,4 +29,8 @@ If you are developing a production application, we recommend enabling type-aware
 }
 ```
 
+## Debugging cloud sync
+
+Always confirm you're viewing the correct Supabase project by checking the project reference shown in the Admin Sidebar & Footer (`Connected Supabase project: <SUPABASE_PROJECT_REF>`) against the URL in your browser's Supabase dashboard tab — `VITE_SUPABASE_URL` in `render.yaml` is the single source of truth for which project is live.
+
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
