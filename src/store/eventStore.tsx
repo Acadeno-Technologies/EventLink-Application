@@ -226,21 +226,25 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         } else if (Array.isArray(evtsRes.data)) {
           const remoteEvents = evtsRes.data;
           const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-          const hasUrlEvent = urlParams && (urlParams.get('event') || urlParams.get('name') || urlParams.get('title') || urlParams.get('d') || urlParams.get('data'));
+          const eventSlugParam = urlParams ? (urlParams.get('event') || urlParams.get('e') || urlParams.get('event_id') || urlParams.get('slug')) : null;
+          const hasUrlEvent = urlParams && (eventSlugParam || urlParams.get('name') || urlParams.get('title') || urlParams.get('d') || urlParams.get('data'));
           
           let merged = [...remoteEvents];
 
           if (hasUrlEvent) {
             const decoded = decodeEventFromUrlParams(urlParams, organization.id);
             if (decoded) {
-              const existingIdx = merged.findIndex(e => 
+              const matchedRemote = merged.find(e => 
+                (eventSlugParam && e.slug.toLowerCase() === eventSlugParam.toLowerCase()) ||
                 e.id === decoded.id || 
                 e.slug.toLowerCase() === decoded.slug.toLowerCase() ||
                 e.name.toLowerCase() === decoded.name.toLowerCase()
               );
-              // Only add decoded fallback if event does not exist in Neon database
-              if (existingIdx < 0) {
+              if (matchedRemote) {
+                setSelectedEventId(matchedRemote.id);
+              } else {
                 merged = [decoded, ...merged];
+                setSelectedEventId(decoded.id);
               }
             }
           }
@@ -329,19 +333,6 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           const decodedEvt = decodeEventFromUrlParams(params, organization.id);
 
           if (decodedEvt) {
-            setEvents(prev => {
-              const matchIdx = prev.findIndex(e => 
-                e.id === decodedEvt.id || 
-                e.slug.toLowerCase() === decodedEvt.slug.toLowerCase() ||
-                (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) ||
-                e.name.toLowerCase() === decodedEvt.name.toLowerCase()
-              );
-              if (matchIdx >= 0) {
-                return prev; // Never overwrite real database event with fallback dummy data
-              }
-              return [decodedEvt, ...prev];
-            });
-
             setSelectedEventId(decodedEvt.id);
             setCurrentScreen(prev => {
               if (prev === '16_registration_success') return prev;
