@@ -95,9 +95,24 @@ export function generateUUID(): string {
   });
 }
 
-function isValidUUID(str: string | undefined | null): boolean {
+export function isValidUUID(str: string | undefined | null): boolean {
   if (!str) return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
+export function ensureValidUUID(id: string | undefined | null, fallbackSeed?: string): string {
+  if (id && isValidUUID(id)) return id;
+  if (id) {
+    let hash = 0;
+    const str = id + (fallbackSeed || '');
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    const hex = Math.abs(hash).toString(16).padStart(8, '0');
+    return `${hex.slice(0, 8)}-4000-8000-0000-${hex.padEnd(12, '0').slice(0, 12)}`;
+  }
+  return generateUUID();
 }
 
 /**
@@ -348,20 +363,30 @@ export async function fetchRemoteRegistrations(): Promise<{ data: Registration[]
   }
 }
 
-/**
- * Sync a new registration to Supabase Cloud.
- * Returns { data, error } directly instead of swallowing errors.
- */
-export async function syncRegistrationToCloud(reg: Registration): Promise<{ data: Registration | null; error: any }> {
+export async function syncRegistrationToCloud(
+  reg: Registration,
+  fallbackEvent?: Event
+): Promise<{ data: Registration | null; error: any }> {
   try {
     const client = getSupabaseClient();
     const regUuid = isValidUUID(reg.id) ? reg.id : generateUUID();
-    const eventUuid = isValidUUID(reg.event_id) ? reg.event_id : undefined;
+    let eventUuid = isValidUUID(reg.event_id) ? reg.event_id : undefined;
+
+    if (!eventUuid && fallbackEvent) {
+      eventUuid = ensureValidUUID(fallbackEvent.id, fallbackEvent.slug || fallbackEvent.name);
+    }
 
     if (!eventUuid) {
-      const err = new Error(`Cannot sync registration: event_id "${reg.event_id}" is not a valid UUID.`);
-      console.error('[Supabase syncRegistrationToCloud Error]:', err);
-      return { data: null, error: err };
+      eventUuid = ensureValidUUID(reg.event_id);
+    }
+
+    // 1. If fallbackEvent is provided, proactively sync the parent event first to guarantee foreign key exists
+    if (fallbackEvent) {
+      const eventToSync: Event = {
+        ...fallbackEvent,
+        id: eventUuid,
+      };
+      await syncEventToCloud(eventToSync);
     }
 
     const { error } = await client
@@ -385,12 +410,41 @@ export async function syncRegistrationToCloud(reg: Registration): Promise<{ data
       }, { onConflict: 'id' });
 
     if (error) {
+      // Auto-healing: If foreign key error occurred, attempt to sync the fallback event and retry once
+      if (fallbackEvent && (error.code === '23503' || /foreign key/i.test(error.message || ''))) {
+        console.log('[Supabase Auto-Healing] Syncing parent event to cloud and retrying registration insert...');
+        await syncEventToCloud({ ...fallbackEvent, id: eventUuid });
+        const retryRes = await client
+          .from('registrations')
+          .upsert({
+            id: regUuid,
+            event_id: eventUuid,
+            registration_code: reg.registration_code,
+            responses: {
+              name: reg.name,
+              email: reg.email,
+              phone: reg.phone,
+              ...(reg.responses || {})
+            },
+            status: reg.status || 'confirmed',
+            payment_status: reg.payment_status || 'not_required',
+            attendance_status: reg.attendance_status || 'not_marked',
+            source: reg.source || 'direct',
+            ip_address: reg.ip_address || null,
+            submitted_at: reg.submitted_at || new Date().toISOString()
+          }, { onConflict: 'id' });
+
+        if (!retryRes.error) {
+          return { data: { ...reg, id: regUuid, event_id: eventUuid }, error: null };
+        }
+      }
+
       const formattedErr = formatPostgresError(error, 'registration');
       console.error('[Supabase syncRegistrationToCloud Error]:', formattedErr.message, error);
       return { data: null, error: formattedErr };
     }
 
-    return { data: { ...reg, id: regUuid }, error: null };
+    return { data: { ...reg, id: regUuid, event_id: eventUuid }, error: null };
   } catch (err: any) {
     console.error('[Supabase syncRegistrationToCloud Exception]:', err);
     return { data: null, error: err };

@@ -21,7 +21,9 @@ import {
   fetchRemoteRegistrations,
   deleteEventFromCloud,
   deleteRegistrationFromCloud,
-  generateUUID
+  generateUUID,
+  ensureValidUUID,
+  isValidUUID
 } from '../utils/supabaseClient';
 
 interface EventContextType {
@@ -708,18 +710,30 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     eventId: string,
     formData: { name: string; email: string; phone: string; responses: Record<string, any>; source?: string }
   ): Promise<Registration> => {
-    const targetEvt = events.find(e => e.id === eventId);
+    let targetEvt = events.find(e => e.id === eventId || e.slug === eventId);
+    if (!targetEvt && selectedEvent) {
+      targetEvt = selectedEvent;
+    }
+
+    const finalEventId = targetEvt?.id && isValidUUID(targetEvt.id)
+      ? targetEvt.id
+      : ensureValidUUID(eventId, targetEvt?.slug || targetEvt?.name);
+
+    if (targetEvt && targetEvt.id !== finalEventId) {
+      targetEvt = { ...targetEvt, id: finalEventId };
+    }
+
     const prefix = targetEvt?.name
       ? targetEvt.name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3)
       : 'EVT';
     
-    const seq = String(registrations.filter(r => r.event_id === eventId).length + 1).padStart(5, '0');
+    const seq = String(registrations.filter(r => r.event_id === finalEventId || r.event_id === eventId).length + 1).padStart(5, '0');
     const year = new Date().getFullYear();
     const regCode = `${prefix}-${year}-${seq}`;
 
     const newReg: Registration = {
       id: generateUUID(),
-      event_id: eventId,
+      event_id: finalEventId,
       registration_code: regCode,
       name: formData.name,
       email: formData.email,
@@ -737,14 +751,14 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setSelectedRegistrationId(newReg.id);
 
     setEvents(prev => prev.map(e => {
-      if (e.id === eventId) {
+      if (e.id === finalEventId || e.id === eventId) {
         return { ...e, views_count: (e.views_count || 0) + 1 };
       }
       return e;
     }));
 
-    // Await cloud sync for registration and handle error
-    const { error } = await syncRegistrationToCloud(newReg);
+    // Await cloud sync for registration with auto-healing parent event sync
+    const { error } = await syncRegistrationToCloud(newReg, targetEvt);
     if (error) {
       console.error('[Supabase Registration Cloud Sync Error]:', error);
       showToast(`⚠️ Registration pass generated, but Cloud sync failed: ${error.message || 'Database error'}`);
