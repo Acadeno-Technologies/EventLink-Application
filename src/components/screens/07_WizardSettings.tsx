@@ -52,12 +52,12 @@ export const WizardSettingsScreen: React.FC = () => {
       <div className="space-y-4 w-full">
         
         {/* Top Header Section with Right Decorative Illustration */}
-        <div className="flex items-center justify-between gap-4 pb-0.5">
+        <div className="flex items-center justify-between gap-4 pb-1">
           <div>
             <h1 className="text-xl sm:text-2xl font-extrabold text-[#101B33] tracking-tight font-sans">
               Create Event — Step 4: Settings & Limits
             </h1>
-            <p className="text-xs sm:text-sm text-[#7184A3] font-medium mt-0.5">
+            <p className="text-xs sm:text-sm text-[#7184A3] font-medium mt-1">
               Configure operational windows, attendee capacity limits, and notification delivery triggers.
             </p>
           </div>
@@ -104,7 +104,7 @@ export const WizardSettingsScreen: React.FC = () => {
         </div>
 
         {/* Main Settings Grid with Distinct Modular Card Boxes */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start mt-3 sm:mt-4">
           
           {/* ========================================================================= */}
           {/* LEFT COLUMN: 3 DISTINCT CARDS (lg:col-span-6)                            */}

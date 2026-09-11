@@ -269,7 +269,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
         </div>
 
         {/* Main Grid: Left Column Cards + Right Column Live Preview Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch mt-3 sm:mt-4">
           
           {/* ========================================================================= */}
           {/* LEFT COLUMN: OUTER BACKGROUND CONTAINER WITH 3 CARDS (lg:col-span-7)       */}
