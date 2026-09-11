@@ -66,12 +66,14 @@ export const WizardBasicInfoScreen: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const [isSlugCustomized, setIsSlugCustomized] = useState(false);
+
   const handleNameChange = (val: string) => {
     const formattedName = toTitleCase(val);
     const slugVal = formattedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     updateWizardDraft({ 
       name: formattedName,
-      slug: wizardDraft.slug && wizardDraft.slug !== '' ? wizardDraft.slug : slugVal
+      slug: (isSlugCustomized && wizardDraft.slug && wizardDraft.slug.length > 1) ? wizardDraft.slug : slugVal
     });
   };
 
@@ -196,9 +198,12 @@ export const WizardBasicInfoScreen: React.FC = () => {
                 <input
                   type="text"
                   value={wizardDraft.slug || ''}
-                  onChange={(e) => updateWizardDraft({ slug: e.target.value })}
+                  onChange={(e) => {
+                    setIsSlugCustomized(true);
+                    updateWizardDraft({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') });
+                  }}
                   onBlur={handleBlur}
-                  placeholder="ai-automation-workshop"
+                  placeholder="python-django-webinar"
                   className="w-full h-full px-2.5 bg-transparent text-xs sm:text-[12.5px] text-slate-900 font-medium placeholder-[#91A4C0] focus:outline-none font-mono"
                 />
               </div>

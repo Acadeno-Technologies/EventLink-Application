@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { 
   ScreenId, 
   User, 
@@ -111,11 +111,58 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [organization, setOrganization] = useState<Organization>(initialOrganization);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [events, setEvents] = useState<Event[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('acadeno_events');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        console.warn('Failed to load events from cache:', e);
+      }
+    }
+    return [];
+  });
+  const [registrations, setRegistrations] = useState<Registration[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('acadeno_registrations');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        console.warn('Failed to load registrations from cache:', e);
+      }
+    }
+    return [];
+  });
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
+
+  // Sync to local storage on changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && events.length > 0) {
+      try {
+        localStorage.setItem('acadeno_events', JSON.stringify(events));
+      } catch (e) {
+        console.warn('Failed to cache events:', e);
+      }
+    }
+  }, [events]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && registrations.length > 0) {
+      try {
+        localStorage.setItem('acadeno_registrations', JSON.stringify(registrations));
+      } catch (e) {
+        console.warn('Failed to cache registrations:', e);
+      }
+    }
+  }, [registrations]);
 
   // Wizard state
   const [wizardStep, setWizardStep] = useState<number>(1);
@@ -176,14 +223,44 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         if (evtsRes.error) {
           console.warn('[Neon Sync Poll - Events]:', evtsRes.error);
-        } else if (evtsRes.data) {
-          setEvents(evtsRes.data);
+        } else if (evtsRes.data && evtsRes.data.length > 0) {
+          setEvents(prev => {
+            const remoteEvents = evtsRes.data!;
+            const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+            const hasUrlEvent = urlParams && (urlParams.get('event') || urlParams.get('name') || urlParams.get('title') || urlParams.get('d') || urlParams.get('data'));
+            
+            let merged = [...remoteEvents];
+
+            if (hasUrlEvent) {
+              const decoded = decodeEventFromUrlParams(urlParams, organization.id);
+              if (decoded) {
+                const existingIdx = merged.findIndex(e => 
+                  e.id === decoded.id || 
+                  e.slug.toLowerCase() === decoded.slug.toLowerCase() ||
+                  e.name.toLowerCase() === decoded.name.toLowerCase()
+                );
+                if (existingIdx >= 0) {
+                  merged[existingIdx] = { ...merged[existingIdx], ...decoded, id: merged[existingIdx].id };
+                } else {
+                  merged = [decoded, ...merged];
+                }
+              }
+            }
+
+            // Also keep any locally created events that haven't synced yet
+            const localOnly = prev.filter(p => !merged.some(m => m.id === p.id || m.slug.toLowerCase() === p.slug.toLowerCase()));
+            return [...localOnly, ...merged];
+          });
         }
 
         if (regsRes.error) {
           console.warn('[Neon Sync Poll - Registrations]:', regsRes.error);
         } else if (regsRes.data) {
-          setRegistrations(regsRes.data);
+          setRegistrations(prev => {
+            const remoteRegs = regsRes.data!;
+            const localOnly = prev.filter(p => !remoteRegs.some(r => r.id === p.id || r.registration_code.toLowerCase() === p.registration_code.toLowerCase()));
+            return [...localOnly, ...remoteRegs];
+          });
         }
 
         if (usersRes.error) {
@@ -207,16 +284,17 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [organization.id]);
 
-  // Read URL search params on mount or popstate (?event=slug or ?code=regCode)
+  // Read URL search params on mount or popstate (?event=slug or ?name=... or ?code=regCode)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const handleUrlRoute = () => {
       try {
         const params = new URLSearchParams(window.location.search);
-        const eventParam = params.get('event') || params.get('e') || params.get('event_id');
+        const eventParam = params.get('event') || params.get('e') || params.get('event_id') || params.get('slug');
+        const nameParam = params.get('name') || params.get('title');
         const codeParam = params.get('code') || params.get('ticket') || params.get('reg');
         const screenParam = params.get('screen') as ScreenId | null;
 
@@ -256,32 +334,29 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           return;
         }
 
-        if (eventParam || params.get('d') || params.get('data')) {
-          let foundEvt = events.find(e => 
-            (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) || 
-            (eventParam && e.id === eventParam) || 
-            (eventParam && e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase())
-          );
-
-          // Decode rich payload or URL parameters
+        if (eventParam || nameParam || params.get('d') || params.get('data')) {
           const decodedEvt = decodeEventFromUrlParams(params, organization.id);
 
           if (decodedEvt) {
-            foundEvt = decodedEvt;
             setEvents(prev => {
-              const exists = prev.some(e => e.id === decodedEvt.id || e.slug === decodedEvt.slug);
-              if (!exists) {
-                return [decodedEvt, ...prev];
+              const matchIdx = prev.findIndex(e => 
+                e.id === decodedEvt.id || 
+                e.slug.toLowerCase() === decodedEvt.slug.toLowerCase() ||
+                (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) ||
+                e.name.toLowerCase() === decodedEvt.name.toLowerCase()
+              );
+              if (matchIdx >= 0) {
+                const updated = [...prev];
+                updated[matchIdx] = { ...updated[matchIdx], ...decodedEvt, id: updated[matchIdx].id };
+                return updated;
               }
-              return prev.map(e => (e.id === decodedEvt.id || e.slug === decodedEvt.slug) ? { ...e, ...decodedEvt } : e);
+              return [decodedEvt, ...prev];
             });
-          }
 
-          if (foundEvt) {
-            setSelectedEventId(foundEvt.id);
+            setSelectedEventId(decodedEvt.id);
             setCurrentScreen(prev => {
               if (prev === '16_registration_success') return prev;
-              return foundEvt!.status === 'closed' ? '17_registration_closed' : '15_public_registration';
+              return decodedEvt.status === 'closed' ? '17_registration_closed' : '15_public_registration';
             });
             return;
           }
@@ -300,10 +375,41 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return () => {
       window.removeEventListener('popstate', handleUrlRoute);
     };
-  }, [organization.id, selectedEventId]);
+  }, [organization.id]);
 
   // Selected event & registrations helper
-  const selectedEvent = events.find(e => e.id === selectedEventId) || (events.length > 0 ? events[0] : undefined);
+  const selectedEvent = useMemo(() => {
+    // 1. Try match by selectedEventId
+    if (selectedEventId) {
+      const byId = events.find(e => e.id === selectedEventId);
+      if (byId) return byId;
+      const bySlug = events.find(e => e.slug.toLowerCase() === selectedEventId.toLowerCase());
+      if (bySlug) return bySlug;
+    }
+
+    // 2. Try match from URL query parameters if present
+    if (typeof window !== 'undefined' && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const eventParam = params.get('event') || params.get('e') || params.get('event_id') || params.get('slug');
+      const nameParam = params.get('name') || params.get('title');
+
+      if (eventParam || nameParam || params.get('d') || params.get('data')) {
+        const match = events.find(e => 
+          (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) ||
+          (eventParam && e.id.toLowerCase() === eventParam.toLowerCase()) ||
+          (nameParam && e.name.toLowerCase() === nameParam.toLowerCase()) ||
+          (eventParam && e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase())
+        );
+        if (match) return match;
+
+        const decoded = decodeEventFromUrlParams(params, organization.id);
+        if (decoded) return decoded;
+      }
+    }
+
+    // 3. Fallback to first available event in list
+    return events.length > 0 ? events[0] : undefined;
+  }, [events, selectedEventId, organization.id]);
   const selectedRegistration = registrations.find(r => r.id === selectedRegistrationId) || (registrations.length > 0 ? registrations[0] : undefined);
   const eventRegistrations = selectedEvent ? registrations.filter(r => r.event_id === selectedEvent.id) : registrations;
 
@@ -458,7 +564,12 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const draftId = (wizardDraft.id && wizardDraft.id.length > 20 && !wizardDraft.id.startsWith('evt-')) 
       ? wizardDraft.id 
       : generateUUID();
-    const cleanSlug = wizardDraft.slug || (wizardDraft.name ? wizardDraft.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `event-${Date.now()}`);
+    let cleanSlug = wizardDraft.slug?.trim().toLowerCase() || '';
+    if (!cleanSlug || cleanSlug.length <= 1) {
+      cleanSlug = wizardDraft.name 
+        ? wizardDraft.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') 
+        : `event-${Date.now()}`;
+    }
     
     const finalized: Event = {
       id: draftId,
@@ -521,7 +632,12 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const draftId = (wizardDraft.id && wizardDraft.id.length > 20 && !wizardDraft.id.startsWith('evt-')) 
       ? wizardDraft.id 
       : generateUUID();
-    const cleanSlug = wizardDraft.slug || (wizardDraft.name ? wizardDraft.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `event-${Date.now()}`);
+    let cleanSlug = wizardDraft.slug?.trim().toLowerCase() || '';
+    if (!cleanSlug || cleanSlug.length <= 1) {
+      cleanSlug = wizardDraft.name 
+        ? wizardDraft.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') 
+        : `event-${Date.now()}`;
+    }
 
     const publishedEvent: Event = {
       id: draftId,

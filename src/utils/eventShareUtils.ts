@@ -9,15 +9,22 @@ import { themePresets } from '../data/seedData';
 export function encodeEventToShareUrl(event: Event | undefined | null, origin?: string): string {
   if (!event) return '';
 
-  const base = origin || (typeof window !== 'undefined' ? window.location.origin : 'https://acadeno-eventlink.onrender.com');
-  const slug = event.slug || (event.name ? event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'event');
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : 'https://eventlink-application.onrender.com');
+  
+  let slug = event.slug ? event.slug.trim().toLowerCase() : '';
+  if (!slug || slug.length <= 1) {
+    slug = event.name ? event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'event';
+  }
 
   const queryParams = new URLSearchParams();
-  queryParams.set('event', slug);
+  queryParams.set('event', slug || 'event');
   if (event.name) queryParams.set('name', event.name);
   if (event.start_date) queryParams.set('date', event.start_date);
   if (event.venue) queryParams.set('venue', event.venue);
   if (event.settings?.max_registrations) queryParams.set('cap', String(event.settings.max_registrations));
+  if (event.banner_url && !event.banner_url.startsWith('data:')) {
+    queryParams.set('banner', event.banner_url);
+  }
 
   return `${base}/?${queryParams.toString()}`;
 }
@@ -81,34 +88,45 @@ export function decodeEventFromUrlParams(params: URLSearchParams, orgId: string)
     }
   }
 
-  const eventSlug = params.get('event') || params.get('e') || params.get('event_id');
-  if (!eventSlug) return null;
+  const eventSlug = params.get('event') || params.get('e') || params.get('event_id') || params.get('slug');
+  const titleParam = params.get('name') || params.get('title');
 
-  const titleParam = params.get('title') || params.get('name');
+  if (!eventSlug && !titleParam) return null;
+
   const dateParam = params.get('date') || params.get('start_date');
-  const venueParam = params.get('venue');
-  const capParam = params.get('cap') || params.get('max');
-  const bannerParam = params.get('banner');
+  const venueParam = params.get('venue') || params.get('location');
+  const capParam = params.get('cap') || params.get('max') || params.get('capacity');
+  const bannerParam = params.get('banner') || params.get('banner_url') || params.get('img');
+  const descParam = params.get('desc') || params.get('description');
+  const timeParam = params.get('time') || params.get('start_time');
 
-  const cleanTitle = titleParam || eventSlug
-    .replace(/[-_]+/g, ' ')
-    .replace(/\bai\b/gi, 'AI')
-    .replace(/\bit\b/gi, 'IT')
-    .replace(/\bui\b/gi, 'UI')
-    .replace(/\bux\b/gi, 'UX')
-    .replace(/\b\w/g, char => char.toUpperCase());
+  const cleanTitle = titleParam ? titleParam.trim() : (eventSlug
+    ? eventSlug
+        .replace(/[-_]+/g, ' ')
+        .replace(/\bai\b/gi, 'AI')
+        .replace(/\bit\b/gi, 'IT')
+        .replace(/\bui\b/gi, 'UI')
+        .replace(/\bux\b/gi, 'UX')
+        .replace(/\b\w/g, char => char.toUpperCase())
+    : 'Event Registration');
+
+  const cleanSlug = (eventSlug && eventSlug.trim().length > 1)
+    ? eventSlug.trim().toLowerCase()
+    : (titleParam ? titleParam.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : (eventSlug?.toLowerCase() || 'event'));
+
+  const eventId = `evt-${cleanSlug}`;
 
   return {
-    id: `evt-${eventSlug}`,
+    id: eventId,
     org_id: orgId,
     name: cleanTitle,
-    slug: eventSlug.toLowerCase(),
-    short_description: `Registration for ${cleanTitle} at ACADENO Technologies.`,
+    slug: cleanSlug,
+    short_description: descParam || `Registration for ${cleanTitle} at ACADENO Technologies.`,
     banner_url: bannerParam || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80',
     venue: venueParam || 'ACADENO Technologies, CSEZ Unit, Kochi',
     start_date: dateParam || new Date().toISOString().split('T')[0],
     end_date: dateParam || new Date().toISOString().split('T')[0],
-    start_time: '10:00 AM',
+    start_time: timeParam || '10:00 AM',
     end_time: '1:00 PM',
     status: 'active',
     created_by: 'arathy@acadeno.in',

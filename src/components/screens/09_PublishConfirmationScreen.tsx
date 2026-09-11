@@ -142,17 +142,17 @@ export const PublishConfirmationScreen: React.FC = () => {
                 </p>
               </div>
 
-              {/* Public URL Box */}
-              <div className="bg-[#F8FAFD] p-3 sm:p-4 rounded-2xl border border-[#DCE5F0] flex items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-9 h-9 rounded-xl bg-[#EBF3FF] text-[#1463FF] flex items-center justify-center shrink-0 border border-blue-100">
-                    <Link2 className="w-4.5 h-4.5" />
+              {/* Compact & Small Public URL Box */}
+              <div className="bg-[#F8FAFD] p-2.5 sm:p-3 rounded-xl border border-[#DCE5F0] flex items-center justify-between gap-2.5 shadow-2xs">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-7 h-7 rounded-lg bg-[#EBF3FF] text-[#1463FF] flex items-center justify-center shrink-0 border border-blue-100">
+                    <Link2 className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0 flex-1 text-left">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider font-mono">
+                    <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider font-mono">
                       LIVE REGISTRATION LINK
                     </div>
-                    <div className="text-xs sm:text-sm font-mono font-bold text-[#1463FF] truncate mt-0.5">
+                    <div className="text-[11px] sm:text-xs font-mono font-semibold text-[#1463FF] truncate mt-0.5" title={publicUrl}>
                       {publicUrl}
                     </div>
                   </div>
@@ -160,9 +160,9 @@ export const PublishConfirmationScreen: React.FC = () => {
 
                 <button
                   onClick={handleCopyLink}
-                  className="h-10 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-[#DCE5F0] text-xs font-bold flex items-center gap-2 shrink-0 transition-colors shadow-2xs cursor-pointer"
+                  className="h-8 px-3 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#DCE5F0] text-[11px] font-bold flex items-center gap-1.5 shrink-0 transition-colors shadow-2xs cursor-pointer"
                 >
-                  {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
                   <span>{copied ? 'Copied!' : 'Copy Link'}</span>
                 </button>
               </div>
