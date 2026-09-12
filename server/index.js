@@ -574,8 +574,12 @@ async function initDatabase() {
   }
 }
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Neon API listening on http://localhost:${port}`);
-  initDatabase();
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Neon API listening on http://localhost:${port}`);
+    initDatabase();
+  });
+}
+
+export default app;
 
