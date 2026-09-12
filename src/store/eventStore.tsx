@@ -554,7 +554,35 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // 4. Fallback to first available event in list
     return events.length > 0 ? events[0] : undefined;
   }, [events, selectedEventId, organization.id]);
-  const selectedRegistration = registrations.find(r => r.id === selectedRegistrationId) || (registrations.length > 0 ? registrations[0] : undefined);
+
+  const selectedRegistration = useMemo(() => {
+    // 1. If URL contains a code param, match strictly by that code
+    if (typeof window !== 'undefined' && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const codeParam = params.get('code') || params.get('ticket') || params.get('reg');
+      if (codeParam) {
+        const clean = codeParam.trim().toLowerCase();
+        const matched = registrations.find(r => 
+          r.registration_code.toLowerCase() === clean || 
+          r.id.toLowerCase() === clean
+        );
+        if (matched) return matched;
+        return undefined; // Don't falsely fallback to registrations[0] if a specific code was requested
+      }
+    }
+
+    // 2. Match by selectedRegistrationId
+    if (selectedRegistrationId) {
+      const matched = registrations.find(r => 
+        r.id === selectedRegistrationId || 
+        r.registration_code.toLowerCase() === selectedRegistrationId.toLowerCase()
+      );
+      if (matched) return matched;
+    }
+
+    return registrations.length > 0 ? registrations[0] : undefined;
+  }, [registrations, selectedRegistrationId]);
+
   const eventRegistrations = selectedEvent ? registrations.filter(r => r.event_id === selectedEvent.id) : registrations;
 
   const setScreen = (screen: ScreenId) => {

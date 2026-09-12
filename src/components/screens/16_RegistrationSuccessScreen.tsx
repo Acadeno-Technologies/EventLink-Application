@@ -17,20 +17,65 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
-export const RegistrationSuccessScreen: React.FC = () => {
-  const { selectedRegistration, selectedEvent, setScreen, showToast, currentUser } = useEventStore();
-  const [qrUrl, setQrUrl] = useState<string>('');
+import { fetchRemoteRegistrationByCode } from '../../utils/supabaseClient';
+import { Registration } from '../../types';
 
-  // Use active registration or elegant demo default matching the reference spec
-  const reg = selectedRegistration || {
+export const RegistrationSuccessScreen: React.FC = () => {
+  const { 
+    selectedRegistration, 
+    selectedEvent, 
+    registrations, 
+    setScreen, 
+    showToast, 
+    currentUser, 
+    setSelectedRegistrationId 
+  } = useEventStore();
+  const [qrUrl, setQrUrl] = useState<string>('');
+  const [fetchedReg, setFetchedReg] = useState<Registration | null>(null);
+  const [isLoadingCode, setIsLoadingCode] = useState<boolean>(false);
+
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const urlCode = urlParams ? (urlParams.get('code') || urlParams.get('ticket') || urlParams.get('reg')) : null;
+
+  useEffect(() => {
+    if (urlCode) {
+      const clean = urlCode.trim().toLowerCase();
+      const existing = registrations.find(r => 
+        r.registration_code.toLowerCase() === clean || 
+        r.id.toLowerCase() === clean
+      );
+      if (existing) {
+        setFetchedReg(existing);
+        setSelectedRegistrationId(existing.id);
+      } else {
+        setIsLoadingCode(true);
+        fetchRemoteRegistrationByCode(urlCode).then(res => {
+          if (res.data && res.data.id) {
+            setFetchedReg(res.data);
+            setSelectedRegistrationId(res.data.id);
+          }
+        }).catch(err => {
+          console.warn('[RegistrationSuccessScreen] Could not fetch code:', err);
+        }).finally(() => {
+          setIsLoadingCode(false);
+        });
+      }
+    }
+  }, [urlCode, registrations]);
+
+  // Use active registration matching urlCode, or selectedRegistration if no urlCode requested
+  const reg: Registration = fetchedReg || (urlCode ? (selectedRegistration?.registration_code.toLowerCase() === urlCode.toLowerCase() ? selectedRegistration : undefined) : selectedRegistration) || {
     id: 'reg-demo-01',
     event_id: selectedEvent?.id || 'evt-01',
-    registration_code: 'PF-2026-00001',
-    name: 'Arathy',
-    email: 'arathy@acadeno.in',
+    registration_code: urlCode ? urlCode.toUpperCase() : 'PF-2026-00001',
+    name: 'Participant',
+    email: 'attendee@acadeno.in',
     phone: '+91 98765 43210',
-    created_at: new Date().toISOString(),
+    submitted_at: new Date().toISOString(),
     status: 'confirmed' as const,
+    payment_status: 'not_required',
+    attendance_status: 'not_marked',
+    source: 'direct',
     responses: {}
   };
 
@@ -93,6 +138,18 @@ export const RegistrationSuccessScreen: React.FC = () => {
       showToast('Ticket code copied to clipboard!');
     }
   };
+
+  if (urlCode && isLoadingCode && !fetchedReg) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-[#F5F9FF] via-[#EDF4FE] to-[#E5EFFD] text-[#10244A] py-10 px-4 flex flex-col justify-center items-center">
+        <div className="w-full max-w-[480px] bg-white rounded-[28px] shadow-2xl border border-slate-100 p-10 text-center space-y-3 animate-pulse">
+          <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <h2 className="text-base font-bold text-slate-800">Loading Official Ticket...</h2>
+          <p className="text-xs font-mono font-extrabold text-blue-600 tracking-wider">{urlCode.toUpperCase()}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#F5F9FF] via-[#EDF4FE] to-[#E5EFFD] text-[#10244A] py-10 px-4 sm:px-6 flex flex-col justify-center items-center relative overflow-hidden font-sans antialiased">
