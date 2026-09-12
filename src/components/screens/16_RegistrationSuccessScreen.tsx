@@ -45,6 +45,11 @@ export const RegistrationSuccessScreen: React.FC = () => {
     short_description: 'Python FullStack Event Registration Pass.'
   };
 
+  const resp = (reg.responses || {}) as Record<string, any>;
+  const attendeeName = (reg.name && reg.name !== 'Participant Pass')
+    ? reg.name
+    : resp.name || resp.f_name || resp.fullName || resp.full_name || reg.name || 'Participant';
+
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
   const passUrl = `${origin}/?code=${reg.registration_code}`;
 
@@ -244,8 +249,8 @@ export const RegistrationSuccessScreen: React.FC = () => {
             <div className="text-xl sm:text-2xl font-black text-[#1769FF] font-sans tracking-wide my-1">
               {reg.registration_code}
             </div>
-            <div className="text-base font-extrabold text-[#10244A]">
-              {reg.name}
+            <div className="text-base font-extrabold text-[#10244A] tracking-tight">
+              {attendeeName}
             </div>
           </div>
 

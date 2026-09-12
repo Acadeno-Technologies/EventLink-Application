@@ -102,11 +102,20 @@ function mapEvent(row) {
 
 function mapRegistration(row) {
   const resp = row.responses || {};
+  let name = resp.name || resp.f_name || resp.fullName || resp.full_name || '';
+  if (!name) {
+    for (const [k, v] of Object.entries(resp)) {
+      if (/(name|attendee|student|participant)/i.test(k) && typeof v === 'string' && v.trim() && v.trim() !== 'Participant Pass') {
+        name = v.trim();
+        break;
+      }
+    }
+  }
   return {
     id: row.id,
     event_id: row.event_id,
     registration_code: row.registration_code,
-    name: resp.name || resp.f_name || resp.fullName || 'Attendee',
+    name: name || 'Participant',
     email: resp.email || resp.f_email || '',
     phone: resp.phone || resp.f_phone || '',
     responses: resp,
@@ -392,6 +401,32 @@ app.get('/api/registrations', async (_req, res) => {
   } catch (error) {
     console.warn('[Neon get registrations error - returning empty]:', error.message);
     res.json([]);
+  }
+});
+
+app.get('/api/registrations/by-code/:code', async (req, res) => {
+  try {
+    const rawCode = String(req.params.code || '').trim();
+    if (!rawCode) return res.status(400).json({ error: 'Code is required' });
+
+    const row = await prisma.registration.findFirst({
+      where: {
+        OR: [
+          { registration_code: { equals: rawCode, mode: 'insensitive' } },
+          { id: rawCode }
+        ]
+      },
+      include: { event: true }
+    });
+
+    if (!row) {
+      return res.status(404).json({ error: 'Registration not found' });
+    }
+
+    res.json(mapRegistration(row));
+  } catch (error) {
+    console.warn('[Neon get registration by code error]:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 

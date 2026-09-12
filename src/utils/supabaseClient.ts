@@ -94,6 +94,10 @@ export async function fetchRemoteRegistrations(): Promise<{ data: Registration[]
   return apiRequest<Registration[]>('/api/registrations');
 }
 
+export async function fetchRemoteRegistrationByCode(code: string): Promise<{ data: Registration | null; error: any }> {
+  return apiRequest<Registration>(`/api/registrations/by-code/${encodeURIComponent(code)}`);
+}
+
 export async function syncRegistrationToCloud(
   reg: Registration,
   fallbackEvent?: Event

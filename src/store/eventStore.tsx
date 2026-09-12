@@ -20,6 +20,7 @@ import {
   fetchRemoteEvents, 
   fetchRemoteEventBySlug,
   fetchRemoteRegistrations,
+  fetchRemoteRegistrationByCode,
   fetchRemoteUsers,
   syncUserToCloud,
   deleteUserFromCloud,
@@ -453,38 +454,30 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const screenParam = params.get('screen') as ScreenId | null;
 
         if (codeParam) {
-          let foundReg = registrations.find(r => 
-            r.registration_code.toLowerCase() === codeParam.toLowerCase() || 
-            r.id.toLowerCase() === codeParam.toLowerCase()
+          const cleanCode = codeParam.trim();
+          const foundReg = registrations.find(r => 
+            r.registration_code.toLowerCase() === cleanCode.toLowerCase() || 
+            r.id.toLowerCase() === cleanCode.toLowerCase()
           );
 
-          if (!foundReg) {
-            const newReg: Registration = {
-              id: `reg-${codeParam}`,
-              event_id: selectedEventId || 'evt-demo',
-              registration_code: codeParam.toUpperCase(),
-              name: 'Participant Pass',
-              email: 'attendee@acadeno.in',
-              phone: '+91 98765 43210',
-              submitted_at: new Date().toISOString(),
-              status: 'confirmed',
-              payment_status: 'not_required',
-              attendance_status: 'not_marked',
-              source: 'qr_scan',
-              responses: {}
-            };
-            foundReg = newReg;
-            setRegistrations(prev => {
-              if (prev.some(r => r.registration_code.toLowerCase() === codeParam.toLowerCase())) {
-                return prev;
+          if (foundReg) {
+            setSelectedRegistrationId(foundReg.id);
+            setSelectedEventId(foundReg.event_id);
+            setCurrentScreen('16_registration_success');
+          } else {
+            // Fetch live attendee details from PostgreSQL database
+            fetchRemoteRegistrationByCode(cleanCode).then(res => {
+              if (res.data && res.data.id) {
+                const dbReg = res.data;
+                setRegistrations(prev => [dbReg, ...prev.filter(r => r.id !== dbReg.id)]);
+                setSelectedRegistrationId(dbReg.id);
+                setSelectedEventId(dbReg.event_id);
               }
-              return [newReg, ...prev];
+            }).catch(err => {
+              console.warn('[Neon fetch registration by code error]:', err);
             });
+            setCurrentScreen('16_registration_success');
           }
-
-          setSelectedRegistrationId(foundReg.id);
-          setSelectedEventId(foundReg.event_id);
-          setCurrentScreen('16_registration_success');
           return;
         }
 
