@@ -26,7 +26,8 @@ export const PublicRegistrationScreen: React.FC = () => {
     submitRegistration, 
     setScreen, 
     setSelectedRegistrationId,
-    currentUser
+    currentUser,
+    isEventLoading
   } = useEventStore();
 
   const [formData, setFormData] = useState<Record<string, any>>({
@@ -42,6 +43,30 @@ export const PublicRegistrationScreen: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // If initial event is loading from cloud, display smooth loading skeleton instead of flashing fallback
+  if (isEventLoading && !selectedEvent) {
+    return (
+      <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 flex flex-col justify-center items-center relative">
+        <div className="mb-6 flex flex-col items-center">
+          <AcadenoLogo size="lg" />
+        </div>
+        <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200/80 p-8 text-center animate-pulse">
+          <div className="w-full h-48 bg-slate-100 rounded-2xl mb-6 flex flex-col items-center justify-center gap-3 border border-slate-200">
+            <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-semibold text-slate-500">Loading Event Details...</span>
+          </div>
+          <div className="h-6 bg-slate-200 rounded-lg w-3/4 mx-auto mb-3" />
+          <div className="h-4 bg-slate-100 rounded-lg w-1/2 mx-auto mb-6" />
+          <div className="space-y-3">
+            <div className="h-10 bg-slate-50 rounded-xl" />
+            <div className="h-10 bg-slate-50 rounded-xl" />
+            <div className="h-10 bg-slate-50 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!selectedEvent) {
     return (
@@ -360,18 +385,15 @@ export const PublicRegistrationScreen: React.FC = () => {
       {/* Main Ticket-style Container */}
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200/80 transition-all">
         
-        {/* Optional Uploaded Event Banner */}
+        {/* Uploaded Event Banner / Poster */}
         {(evt.banner_url || evt.theme?.banner_url) && (
-          <div className="w-full h-44 sm:h-52 relative overflow-hidden bg-slate-900 border-b border-white/10">
+          <div className="w-full relative overflow-hidden bg-slate-950 border-b border-white/10 flex items-center justify-center">
             <img 
               src={evt.banner_url || evt.theme?.banner_url} 
               alt={evt.name} 
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80';
-              }}
-              className="w-full h-full object-cover"
+              className="w-full h-auto max-h-[420px] object-cover sm:object-contain transition-all"
+              loading="eager"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
           </div>
         )}
 

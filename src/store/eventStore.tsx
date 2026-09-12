@@ -18,6 +18,7 @@ import {
   syncEventToCloud, 
   syncRegistrationToCloud, 
   fetchRemoteEvents, 
+  fetchRemoteEventBySlug,
   fetchRemoteRegistrations,
   fetchRemoteUsers,
   syncUserToCloud,
@@ -111,6 +112,7 @@ interface EventContextType {
   registrations: Registration[];
   users: User[];
   auditLogs: AuditLog[];
+  isEventLoading: boolean;
   
   // Active event helper
   selectedEvent: Event | undefined;
@@ -244,6 +246,25 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
+  const [isEventLoading, setIsEventLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const hasEventParam = params.get('event') || params.get('e') || params.get('event_id') || params.get('slug') || params.get('name');
+      if (hasEventParam) {
+        try {
+          const cached = localStorage.getItem('acadeno_events');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && findMatchingEvent(parsed, hasEventParam)) {
+              return false;
+            }
+          }
+        } catch {}
+        return true;
+      }
+    }
+    return false;
+  });
 
   // Sync session user to local storage for persistent login session
   useEffect(() => {
@@ -285,7 +306,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       name: '',
       slug: '',
       short_description: '',
-      banner_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&auto=format&fit=crop&q=80',
+      banner_url: '',
       venue: '',
       start_date: new Date().toISOString().split('T')[0],
       end_date: new Date().toISOString().split('T')[0],
@@ -327,6 +348,31 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const syncWithCloud = async () => {
       try {
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const eventSlugParam = urlParams ? (urlParams.get('event') || urlParams.get('e') || urlParams.get('event_id') || urlParams.get('slug')) : null;
+        const titleParam = urlParams ? (urlParams.get('name') || urlParams.get('title')) : null;
+
+        // Fast high-priority single event lookup if direct event URL requested
+        if (eventSlugParam || titleParam) {
+          fetchRemoteEventBySlug(eventSlugParam || titleParam || '').then(res => {
+            if (!isMounted) return;
+            if (res.data) {
+              const matchedEvt = res.data;
+              setEvents(prev => {
+                const idx = prev.findIndex(e => e.id === matchedEvt.id || matchesEvent(e, matchedEvt.slug));
+                if (idx >= 0) {
+                  const updated = [...prev];
+                  updated[idx] = matchedEvt;
+                  return updated;
+                }
+                return [matchedEvt, ...prev];
+              });
+              setSelectedEventId(matchedEvt.id);
+              setIsEventLoading(false);
+            }
+          }).catch(e => console.warn('Fast slug fetch notice:', e));
+        }
+
         const [evtsRes, regsRes, usersRes] = await Promise.all([
           fetchRemoteEvents(),
           fetchRemoteRegistrations(),
@@ -339,15 +385,11 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           console.warn('[Cloud Sync Poll - Events]:', evtsRes.error);
         } else if (Array.isArray(evtsRes.data)) {
           const remoteEvents = evtsRes.data;
-          const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-          const eventSlugParam = urlParams ? (urlParams.get('event') || urlParams.get('e') || urlParams.get('event_id') || urlParams.get('slug')) : null;
-          const titleParam = urlParams ? (urlParams.get('name') || urlParams.get('title')) : null;
           const hasUrlEvent = urlParams && (eventSlugParam || titleParam || urlParams.get('d') || urlParams.get('data'));
           
-          // Merge remote events while preserving locally uploaded banners if remote is missing banner
           let merged = remoteEvents.map(remote => {
             const localMatch = events.find(l => l.id === remote.id || matchesEvent(l, remote.slug) || matchesEvent(l, remote.name));
-            if (localMatch && localMatch.banner_url && (!remote.banner_url || remote.banner_url.includes('unsplash.com/photo-1540575467063'))) {
+            if (localMatch && localMatch.banner_url && !remote.banner_url) {
               return {
                 ...remote,
                 banner_url: localMatch.banner_url,
@@ -372,6 +414,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const matched = findMatchingEvent(merged, query);
             if (matched) {
               setSelectedEventId(matched.id);
+              setIsEventLoading(false);
             } else {
               const decoded = decodeEventFromUrlParams(urlParams, organization.id, merged);
               if (decoded) {
@@ -383,7 +426,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                   setSelectedEventId(decoded.id);
                 }
               }
+              setIsEventLoading(false);
             }
+          } else {
+            setIsEventLoading(false);
           }
 
           setEvents(merged);
@@ -1133,6 +1179,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         registrations,
         users,
         auditLogs,
+        isEventLoading,
         selectedEvent,
         selectedRegistration,
         eventRegistrations,

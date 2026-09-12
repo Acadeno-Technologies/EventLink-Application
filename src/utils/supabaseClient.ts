@@ -76,6 +76,10 @@ export async function fetchRemoteEvents(): Promise<{ data: Event[] | null; error
   return apiRequest<Event[]>('/api/events');
 }
 
+export async function fetchRemoteEventBySlug(slug: string): Promise<{ data: Event | null; error: any }> {
+  return apiRequest<Event>(`/api/events/by-slug/${encodeURIComponent(slug)}`);
+}
+
 export async function syncEventToCloud(event: Event): Promise<{ data: Event | null; error: any }> {
   return apiRequest<Event>('/api/events', {
     method: 'PUT',

@@ -270,10 +270,43 @@ app.get('/api/events', async (_req, res) => {
       include: { form: true, theme: true },
       orderBy: { created_at: 'desc' },
     });
+    res.set('Cache-Control', 'public, max-age=5, s-maxage=30, stale-while-revalidate=120');
     res.json(rows.map(mapEvent));
   } catch (error) {
     console.warn('[Neon get events error - returning cached/empty]:', error.message);
     res.json([]);
+  }
+});
+
+app.get('/api/events/by-slug/:slug', async (req, res) => {
+  try {
+    const rawParam = decodeURIComponent(req.params.slug || '').toLowerCase().trim();
+    const hyphenated = rawParam.replace(/\s+/g, '-');
+    const spaceSeparated = rawParam.replace(/[-_]+/g, ' ');
+
+    const row = await prisma.event.findFirst({
+      where: {
+        OR: [
+          { slug: rawParam },
+          { slug: hyphenated },
+          { slug: spaceSeparated },
+          { name: { equals: rawParam, mode: 'insensitive' } },
+          { name: { equals: spaceSeparated, mode: 'insensitive' } },
+          ...(isValidUUID(rawParam) ? [{ id: rawParam }] : [])
+        ]
+      },
+      include: { form: true, theme: true }
+    });
+
+    if (row) {
+      res.set('Cache-Control', 'public, max-age=10, s-maxage=60, stale-while-revalidate=300');
+      return res.json(mapEvent(row));
+    }
+
+    res.status(404).json({ error: 'Event not found' });
+  } catch (error) {
+    console.error('[Neon get event by slug error]:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
