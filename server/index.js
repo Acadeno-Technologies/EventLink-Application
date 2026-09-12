@@ -440,41 +440,39 @@ app.put('/api/registrations', async (req, res) => {
     }
 
     const regUuid = isValidUUID(payload.id) ? payload.id : crypto.randomUUID();
-    let registrationCode = payload.registration_code;
+    
+    // Check if updating existing record
+    const existingRecord = await prisma.registration.findUnique({
+      where: { id: regUuid }
+    });
 
-    // Check if this registration_code is already taken by a different registration in DB
-    if (registrationCode) {
-      const codeClash = await prisma.registration.findFirst({
-        where: {
-          event_id: eventUuid,
-          registration_code: registrationCode,
-          NOT: { id: regUuid }
-        }
-      });
-      if (codeClash) {
-        // Generate guaranteed unique registration code based on count
-        const totalCount = await prisma.registration.count({ where: { event_id: eventUuid } });
-        const prefix = fallbackEvent?.name
-          ? fallbackEvent.name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3)
-          : 'EPR';
-        const year = new Date().getFullYear();
-        registrationCode = `${prefix}-${year}-${String(totalCount + 1).padStart(5, '0')}`;
+    let registrationCode = existingRecord?.registration_code || payload.registration_code;
 
-        // Secondary collision check
-        const doubleCheck = await prisma.registration.findFirst({
-          where: { event_id: eventUuid, registration_code: registrationCode }
-        });
-        if (doubleCheck) {
-          registrationCode = `${prefix}-${year}-${String(Date.now()).slice(-5)}`;
+    // Fetch existing records for this event to guarantee unique sequence ID
+    const existingDbRegs = await prisma.registration.findMany({
+      where: { event_id: eventUuid },
+      select: { id: true, registration_code: true }
+    });
+
+    const isCodeClash = registrationCode && existingDbRegs.some(r => r.registration_code === registrationCode && r.id !== regUuid);
+
+    if (!registrationCode || isCodeClash) {
+      let maxSeq = 0;
+      for (const r of existingDbRegs) {
+        if (r.registration_code) {
+          const match = r.registration_code.match(/-(\d+)$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+          }
         }
       }
-    } else {
-      const totalCount = await prisma.registration.count({ where: { event_id: eventUuid } });
+      const nextSeqNum = Math.max(maxSeq + 1, existingDbRegs.length + 1);
       const prefix = fallbackEvent?.name
         ? fallbackEvent.name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3)
         : 'EPR';
       const year = new Date().getFullYear();
-      registrationCode = `${prefix}-${year}-${String(totalCount + 1).padStart(5, '0')}`;
+      registrationCode = `${prefix}-${year}-${String(nextSeqNum).padStart(5, '0')}`;
     }
     const saved = await prisma.registration.upsert({
       where: { id: regUuid },

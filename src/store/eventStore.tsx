@@ -217,19 +217,12 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return [];
   });
 
+  // Registrations are pure database-backed, never stored in phone/browser local storage
   const [registrations, setRegistrations] = useState<Registration[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('acadeno_registrations');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return deduplicateRegistrationsList(parsed);
-          }
-        }
-      } catch {
-        // ignore storage error
-      }
+        localStorage.removeItem('acadeno_registrations');
+      } catch {}
     }
     return [];
   });
@@ -279,16 +272,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [events]);
 
-  // Persist registrations to local storage whenever updated
-  useEffect(() => {
-    if (typeof window !== 'undefined' && registrations.length > 0) {
-      try {
-        localStorage.setItem('acadeno_registrations', JSON.stringify(registrations));
-      } catch {
-        // ignore storage error
-      }
-    }
-  }, [registrations]);
+
 
   // Wizard state
   const [wizardStep, setWizardStep] = useState<number>(1);
@@ -963,28 +947,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       throw err;
     }
 
-    const prefix = targetEvt?.name
-      ? targetEvt.name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3)
-      : 'EPR';
-    
-    const eventRegs = registrations.filter(r => r.event_id === finalEventId || r.event_id === eventId);
-    let maxSeq = 0;
-    for (const r of eventRegs) {
-      const match = String(r.registration_code || '').match(/-(\d+)$/);
-      if (match) {
-        const num = parseInt(match[1], 10);
-        if (!isNaN(num) && num > maxSeq) maxSeq = num;
-      }
-    }
-    const nextNum = Math.max(maxSeq + 1, eventRegs.length + 1);
-    const seq = String(nextNum).padStart(5, '0');
-    const year = new Date().getFullYear();
-    const regCode = `${prefix}-${year}-${seq}`;
-
     const newReg: Registration = {
       id: generateUUID(),
       event_id: finalEventId,
-      registration_code: regCode,
+      registration_code: '', // Left blank so backend PostgreSQL assigns verified unique sequence ID
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
@@ -997,7 +963,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       submitted_at: new Date().toISOString(),
     };
 
-    // Await cloud sync for database consistency and duplicate prevention
+    // Save directly to PostgreSQL database via backend API
     const cloudRes = await syncRegistrationToCloud(newReg, targetEvt);
     if (cloudRes.error) {
       const err: any = cloudRes.error;
@@ -1005,11 +971,17 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         err.code = 'ALREADY_REGISTERED';
         throw err;
       }
-      console.warn('[Cloud Sync Notice]:', cloudRes.error);
+      console.error('[Database Registration Error]:', cloudRes.error);
+      throw new Error(cloudRes.error.message || 'Failed to save registration to database.');
     }
 
-    const finalReg = (cloudRes.data && cloudRes.data.id) ? { ...newReg, ...cloudRes.data } : newReg;
+    if (!cloudRes.data || !cloudRes.data.id) {
+      throw new Error('Database did not return saved registration.');
+    }
 
+    const finalReg = cloudRes.data;
+
+    // Update in-memory registrations for current view
     setRegistrations(prev => [finalReg, ...prev.filter(r => r.id !== finalReg.id)]);
     setSelectedRegistrationId(finalReg.id);
 
@@ -1064,13 +1036,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const toDelete = registrations.filter(r => !dedupedIds.has(r.id));
       
       setRegistrations(deduped);
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('acadeno_registrations', JSON.stringify(deduped));
-        } catch {
-          // ignore
-        }
-      }
+
       
       // Delete redundant duplicate records from cloud database in background
       for (const item of toDelete) {
