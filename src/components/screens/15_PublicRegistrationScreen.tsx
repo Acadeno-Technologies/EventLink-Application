@@ -173,8 +173,9 @@ export const PublicRegistrationScreen: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMessage(null);
 
     if (evt.form_schema) {
@@ -233,110 +234,110 @@ export const PublicRegistrationScreen: React.FC = () => {
       return;
     }
 
+    // 1. Dynamic Phone Extraction across all possible schema IDs and form keys
+    let rawPhone = '';
+    if (evt.form_schema) {
+      const phoneField = evt.form_schema.find((f: any) => isPhoneField(f));
+      if (phoneField && formData[phoneField.id]) {
+        rawPhone = String(formData[phoneField.id]).replace(/[^\d+]/g, '');
+      }
+    }
+    if (!rawPhone) {
+      for (const [key, val] of Object.entries(formData)) {
+        if (/(phone|mobile|contact|whatsapp|tel|cell)/i.test(key) && val) {
+          rawPhone = String(val).replace(/[^\d+]/g, '');
+          break;
+        }
+      }
+    }
+    if (!rawPhone && formData.f_phone) {
+      rawPhone = String(formData.f_phone).replace(/[^\d+]/g, '');
+    }
+    // Catch-all: check if any entered field value contains 7-15 digits
+    if (!rawPhone) {
+      for (const [, val] of Object.entries(formData)) {
+        if (typeof val === 'string' || typeof val === 'number') {
+          const digits = String(val).replace(/\D/g, '');
+          if (digits.length >= 7 && digits.length <= 15) {
+            rawPhone = digits;
+            break;
+          }
+        }
+      }
+    }
+
+    // 2. Dynamic Email Extraction
+    let rawEmail = '';
+    if (evt.form_schema) {
+      const emailField = evt.form_schema.find((f: any) => isEmailField(f));
+      if (emailField && formData[emailField.id]) {
+        rawEmail = String(formData[emailField.id]).trim();
+      }
+    }
+    if (!rawEmail) {
+      for (const [key, val] of Object.entries(formData)) {
+        if ((/(email|mail)/i.test(key) || (typeof val === 'string' && val.includes('@'))) && val) {
+          rawEmail = String(val).trim();
+          break;
+        }
+      }
+    }
+    if (!rawEmail && formData.f_email) {
+      rawEmail = String(formData.f_email).trim();
+    }
+
+    // 3. Dynamic Name Extraction
+    let rawName = '';
+    if (evt.form_schema) {
+      const nameField = evt.form_schema.find((f: any) => f.id === 'f_name' || /(full[\s_]?name|first[\s_]?name|participant|student|attendee|name)/i.test(f.label || ''));
+      if (nameField && formData[nameField.id]) {
+        rawName = String(formData[nameField.id]).trim();
+      }
+    }
+    if (!rawName) {
+      for (const [key, val] of Object.entries(formData)) {
+        if (/(name|attendee|student)/i.test(key) && val && typeof val === 'string' && val.trim().length > 0) {
+          rawName = String(val).trim();
+          break;
+        }
+      }
+    }
+    if (!rawName) {
+      const firstTextField = evt.form_schema?.find((f: any) => f.type === 'text');
+      if (firstTextField && formData[firstTextField.id]) {
+        rawName = String(formData[firstTextField.id]).trim();
+      }
+    }
+
+    const formattedPhone = rawPhone ? (rawPhone.startsWith('+') ? rawPhone : `+91 ${rawPhone}`) : '—';
+    const finalName = rawName || 'Participant';
+    const finalEmail = rawEmail || 'attendee@example.com';
+
+    // Lock submit immediately to block repeat button clicks / enter key presses
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      
-      // 1. Dynamic Phone Extraction across all possible schema IDs and form keys
-      let rawPhone = '';
-      if (evt.form_schema) {
-        const phoneField = evt.form_schema.find((f: any) => isPhoneField(f));
-        if (phoneField && formData[phoneField.id]) {
-          rawPhone = String(formData[phoneField.id]).replace(/[^\d+]/g, '');
-        }
-      }
-      if (!rawPhone) {
-        for (const [key, val] of Object.entries(formData)) {
-          if (/(phone|mobile|contact|whatsapp|tel|cell)/i.test(key) && val) {
-            rawPhone = String(val).replace(/[^\d+]/g, '');
-            break;
-          }
-        }
-      }
-      if (!rawPhone && formData.f_phone) {
-        rawPhone = String(formData.f_phone).replace(/[^\d+]/g, '');
-      }
-      // Catch-all: check if any entered field value contains 7-15 digits
-      if (!rawPhone) {
-        for (const [, val] of Object.entries(formData)) {
-          if (typeof val === 'string' || typeof val === 'number') {
-            const digits = String(val).replace(/\D/g, '');
-            if (digits.length >= 7 && digits.length <= 15) {
-              rawPhone = digits;
-              break;
-            }
-          }
-        }
-      }
-
-      // 2. Dynamic Email Extraction
-      let rawEmail = '';
-      if (evt.form_schema) {
-        const emailField = evt.form_schema.find((f: any) => isEmailField(f));
-        if (emailField && formData[emailField.id]) {
-          rawEmail = String(formData[emailField.id]).trim();
-        }
-      }
-      if (!rawEmail) {
-        for (const [key, val] of Object.entries(formData)) {
-          if ((/(email|mail)/i.test(key) || (typeof val === 'string' && val.includes('@'))) && val) {
-            rawEmail = String(val).trim();
-            break;
-          }
-        }
-      }
-      if (!rawEmail && formData.f_email) {
-        rawEmail = String(formData.f_email).trim();
-      }
-
-      // 3. Dynamic Name Extraction
-      let rawName = '';
-      if (evt.form_schema) {
-        const nameField = evt.form_schema.find((f: any) => f.id === 'f_name' || /(full[\s_]?name|first[\s_]?name|participant|student|attendee|name)/i.test(f.label || ''));
-        if (nameField && formData[nameField.id]) {
-          rawName = String(formData[nameField.id]).trim();
-        }
-      }
-      if (!rawName) {
-        for (const [key, val] of Object.entries(formData)) {
-          if (/(name|attendee|student)/i.test(key) && val && typeof val === 'string' && val.trim().length > 0) {
-            rawName = String(val).trim();
-            break;
-          }
-        }
-      }
-      if (!rawName) {
-        const firstTextField = evt.form_schema?.find((f: any) => f.type === 'text');
-        if (firstTextField && formData[firstTextField.id]) {
-          rawName = String(formData[firstTextField.id]).trim();
-        }
-      }
-
-      const formattedPhone = rawPhone ? (rawPhone.startsWith('+') ? rawPhone : `+91 ${rawPhone}`) : '—';
-      const finalName = rawName || 'Participant';
-      const finalEmail = rawEmail || 'attendee@example.com';
-
-      submitRegistration(evt.id, {
+    try {
+      const newReg = await submitRegistration(evt.id, {
         name: finalName,
         email: finalEmail,
         phone: formattedPhone,
         responses: formData,
         source: 'direct',
-      }).then(newReg => {
-        try {
-          const newUrl = `${window.location.origin}/?code=${encodeURIComponent(newReg.registration_code)}`;
-          window.history.pushState({ code: newReg.registration_code }, '', newUrl);
-        } catch (e) {
-          console.warn('history.pushState notice:', e);
-        }
-        setSelectedRegistrationId(newReg.id);
-        setScreen('16_registration_success');
-      }).catch(err => {
-        console.error('Registration error:', err);
-        setErrorMessage('Failed to complete registration. Please try again.');
       });
-    }, 400);
+
+      try {
+        const newUrl = `${window.location.origin}/?code=${encodeURIComponent(newReg.registration_code)}`;
+        window.history.pushState({ code: newReg.registration_code }, '', newUrl);
+      } catch (historyErr) {
+        console.warn('history.pushState notice:', historyErr);
+      }
+      setSelectedRegistrationId(newReg.id);
+      setScreen('16_registration_success');
+    } catch (err) {
+      console.error('Registration error:', err);
+      setErrorMessage('Failed to complete registration. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -636,13 +637,18 @@ export const PublicRegistrationScreen: React.FC = () => {
               type="submit"
               disabled={isSubmitting}
               style={{
-                backgroundColor: theme.colors.button || '#FF7A00',
+                backgroundColor: isSubmitting ? '#94A3B8' : (theme.colors.button || '#FF7A00'),
                 color: theme.colors.buttonText || '#FFFFFF',
               }}
-              className="w-full py-3.5 px-6 rounded-xl font-bold text-sm shadow-lg hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 mt-4"
+              className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-2 mt-4 select-none ${
+                isSubmitting ? 'cursor-not-allowed opacity-90' : 'hover:brightness-110 active:scale-98 cursor-pointer'
+              }`}
             >
               {isSubmitting ? (
-                <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <>
+                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span>Securing Registration Pass...</span>
+                </>
               ) : (
                 <>
                   <span>Submit Registration</span>

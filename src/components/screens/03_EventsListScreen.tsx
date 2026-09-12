@@ -167,7 +167,7 @@ export const EventsListScreen: React.FC = () => {
               {/* Event Banner Image */}
               <div className="relative h-44 bg-slate-900 overflow-hidden">
                 <img 
-                  src={evt.banner_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800'} 
+                  src={evt.banner_url || evt.theme?.banner_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800'} 
                   alt={evt.name}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800';

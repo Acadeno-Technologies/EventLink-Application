@@ -332,6 +332,31 @@ app.put('/api/registrations', async (req, res) => {
       await upsertEvent({ ...fallbackEvent, id: eventUuid });
     }
 
+    const userEmail = String(payload.email || payload.responses?.email || payload.responses?.f_email || '').trim().toLowerCase();
+    const userPhone = String(payload.phone || payload.responses?.phone || payload.responses?.f_phone || '').replace(/[^\d]/g, '');
+
+    // Server-side deduplication: Check if registration with same email or phone already exists for this event
+    if (userEmail || userPhone || payload.registration_code) {
+      const existingRegs = await prisma.registration.findMany({
+        where: { event_id: eventUuid },
+      });
+
+      const matchedExisting = existingRegs.find(r => {
+        if (r.id === payload.id) return true;
+        if (payload.registration_code && r.registration_code === payload.registration_code) return true;
+        const resp = r.responses || {};
+        const rEmail = String(resp.email || resp.f_email || '').trim().toLowerCase();
+        const rPhone = String(resp.phone || resp.f_phone || '').replace(/[^\d]/g, '');
+        if (userEmail && rEmail && userEmail === rEmail) return true;
+        if (userPhone && userPhone.length >= 10 && rPhone && (userPhone === rPhone || rPhone.endsWith(userPhone.slice(-10)))) return true;
+        return false;
+      });
+
+      if (matchedExisting) {
+        return res.json(mapRegistration(matchedExisting));
+      }
+    }
+
     const regUuid = isValidUUID(payload.id) ? payload.id : crypto.randomUUID();
     const registrationCode = payload.registration_code || `EVT-${Date.now()}`;
     const saved = await prisma.registration.upsert({

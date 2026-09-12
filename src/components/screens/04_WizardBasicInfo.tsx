@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 
 import { toTitleCase, toSentenceCase, format12to24, format24to12 } from '../../utils/textUtils';
+import { optimizeImageUpload } from '../../utils/imageCompressor';
+import { themePresets } from '../../data/seedData';
 
 export const WizardBasicInfoScreen: React.FC = () => {
   const { 
@@ -42,7 +44,7 @@ export const WizardBasicInfoScreen: React.FC = () => {
 
   const currentBanner = wizardDraft.banner_url || bannerPresets[1].url;
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -52,18 +54,22 @@ export const WizardBasicInfoScreen: React.FC = () => {
     }
 
     setIsUploadingBanner(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      updateWizardDraft({ banner_url: dataUrl });
-      showToast('Cover image uploaded successfully!');
+    try {
+      const optimizedUrl = await optimizeImageUpload(file, { maxWidth: 1280, maxHeight: 720, quality: 0.84 });
+      updateWizardDraft({ 
+        banner_url: optimizedUrl,
+        theme: {
+          ...(wizardDraft.theme || themePresets.workshop),
+          banner_url: optimizedUrl
+        }
+      });
+      showToast('Cover image optimized and uploaded successfully!');
+    } catch (err: any) {
+      console.error('Image upload error:', err);
+      showToast('Failed to process image file.');
+    } finally {
       setIsUploadingBanner(false);
-    };
-    reader.onerror = () => {
-      showToast('Failed to read image file.');
-      setIsUploadingBanner(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const [isSlugCustomized, setIsSlugCustomized] = useState(false);

@@ -131,6 +131,7 @@ export interface EventSettings {
   allow_excel_export: boolean;
   require_consent: boolean;
   consent_text: string;
+  prevent_duplicate_registrations?: boolean;
 }
 
 export interface Event {

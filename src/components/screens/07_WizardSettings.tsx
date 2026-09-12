@@ -279,7 +279,43 @@ export const WizardSettingsScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* BOX 3: India DPDP Act 2023 Consent */}
+            {/* BOX 3: Duplicate Submission Protection */}
+            <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#1463FF]" />
+                  <h3 className="text-xs sm:text-[13px] font-bold uppercase tracking-wider text-[#101B33]">
+                    Duplicate Submission Protection
+                  </h3>
+                </div>
+                <span className="text-[10px] font-bold text-[#1463FF] bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200">
+                  Active
+                </span>
+              </div>
+
+              <label className={`flex items-start justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
+                settings.prevent_duplicate_registrations !== false
+                  ? 'border-[#1463FF]/40 bg-[#F0F5FF]/50'
+                  : 'border-[#DCE5F0] bg-white hover:bg-slate-50/50'
+              }`}>
+                <div className="space-y-0.5 pr-3">
+                  <div className="text-xs font-bold text-[#101B33]">
+                    Allow Only 1 Registration per Email & Phone
+                  </div>
+                  <div className="text-[11px] text-[#7184A3] leading-snug">
+                    Prevents students and teams from submitting multiple times or pressing enter repeatedly.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.prevent_duplicate_registrations !== false}
+                  onChange={(e) => handleUpdateSettings('prevent_duplicate_registrations', e.target.checked)}
+                  className="w-4 h-4 rounded text-[#1463FF] focus:ring-[#1463FF] cursor-pointer mt-0.5"
+                />
+              </label>
+            </div>
+
+            {/* BOX 4: India DPDP Act 2023 Consent */}
             <div className="bg-white rounded-2xl border border-[#DCE5F0] p-5 shadow-[0_1px_3px_rgba(7,26,51,0.02)] space-y-3">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2">

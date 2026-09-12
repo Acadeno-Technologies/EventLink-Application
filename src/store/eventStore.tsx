@@ -13,7 +13,7 @@ import {
   initialUsers, 
   themePresets 
 } from '../data/seedData';
-import { decodeEventFromUrlParams } from '../utils/eventShareUtils';
+import { decodeEventFromUrlParams, findMatchingEvent, matchesEvent } from '../utils/eventShareUtils';
 import { 
   syncEventToCloud, 
   syncRegistrationToCloud, 
@@ -116,7 +116,9 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           const parsed = JSON.parse(saved);
           if (parsed && parsed.role) return parsed.role;
         }
-      } catch (e) {}
+      } catch {
+        // ignore storage error
+      }
     }
     return 'super_admin';
   });
@@ -131,16 +133,46 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           const parsed = JSON.parse(saved);
           if (parsed && parsed.email) return parsed;
         }
-      } catch (e) {
-        console.warn('Failed to restore user session:', e);
+      } catch (err) {
+        console.warn('Failed to restore user session:', err);
       }
     }
     return null;
   });
 
   const [organization, setOrganization] = useState<Organization>(initialOrganization);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  
+  // Initialize events from local storage cache first for instant zero-latency loading
+  const [events, setEvents] = useState<Event[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('acadeno_events');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (err) {
+        console.warn('Failed to parse cached events:', err);
+      }
+    }
+    return [];
+  });
+
+  const [registrations, setRegistrations] = useState<Registration[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('acadeno_registrations');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {
+        // ignore storage error
+      }
+    }
+    return [];
+  });
+
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
@@ -156,13 +188,27 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [currentUser]);
 
-  // Ensure any legacy cached events/registrations in localStorage are cleared
+  // Persist events to local storage whenever updated
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('acadeno_events');
-      localStorage.removeItem('acadeno_registrations');
+    if (typeof window !== 'undefined' && events.length > 0) {
+      try {
+        localStorage.setItem('acadeno_events', JSON.stringify(events));
+      } catch (err) {
+        console.warn('Failed to cache events in localStorage:', err);
+      }
     }
-  }, []);
+  }, [events]);
+
+  // Persist registrations to local storage whenever updated
+  useEffect(() => {
+    if (typeof window !== 'undefined' && registrations.length > 0) {
+      try {
+        localStorage.setItem('acadeno_registrations', JSON.stringify(registrations));
+      } catch {
+        // ignore storage error
+      }
+    }
+  }, [registrations]);
 
   // Wizard state
   const [wizardStep, setWizardStep] = useState<number>(1);
@@ -207,7 +253,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Pure database sync polling with Neon Postgres
+  // Pure database sync polling with Neon / Supabase Postgres
   useEffect(() => {
     let isMounted = true;
 
@@ -222,29 +268,52 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!isMounted) return;
 
         if (evtsRes.error) {
-          console.warn('[Neon Sync Poll - Events]:', evtsRes.error);
+          console.warn('[Cloud Sync Poll - Events]:', evtsRes.error);
         } else if (Array.isArray(evtsRes.data)) {
           const remoteEvents = evtsRes.data;
           const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
           const eventSlugParam = urlParams ? (urlParams.get('event') || urlParams.get('e') || urlParams.get('event_id') || urlParams.get('slug')) : null;
-          const hasUrlEvent = urlParams && (eventSlugParam || urlParams.get('name') || urlParams.get('title') || urlParams.get('d') || urlParams.get('data'));
+          const titleParam = urlParams ? (urlParams.get('name') || urlParams.get('title')) : null;
+          const hasUrlEvent = urlParams && (eventSlugParam || titleParam || urlParams.get('d') || urlParams.get('data'));
           
-          let merged = [...remoteEvents];
+          // Merge remote events while preserving locally uploaded banners if remote is missing banner
+          let merged = remoteEvents.map(remote => {
+            const localMatch = events.find(l => l.id === remote.id || matchesEvent(l, remote.slug) || matchesEvent(l, remote.name));
+            if (localMatch && localMatch.banner_url && (!remote.banner_url || remote.banner_url.includes('unsplash.com/photo-1540575467063'))) {
+              return {
+                ...remote,
+                banner_url: localMatch.banner_url,
+                theme: {
+                  ...(remote.theme || {}),
+                  banner_url: localMatch.banner_url
+                }
+              };
+            }
+            return remote;
+          });
+
+          // Also include any locally created events not yet in remote list
+          for (const local of events) {
+            if (!merged.some(m => m.id === local.id || matchesEvent(m, local.slug))) {
+              merged.push(local);
+            }
+          }
 
           if (hasUrlEvent) {
-            const decoded = decodeEventFromUrlParams(urlParams, organization.id);
-            if (decoded) {
-              const matchedRemote = merged.find(e => 
-                (eventSlugParam && e.slug.toLowerCase() === eventSlugParam.toLowerCase()) ||
-                e.id === decoded.id || 
-                e.slug.toLowerCase() === decoded.slug.toLowerCase() ||
-                e.name.toLowerCase() === decoded.name.toLowerCase()
-              );
-              if (matchedRemote) {
-                setSelectedEventId(matchedRemote.id);
-              } else {
-                merged = [decoded, ...merged];
-                setSelectedEventId(decoded.id);
+            const query = eventSlugParam || titleParam;
+            const matched = findMatchingEvent(merged, query);
+            if (matched) {
+              setSelectedEventId(matched.id);
+            } else {
+              const decoded = decodeEventFromUrlParams(urlParams, organization.id, merged);
+              if (decoded) {
+                const existing = findMatchingEvent(merged, decoded.id) || findMatchingEvent(merged, decoded.slug);
+                if (existing) {
+                  setSelectedEventId(existing.id);
+                } else {
+                  merged = [decoded, ...merged];
+                  setSelectedEventId(decoded.id);
+                }
               }
             }
           }
@@ -253,23 +322,23 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
 
         if (regsRes.error) {
-          console.warn('[Neon Sync Poll - Registrations]:', regsRes.error);
+          console.warn('[Cloud Sync Poll - Registrations]:', regsRes.error);
         } else if (Array.isArray(regsRes.data)) {
           setRegistrations(regsRes.data);
         }
 
         if (usersRes.error) {
-          console.warn('[Neon Sync Poll - Users]:', usersRes.error);
+          console.warn('[Cloud Sync Poll - Users]:', usersRes.error);
         } else if (Array.isArray(usersRes.data) && usersRes.data.length > 0) {
           setUsers(usersRes.data);
         }
       } catch (err) {
-        console.warn('Neon database polling warning:', err);
+        console.warn('Database polling warning:', err);
       }
     };
 
     syncWithCloud();
-    const interval = setInterval(syncWithCloud, 4000); // 4s real-time auto-sync with Neon
+    const interval = setInterval(syncWithCloud, 4000); // 4s real-time auto-sync
 
     const handleFocus = () => syncWithCloud();
     window.addEventListener('focus', handleFocus);
@@ -330,8 +399,17 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
 
         if (eventParam || nameParam || params.get('d') || params.get('data')) {
-          const decodedEvt = decodeEventFromUrlParams(params, organization.id);
+          const match = findMatchingEvent(events, eventParam || nameParam);
+          if (match) {
+            setSelectedEventId(match.id);
+            setCurrentScreen(prev => {
+              if (prev === '16_registration_success') return prev;
+              return match.status === 'closed' ? '17_registration_closed' : '15_public_registration';
+            });
+            return;
+          }
 
+          const decodedEvt = decodeEventFromUrlParams(params, organization.id, events);
           if (decodedEvt) {
             setSelectedEventId(decodedEvt.id);
             setCurrentScreen(prev => {
@@ -355,40 +433,37 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return () => {
       window.removeEventListener('popstate', handleUrlRoute);
     };
-  }, [organization.id]);
+  }, [organization.id, events]);
 
   // Selected event & registrations helper
   const selectedEvent = useMemo(() => {
-    // 1. First priority: match URL query parameter against real database events
+    // 1. First priority: match URL query parameter against real events list
     if (typeof window !== 'undefined' && window.location.search) {
       const params = new URLSearchParams(window.location.search);
       const eventParam = params.get('event') || params.get('e') || params.get('event_id') || params.get('slug');
       const nameParam = params.get('name') || params.get('title');
 
-      if (eventParam || nameParam) {
-        const match = events.find(e => 
-          (eventParam && e.slug.toLowerCase() === eventParam.toLowerCase()) ||
-          (eventParam && e.id.toLowerCase() === eventParam.toLowerCase()) ||
-          (nameParam && e.name.toLowerCase() === nameParam.toLowerCase()) ||
-          (eventParam && e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === eventParam.toLowerCase())
-        );
+      if (eventParam) {
+        const match = findMatchingEvent(events, eventParam);
+        if (match) return match;
+      }
+      if (nameParam) {
+        const match = findMatchingEvent(events, nameParam);
         if (match) return match;
       }
     }
 
     // 2. Second priority: match by selectedEventId from state
     if (selectedEventId) {
-      const byId = events.find(e => e.id === selectedEventId);
-      if (byId) return byId;
-      const bySlug = events.find(e => e.slug.toLowerCase() === selectedEventId.toLowerCase());
-      if (bySlug) return bySlug;
+      const match = findMatchingEvent(events, selectedEventId);
+      if (match) return match;
     }
 
     // 3. Third priority: decode from URL query parameters (for offline or standalone shared links)
     if (typeof window !== 'undefined' && window.location.search) {
       const params = new URLSearchParams(window.location.search);
       if (params.get('event') || params.get('name') || params.get('d') || params.get('data')) {
-        const decoded = decodeEventFromUrlParams(params, organization.id);
+        const decoded = decodeEventFromUrlParams(params, organization.id, events);
         if (decoded) return decoded;
       }
     }
@@ -546,11 +621,20 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const updateWizardDraft = (updates: Partial<Event>) => {
-    setWizardDraft(prev => ({
-      ...prev,
-      ...updates,
-      updated_at: new Date().toISOString(),
-    }));
+    setWizardDraft(prev => {
+      const banner = updates.banner_url !== undefined ? updates.banner_url : prev.banner_url;
+      const theme = updates.theme 
+        ? { ...updates.theme, ...(banner ? { banner_url: banner } : {}) } 
+        : (prev.theme ? { ...prev.theme, ...(banner ? { banner_url: banner } : {}) } : undefined);
+
+      return {
+        ...prev,
+        ...updates,
+        ...(banner !== undefined ? { banner_url: banner } : {}),
+        ...(theme ? { theme } : {}),
+        updated_at: new Date().toISOString(),
+      };
+    });
   };
 
   const saveWizardDraft = async (): Promise<Event> => {
@@ -755,6 +839,30 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       targetEvt = { ...targetEvt, id: finalEventId };
     }
 
+    // --- Deduplication Check ---
+    // Check if a registration with the same email or phone already exists for this event
+    const cleanEmail = String(formData.email || '').trim().toLowerCase();
+    const cleanPhone = String(formData.phone || '').replace(/[^\d]/g, '');
+
+    const existingReg = registrations.find(r => {
+      const isSameEvent = r.event_id === finalEventId || r.event_id === eventId;
+      if (!isSameEvent) return false;
+
+      const rEmail = String(r.email || r.responses?.email || r.responses?.f_email || '').trim().toLowerCase();
+      const rPhone = String(r.phone || r.responses?.phone || r.responses?.f_phone || '').replace(/[^\d]/g, '');
+
+      if (cleanEmail && rEmail && cleanEmail === rEmail) return true;
+      if (cleanPhone && cleanPhone.length >= 10 && rPhone && (cleanPhone === rPhone || rPhone.endsWith(cleanPhone.slice(-10)))) return true;
+      return false;
+    });
+
+    if (existingReg) {
+      // Return existing registration pass immediately without creating a duplicate record
+      setSelectedRegistrationId(existingReg.id);
+      showToast(`Welcome back, ${existingReg.name}! Showing your confirmed pass.`);
+      return existingReg;
+    }
+
     const prefix = targetEvt?.name
       ? targetEvt.name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3)
       : 'EVT';
@@ -779,6 +887,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       submitted_at: new Date().toISOString(),
     };
 
+    // Instant local state update for zero-latency UI transition
     setRegistrations(prev => [newReg, ...prev]);
     setSelectedRegistrationId(newReg.id);
 
@@ -789,12 +898,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return e;
     }));
 
-    // Await cloud sync for registration with auto-healing parent event sync
-    const { error } = await syncRegistrationToCloud(newReg, targetEvt);
-    if (error) {
-      console.error('[Neon Registration Sync Error]:', error);
-      showToast(`⚠️ Registration pass generated, but Neon sync failed: ${error.message || 'Database error'}`);
-    }
+    // Background cloud sync for registration
+    syncRegistrationToCloud(newReg, targetEvt).catch(err => {
+      console.warn('[Neon Registration Sync Background Notice]:', err);
+    });
 
     return newReg;
   };

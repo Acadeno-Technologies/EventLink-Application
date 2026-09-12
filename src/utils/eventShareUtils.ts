@@ -2,9 +2,58 @@ import { Event } from '../types';
 import { themePresets } from '../data/seedData';
 
 /**
+ * Normalizes any slug, name, or URL param string to a comparable string
+ */
+export function normalizeQueryString(str: string | undefined | null): string {
+  if (!str) return '';
+  return decodeURIComponent(str)
+    .toLowerCase()
+    .replace(/[-_\s]+/g, ' ')
+    .trim();
+}
+
+/**
+ * Matches an event against an ID, slug, title, or URL query parameter
+ */
+export function matchesEvent(event: Event, query: string | undefined | null): boolean {
+  if (!event || !query) return false;
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return false;
+
+  const normalizedQuery = normalizeQueryString(cleanQuery);
+  const normalizedSlug = normalizeQueryString(event.slug);
+  const normalizedName = normalizeQueryString(event.name);
+
+  // 1. Direct ID match
+  if (event.id.toLowerCase() === cleanQuery.toLowerCase()) return true;
+
+  // 2. Direct Slug match
+  if (event.slug.toLowerCase() === cleanQuery.toLowerCase()) return true;
+
+  // 3. Normalized Slug match (handles spaces vs hyphens: "event-name" vs "event name")
+  if (normalizedSlug && normalizedSlug === normalizedQuery) return true;
+
+  // 4. Normalized Name match
+  if (normalizedName && normalizedName === normalizedQuery) return true;
+
+  // 5. Slugified Name match
+  const slugifiedName = event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slugifiedQuery = cleanQuery.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  if (slugifiedName && slugifiedName === slugifiedQuery) return true;
+
+  return false;
+}
+
+/**
+ * Searches a list of events to find one matching the query (slug, ID, or name)
+ */
+export function findMatchingEvent(events: Event[], query: string | undefined | null): Event | undefined {
+  if (!events || !Array.isArray(events) || events.length === 0 || !query) return undefined;
+  return events.find(e => matchesEvent(e, query));
+}
+
+/**
  * Encodes an event into a self-contained, portable URL with its full metadata.
- * This guarantees that when scanned via QR code or opened on any mobile phone / browser,
- * the recipient sees the exact event name, date, venue, capacity, banner, and schema.
  */
 export function encodeEventToShareUrl(event: Event | undefined | null, origin?: string): string {
   if (!event) return '';
@@ -14,6 +63,8 @@ export function encodeEventToShareUrl(event: Event | undefined | null, origin?: 
   let slug = event.slug ? event.slug.trim().toLowerCase() : '';
   if (!slug || slug.length <= 1) {
     slug = event.name ? event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'event';
+  } else {
+    slug = slug.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
 
   // Return clean, short, professional registration URL
@@ -22,8 +73,36 @@ export function encodeEventToShareUrl(event: Event | undefined | null, origin?: 
 
 /**
  * Decodes event details from URL search parameters on mobile phones or fresh browsers.
+ * If knownEvents or localStorage contains the real published event, it prioritizes that event
+ * so custom uploaded banners and form schemas are perfectly retained.
  */
-export function decodeEventFromUrlParams(params: URLSearchParams, orgId: string): Event | null {
+export function decodeEventFromUrlParams(params: URLSearchParams, orgId: string, knownEvents?: Event[]): Event | null {
+  const eventSlug = params.get('event') || params.get('e') || params.get('event_id') || params.get('slug');
+  const titleParam = params.get('name') || params.get('title');
+
+  // Try finding from knownEvents or localStorage first
+  let candidates: Event[] = knownEvents || [];
+  if (candidates.length === 0 && typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('acadeno_events');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) candidates = parsed;
+      }
+    } catch (e) {}
+  }
+
+  if (candidates.length > 0) {
+    if (eventSlug) {
+      const match = findMatchingEvent(candidates, eventSlug);
+      if (match) return match;
+    }
+    if (titleParam) {
+      const match = findMatchingEvent(candidates, titleParam);
+      if (match) return match;
+    }
+  }
+
   const encodedData = params.get('d') || params.get('data');
 
   if (encodedData) {
@@ -79,9 +158,6 @@ export function decodeEventFromUrlParams(params: URLSearchParams, orgId: string)
     }
   }
 
-  const eventSlug = params.get('event') || params.get('e') || params.get('event_id') || params.get('slug');
-  const titleParam = params.get('name') || params.get('title');
-
   if (!eventSlug && !titleParam) return null;
 
   const dateParam = params.get('date') || params.get('start_date');
@@ -92,7 +168,7 @@ export function decodeEventFromUrlParams(params: URLSearchParams, orgId: string)
   const timeParam = params.get('time') || params.get('start_time');
 
   const cleanTitle = titleParam ? titleParam.trim() : (eventSlug
-    ? eventSlug
+    ? decodeURIComponent(eventSlug)
         .replace(/[-_]+/g, ' ')
         .replace(/\bai\b/gi, 'AI')
         .replace(/\bit\b/gi, 'IT')
@@ -102,7 +178,7 @@ export function decodeEventFromUrlParams(params: URLSearchParams, orgId: string)
     : 'Event Registration');
 
   const cleanSlug = (eventSlug && eventSlug.trim().length > 1)
-    ? eventSlug.trim().toLowerCase()
+    ? eventSlug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
     : (titleParam ? titleParam.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : (eventSlug?.toLowerCase() || 'event'));
 
   const eventId = `evt-${cleanSlug}`;

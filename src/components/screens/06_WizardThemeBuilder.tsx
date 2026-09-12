@@ -3,6 +3,7 @@ import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
 import { ThemeTemplate, EventTheme } from '../../types';
 import { themePresets } from '../../data/seedData';
+import { optimizeImageUpload } from '../../utils/imageCompressor';
 import {
   Palette,
   Type,
@@ -167,7 +168,7 @@ export const WizardThemeBuilderScreen: React.FC = () => {
       f.category.toLowerCase().includes(fontSearch.toLowerCase())
     );
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -177,24 +178,22 @@ export const WizardThemeBuilderScreen: React.FC = () => {
     }
 
     setIsUploadingBanner(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64Url = reader.result as string;
+    try {
+      const optimizedUrl = await optimizeImageUpload(file, { maxWidth: 1280, maxHeight: 720, quality: 0.84 });
       updateWizardDraft({
-        banner_url: base64Url,
+        banner_url: optimizedUrl,
         theme: {
           ...currentTheme,
-          banner_url: base64Url
+          banner_url: optimizedUrl
         }
       });
-      showToast('Banner image uploaded successfully!');
+      showToast('Banner image optimized and uploaded successfully!');
+    } catch (err: any) {
+      console.error('Image upload error:', err);
+      showToast('Failed to process image file.');
+    } finally {
       setIsUploadingBanner(false);
-    };
-    reader.onerror = () => {
-      showToast('Failed to read image file.');
-      setIsUploadingBanner(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   return (
