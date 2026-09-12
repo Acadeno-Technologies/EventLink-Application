@@ -416,18 +416,17 @@ app.put('/api/registrations', async (req, res) => {
     const userEmail = String(payload.email || payload.responses?.email || payload.responses?.f_email || '').trim().toLowerCase();
     const userPhone = String(payload.phone || payload.responses?.phone || payload.responses?.f_phone || '').replace(/[^\d]/g, '');
 
-    // Server-side deduplication: Check if registration with same email or phone already exists for this event
-    if (userEmail || userPhone || payload.registration_code) {
+    // Server-side deduplication: ONLY check if the same person (email or mobile) already registered for this event
+    if (userEmail || userPhone) {
       const existingRegs = await prisma.registration.findMany({
         where: { event_id: eventUuid },
       });
 
       const matchedExisting = existingRegs.find(r => {
-        if (r.id === payload.id) return true;
-        if (payload.registration_code && r.registration_code === payload.registration_code) return true;
+        if (payload.id && r.id === payload.id) return true;
         const resp = r.responses || {};
-        const rEmail = String(resp.email || resp.f_email || '').trim().toLowerCase();
-        const rPhone = String(resp.phone || resp.f_phone || '').replace(/[^\d]/g, '');
+        const rEmail = String(r.email || resp.email || resp.f_email || '').trim().toLowerCase();
+        const rPhone = String(r.phone || resp.phone || resp.f_phone || '').replace(/[^\d]/g, '');
         if (userEmail && rEmail && userEmail === rEmail) return true;
         if (userPhone && userPhone.length >= 10 && rPhone && (userPhone === rPhone || rPhone.endsWith(userPhone.slice(-10)))) return true;
         return false;
@@ -439,7 +438,42 @@ app.put('/api/registrations', async (req, res) => {
     }
 
     const regUuid = isValidUUID(payload.id) ? payload.id : crypto.randomUUID();
-    const registrationCode = payload.registration_code || `EVT-${Date.now()}`;
+    let registrationCode = payload.registration_code;
+
+    // Check if this registration_code is already taken by a different registration in DB
+    if (registrationCode) {
+      const codeClash = await prisma.registration.findFirst({
+        where: {
+          event_id: eventUuid,
+          registration_code: registrationCode,
+          NOT: { id: regUuid }
+        }
+      });
+      if (codeClash) {
+        // Generate guaranteed unique registration code based on count
+        const totalCount = await prisma.registration.count({ where: { event_id: eventUuid } });
+        const prefix = fallbackEvent?.name
+          ? fallbackEvent.name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3)
+          : 'EPR';
+        const year = new Date().getFullYear();
+        registrationCode = `${prefix}-${year}-${String(totalCount + 1).padStart(5, '0')}`;
+
+        // Secondary collision check
+        const doubleCheck = await prisma.registration.findFirst({
+          where: { event_id: eventUuid, registration_code: registrationCode }
+        });
+        if (doubleCheck) {
+          registrationCode = `${prefix}-${year}-${String(Date.now()).slice(-5)}`;
+        }
+      }
+    } else {
+      const totalCount = await prisma.registration.count({ where: { event_id: eventUuid } });
+      const prefix = fallbackEvent?.name
+        ? fallbackEvent.name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3)
+        : 'EPR';
+      const year = new Date().getFullYear();
+      registrationCode = `${prefix}-${year}-${String(totalCount + 1).padStart(5, '0')}`;
+    }
     const saved = await prisma.registration.upsert({
       where: { id: regUuid },
       update: {

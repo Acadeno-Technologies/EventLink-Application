@@ -983,9 +983,19 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const prefix = targetEvt?.name
       ? targetEvt.name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 3)
-      : 'EVT';
+      : 'EPR';
     
-    const seq = String(registrations.filter(r => r.event_id === finalEventId || r.event_id === eventId).length + 1).padStart(5, '0');
+    const eventRegs = registrations.filter(r => r.event_id === finalEventId || r.event_id === eventId);
+    let maxSeq = 0;
+    for (const r of eventRegs) {
+      const match = String(r.registration_code || '').match(/-(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    }
+    const nextNum = Math.max(maxSeq + 1, eventRegs.length + 1);
+    const seq = String(nextNum).padStart(5, '0');
     const year = new Date().getFullYear();
     const regCode = `${prefix}-${year}-${seq}`;
 
@@ -1016,8 +1026,19 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return e;
     }));
 
-    // Background cloud sync for registration
-    syncRegistrationToCloud(newReg, targetEvt).catch(err => {
+    // Background cloud sync for registration with server code update
+    syncRegistrationToCloud(newReg, targetEvt).then(res => {
+      if (res.data && res.data.id) {
+        const serverReg = res.data;
+        setRegistrations(prev => prev.map(r => r.id === newReg.id ? { ...r, ...serverReg } : r));
+        if (typeof window !== 'undefined' && serverReg.registration_code && serverReg.registration_code !== newReg.registration_code) {
+          try {
+            const newUrl = `${window.location.origin}/?code=${encodeURIComponent(serverReg.registration_code)}`;
+            window.history.replaceState({ code: serverReg.registration_code }, '', newUrl);
+          } catch {}
+        }
+      }
+    }).catch(err => {
       console.warn('[Neon Registration Sync Background Notice]:', err);
     });
 
