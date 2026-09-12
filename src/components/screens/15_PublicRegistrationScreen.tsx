@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AcadenoLogo } from '../common/AcadenoLogo';
 import { 
@@ -40,6 +40,7 @@ export const PublicRegistrationScreen: React.FC = () => {
 
   const [consentAgreed, setConsentAgreed] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!selectedEvent) {
@@ -175,7 +176,7 @@ export const PublicRegistrationScreen: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || isSubmittingRef.current) return;
     setErrorMessage(null);
 
     if (evt.form_schema) {
@@ -233,6 +234,10 @@ export const PublicRegistrationScreen: React.FC = () => {
       setErrorMessage('Please accept the event data consent agreement.');
       return;
     }
+
+    // Lock submission synchronously right away to block duplicate clicks / enter key presses
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
 
     // 1. Dynamic Phone Extraction across all possible schema IDs and form keys
     let rawPhone = '';
@@ -313,9 +318,6 @@ export const PublicRegistrationScreen: React.FC = () => {
     const finalName = rawName || 'Participant';
     const finalEmail = rawEmail || 'attendee@example.com';
 
-    // Lock submit immediately to block repeat button clicks / enter key presses
-    setIsSubmitting(true);
-
     try {
       const newReg = await submitRegistration(evt.id, {
         name: finalName,
@@ -336,6 +338,7 @@ export const PublicRegistrationScreen: React.FC = () => {
     } catch (err) {
       console.error('Registration error:', err);
       setErrorMessage('Failed to complete registration. Please try again.');
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -417,211 +420,234 @@ export const PublicRegistrationScreen: React.FC = () => {
             </div>
           )}
 
+          {isSubmitting && (
+            <div className="mb-5 p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-2xl text-amber-900 text-xs flex items-center gap-3 shadow-xs animate-pulse">
+              <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin shrink-0" />
+              <div>
+                <p className="font-bold text-amber-950 flex items-center gap-1.5">
+                  <span>⏳ Processing Registration...</span>
+                </p>
+                <p className="text-[11px] text-amber-800 leading-tight mt-0.5">
+                  Generating your confirmed pass. Please do not press submit again or reload the page.
+                </p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            
-            {/* Dynamic fields */}
-            {evt.form_schema?.map((f: any) => {
-              const val = formData[f.id] || '';
-              const isPhone = isPhoneField(f);
-              const isEmail = isEmailField(f);
-              const phoneCheck = isPhone ? validateIndianMobile(val) : { isValid: true, errorMsg: '' };
-              const emailCheck = isEmail ? validateEmailWithDetails(val) : { isValid: true, errorMsg: '' };
+            <fieldset disabled={isSubmitting} className="contents space-y-4">
+              {/* Dynamic fields */}
+              {evt.form_schema?.map((f: any) => {
+                const val = formData[f.id] || '';
+                const isPhone = isPhoneField(f);
+                const isEmail = isEmailField(f);
+                const phoneCheck = isPhone ? validateIndianMobile(val) : { isValid: true, errorMsg: '' };
+                const emailCheck = isEmail ? validateEmailWithDetails(val) : { isValid: true, errorMsg: '' };
 
-              return (
-                <div key={f.id} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label 
-                      className="block text-xs font-bold"
-                      style={{ color: theme.colors.text || '#1E293B' }}
-                    >
-                      {f.label} {f.required && <span className="text-rose-500">*</span>}
-                    </label>
+                return (
+                  <div key={f.id} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label 
+                        className="block text-xs font-bold"
+                        style={{ color: theme.colors.text || '#1E293B' }}
+                      >
+                        {f.label} {f.required && <span className="text-rose-500">*</span>}
+                      </label>
 
-                    {/* Live helper badge for Phone */}
-                    {isPhone && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-all ${
-                        val.length === 10 && phoneCheck.isValid
-                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' 
-                          : val.length === 10 && !phoneCheck.isValid
-                            ? 'bg-rose-50 text-rose-600 border border-rose-200'
-                            : val.length > 0 
-                              ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                              : 'bg-slate-100 text-slate-500'
-                      }`}>
-                        {val.length === 10 && phoneCheck.isValid 
-                          ? '✓ Valid Mobile' 
-                          : val.length === 10 && !phoneCheck.isValid 
-                            ? '❌ Starts with 6, 7, 8 or 9' 
-                            : `${val.length}/10 digits`}
-                      </span>
-                    )}
+                      {/* Live helper badge for Phone */}
+                      {isPhone && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-all ${
+                          val.length === 10 && phoneCheck.isValid
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' 
+                            : val.length === 10 && !phoneCheck.isValid
+                              ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                              : val.length > 0 
+                                ? 'bg-amber-50 text-amber-600 border border-amber-200'
+                                : 'bg-slate-100 text-slate-500'
+                        }`}>
+                          {val.length === 10 && phoneCheck.isValid 
+                            ? '✓ Valid Mobile' 
+                            : val.length === 10 && !phoneCheck.isValid 
+                              ? '❌ Starts with 6, 7, 8 or 9' 
+                              : `${val.length}/10 digits`}
+                        </span>
+                      )}
 
-                    {/* Live helper badge for Email */}
-                    {isEmail && val.length > 0 && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-all ${
-                        emailCheck.isValid 
-                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' 
-                          : 'bg-rose-50 text-rose-600 border border-rose-200'
-                      }`}>
-                        {emailCheck.isValid ? '✓ Valid Format' : emailCheck.suggestion || emailCheck.errorMsg || 'Invalid format'}
-                      </span>
+                      {/* Live helper badge for Email */}
+                      {isEmail && val.length > 0 && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-all ${
+                          emailCheck.isValid 
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' 
+                            : 'bg-rose-50 text-rose-600 border border-rose-200'
+                        }`}>
+                          {emailCheck.isValid ? '✓ Valid Format' : emailCheck.suggestion || emailCheck.errorMsg || 'Invalid format'}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Field Types renderer */}
+                    {f.type === 'textarea' ? (
+                      <textarea
+                        rows={3}
+                        value={val}
+                        disabled={isSubmitting}
+                        onChange={(e) => handleFieldChange(f.id, e.target.value, 'textarea')}
+                        placeholder={f.placeholder || 'Enter your response...'}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-all disabled:opacity-60"
+                      />
+                    ) : f.type === 'dropdown' ? (
+                      <select
+                        value={val}
+                        disabled={isSubmitting}
+                        onChange={(e) => handleFieldChange(f.id, e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-all font-medium disabled:opacity-60"
+                      >
+                        <option value="">{f.placeholder || 'Select an option...'}</option>
+                        {f.options?.map((opt: string, i: number) => (
+                          <option key={i} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : f.type === 'radio' ? (
+                      <div className="space-y-2 pt-1">
+                        {f.options?.map((opt: string, i: number) => (
+                          <label key={i} className={`flex items-center gap-2.5 p-2 rounded-xl border border-slate-200/80 hover:bg-slate-50 cursor-pointer text-xs ${isSubmitting ? 'pointer-events-none opacity-60' : ''}`}>
+                            <input
+                              type="radio"
+                              name={f.id}
+                              value={opt}
+                              disabled={isSubmitting}
+                              checked={val === opt}
+                              onChange={() => handleFieldChange(f.id, opt)}
+                              className="text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="font-medium text-slate-700">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : f.type === 'file' ? (
+                      <label className={`block p-4 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl text-center bg-slate-50 hover:bg-blue-50/40 cursor-pointer transition-all ${isSubmitting ? 'pointer-events-none opacity-60' : ''}`}>
+                        <input
+                          type="file"
+                          disabled={isSubmitting}
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleFieldChange(f.id, file.name);
+                            }
+                          }}
+                        />
+                        {val ? (
+                          <div className="flex items-center justify-center gap-2 text-xs font-bold text-emerald-600">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                            <span>Uploaded: {val}</span>
+                            <span className="text-[10px] text-slate-400 font-normal underline ml-1">Change file</span>
+                          </div>
+                        ) : (
+                          <div>
+                            <Upload className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+                            <span className="text-xs text-slate-700 font-semibold block">Click to upload document attachment</span>
+                            <span className="text-[10px] text-slate-400">PDF, PNG, JPG or DOC (Max 10MB)</span>
+                          </div>
+                        )}
+                      </label>
+                    ) : isPhone ? (
+                      /* Dedicated 10-Digit Mobile Phone Input */
+                      <div className="space-y-1">
+                        <div className="relative flex items-center">
+                          <div className="absolute left-3.5 flex items-center gap-1.5 pointer-events-none text-slate-500 text-xs font-bold border-r border-slate-200 pr-2">
+                            <span>🇮🇳</span>
+                            <span>+91</span>
+                          </div>
+                          <input
+                            type="tel"
+                            inputMode="numeric"
+                            maxLength={10}
+                            disabled={isSubmitting}
+                            value={val}
+                            onChange={(e) => handleFieldChange(f.id, e.target.value, 'phone')}
+                            placeholder="9876543210 (starts with 6, 7, 8, 9)"
+                            className={`w-full pl-20 pr-4 py-2.5 bg-slate-50 border ${
+                              val.length === 10 && phoneCheck.isValid
+                                ? 'border-emerald-400 focus:ring-emerald-500 bg-emerald-50/10' 
+                                : val.length === 10 && !phoneCheck.isValid
+                                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20 text-rose-800'
+                                  : val.length > 0 && val.length < 10 
+                                    ? 'border-amber-300 focus:ring-amber-500'
+                                    : 'border-slate-200 focus:ring-blue-600'
+                            } rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:outline-none transition-all font-mono font-medium tracking-wide disabled:opacity-60`}
+                          />
+                        </div>
+                        {val.length === 10 && !phoneCheck.isValid && (
+                          <p className="text-[11px] text-rose-600 font-medium pl-1">
+                            ⚠️ Indian mobile numbers must start with <strong>6, 7, 8, or 9</strong>.
+                          </p>
+                        )}
+                      </div>
+                    ) : isEmail ? (
+                      /* Dedicated Email Input */
+                      <div className="space-y-1">
+                        <input
+                          type="email"
+                          disabled={isSubmitting}
+                          value={val}
+                          onChange={(e) => handleFieldChange(f.id, e.target.value, 'email')}
+                          placeholder={f.placeholder || 'e.g. participant@gmail.com'}
+                          className={`w-full px-3.5 py-2.5 bg-slate-50 border ${
+                            val.length > 0 && emailCheck.isValid 
+                              ? 'border-emerald-400 focus:ring-emerald-500 bg-emerald-50/10' 
+                              : val.length > 0 && !emailCheck.isValid
+                                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20 text-rose-900'
+                                : 'border-slate-200 focus:ring-blue-600'
+                          } rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:outline-none transition-all font-medium disabled:opacity-60`}
+                        />
+
+                        {/* Clickable suggestion auto-fix button if typo detected */}
+                        {val.length > 0 && !emailCheck.isValid && emailCheck.suggestion && !isSubmitting && (
+                          <button
+                            type="button"
+                            onClick={() => handleApplyEmailSuggestion(f.id, val, emailCheck.suggestion!)}
+                            className="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 pl-1 cursor-pointer underline"
+                          >
+                            <span>Fix to:</span>
+                            <span className="bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
+                              {val.split('@')[0]}@gmail.com
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type={f.type === 'number' ? 'number' : 'text'}
+                        disabled={isSubmitting}
+                        value={val}
+                        onChange={(e) => handleFieldChange(f.id, e.target.value, f.type || 'text')}
+                        placeholder={f.placeholder || `Enter ${f.label.toLowerCase()}`}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-all font-medium disabled:opacity-60"
+                      />
                     )}
                   </div>
+                );
+              })}
 
-                  {/* Field Types renderer */}
-                  {f.type === 'textarea' ? (
-                    <textarea
-                      rows={3}
-                      value={val}
-                      onChange={(e) => handleFieldChange(f.id, e.target.value, 'textarea')}
-                      placeholder={f.placeholder || 'Enter your response...'}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-all"
-                    />
-                  ) : f.type === 'dropdown' ? (
-                    <select
-                      value={val}
-                      onChange={(e) => handleFieldChange(f.id, e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-all font-medium"
-                    >
-                      <option value="">{f.placeholder || 'Select an option...'}</option>
-                      {f.options?.map((opt: string, i: number) => (
-                        <option key={i} value={opt}>{opt}</option>
-                      ))}
-                    </select>
-                  ) : f.type === 'radio' ? (
-                    <div className="space-y-2 pt-1">
-                      {f.options?.map((opt: string, i: number) => (
-                        <label key={i} className="flex items-center gap-2.5 p-2 rounded-xl border border-slate-200/80 hover:bg-slate-50 cursor-pointer text-xs">
-                          <input
-                            type="radio"
-                            name={f.id}
-                            value={opt}
-                            checked={val === opt}
-                            onChange={() => handleFieldChange(f.id, opt)}
-                            className="text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="font-medium text-slate-700">{opt}</span>
-                        </label>
-                      ))}
-                    </div>
-                  ) : f.type === 'file' ? (
-                    <label className="block p-4 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl text-center bg-slate-50 hover:bg-blue-50/40 cursor-pointer transition-all">
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            handleFieldChange(f.id, file.name);
-                          }
-                        }}
-                      />
-                      {val ? (
-                        <div className="flex items-center justify-center gap-2 text-xs font-bold text-emerald-600">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                          <span>Uploaded: {val}</span>
-                          <span className="text-[10px] text-slate-400 font-normal underline ml-1">Change file</span>
-                        </div>
-                      ) : (
-                        <div>
-                          <Upload className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-                          <span className="text-xs text-slate-700 font-semibold block">Click to upload document attachment</span>
-                          <span className="text-[10px] text-slate-400">PDF, PNG, JPG or DOC (Max 10MB)</span>
-                        </div>
-                      )}
-                    </label>
-                  ) : isPhone ? (
-                    /* Dedicated 10-Digit Mobile Phone Input */
-                    <div className="space-y-1">
-                      <div className="relative flex items-center">
-                        <div className="absolute left-3.5 flex items-center gap-1.5 pointer-events-none text-slate-500 text-xs font-bold border-r border-slate-200 pr-2">
-                          <span>🇮🇳</span>
-                          <span>+91</span>
-                        </div>
-                        <input
-                          type="tel"
-                          inputMode="numeric"
-                          maxLength={10}
-                          value={val}
-                          onChange={(e) => handleFieldChange(f.id, e.target.value, 'phone')}
-                          placeholder="9876543210 (starts with 6, 7, 8, 9)"
-                          className={`w-full pl-20 pr-4 py-2.5 bg-slate-50 border ${
-                            val.length === 10 && phoneCheck.isValid
-                              ? 'border-emerald-400 focus:ring-emerald-500 bg-emerald-50/10' 
-                              : val.length === 10 && !phoneCheck.isValid
-                                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20 text-rose-800'
-                                : val.length > 0 && val.length < 10 
-                                  ? 'border-amber-300 focus:ring-amber-500'
-                                  : 'border-slate-200 focus:ring-blue-600'
-                          } rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:outline-none transition-all font-mono font-medium tracking-wide`}
-                        />
-                      </div>
-                      {val.length === 10 && !phoneCheck.isValid && (
-                        <p className="text-[11px] text-rose-600 font-medium pl-1">
-                          ⚠️ Indian mobile numbers must start with <strong>6, 7, 8, or 9</strong>.
-                        </p>
-                      )}
-                    </div>
-                  ) : isEmail ? (
-                    /* Dedicated Email Input */
-                    <div className="space-y-1">
-                      <input
-                        type="email"
-                        value={val}
-                        onChange={(e) => handleFieldChange(f.id, e.target.value, 'email')}
-                        placeholder={f.placeholder || 'e.g. participant@gmail.com'}
-                        className={`w-full px-3.5 py-2.5 bg-slate-50 border ${
-                          val.length > 0 && emailCheck.isValid 
-                            ? 'border-emerald-400 focus:ring-emerald-500 bg-emerald-50/10' 
-                            : val.length > 0 && !emailCheck.isValid
-                              ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20 text-rose-900'
-                              : 'border-slate-200 focus:ring-blue-600'
-                        } rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:outline-none transition-all font-medium`}
-                      />
-
-                      {/* Clickable suggestion auto-fix button if typo detected */}
-                      {val.length > 0 && !emailCheck.isValid && emailCheck.suggestion && (
-                        <button
-                          type="button"
-                          onClick={() => handleApplyEmailSuggestion(f.id, val, emailCheck.suggestion!)}
-                          className="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 pl-1 cursor-pointer underline"
-                        >
-                          <span>Fix to:</span>
-                          <span className="bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
-                            {val.split('@')[0]}@gmail.com
-                          </span>
-                        </button>
-                      )}
-                    </div>
-                  ) : (
+              {/* DPDP Act 2023 Consent Checkbox */}
+              {evt.settings?.require_consent && (
+                <div className="pt-2">
+                  <label className={`flex items-start gap-2.5 cursor-pointer text-xs text-slate-600 ${isSubmitting ? 'pointer-events-none opacity-60' : ''}`}>
                     <input
-                      type={f.type === 'number' ? 'number' : 'text'}
-                      value={val}
-                      onChange={(e) => handleFieldChange(f.id, e.target.value, f.type || 'text')}
-                      placeholder={f.placeholder || `Enter ${f.label.toLowerCase()}`}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none transition-all font-medium"
+                      type="checkbox"
+                      disabled={isSubmitting}
+                      checked={consentAgreed}
+                      onChange={(e) => setConsentAgreed(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
                     />
-                  )}
+                    <span className="leading-snug">
+                      {evt.settings.consent_text || 'I agree to receive event updates on WhatsApp and email under India DPDP Act 2023.'}
+                    </span>
+                  </label>
                 </div>
-              );
-            })}
-
-            {/* DPDP Act 2023 Consent Checkbox */}
-            {evt.settings?.require_consent && (
-              <div className="pt-2">
-                <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-600">
-                  <input
-                    type="checkbox"
-                    checked={consentAgreed}
-                    onChange={(e) => setConsentAgreed(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="leading-snug">
-                    {evt.settings.consent_text || 'I agree to receive event updates on WhatsApp and email under India DPDP Act 2023.'}
-                  </span>
-                </label>
-              </div>
-            )}
+              )}
+            </fieldset>
 
             {/* Anti-bot protection badge */}
             <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
@@ -639,15 +665,16 @@ export const PublicRegistrationScreen: React.FC = () => {
               style={{
                 backgroundColor: isSubmitting ? '#94A3B8' : (theme.colors.button || '#FF7A00'),
                 color: theme.colors.buttonText || '#FFFFFF',
+                pointerEvents: isSubmitting ? 'none' : 'auto',
               }}
               className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-2 mt-4 select-none ${
-                isSubmitting ? 'cursor-not-allowed opacity-90' : 'hover:brightness-110 active:scale-98 cursor-pointer'
+                isSubmitting ? 'cursor-not-allowed opacity-75 pointer-events-none' : 'hover:brightness-110 active:scale-98 cursor-pointer'
               }`}
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  <span>Securing Registration Pass...</span>
+                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" />
+                  <span>Securing Registration Pass... Please Wait</span>
                 </>
               ) : (
                 <>

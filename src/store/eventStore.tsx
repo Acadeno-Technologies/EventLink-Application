@@ -30,6 +30,71 @@ import {
   isValidUUID
 } from '../utils/supabaseClient';
 
+export const extractRegistrationIdentifiers = (reg: Partial<Registration> | { name?: string; email?: string; phone?: string; responses?: Record<string, any> }) => {
+  let email = String(reg.email || '').trim().toLowerCase();
+  let phone = String(reg.phone || '').replace(/[^\d]/g, '');
+
+  if (reg.responses) {
+    if (!email) {
+      for (const [k, v] of Object.entries(reg.responses)) {
+        if ((/(email|mail)/i.test(k) || (typeof v === 'string' && v.includes('@'))) && v) {
+          email = String(v).trim().toLowerCase();
+          break;
+        }
+      }
+    }
+    if (!phone || phone === '9846000000' || phone === '9876543210') {
+      for (const [k, v] of Object.entries(reg.responses)) {
+        if (/(phone|mobile|contact|whatsapp|tel|cell)/i.test(k) && v) {
+          const digits = String(v).replace(/[^\d]/g, '');
+          if (digits.length >= 7) {
+            phone = digits;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  const phoneLast10 = phone.length >= 10 ? phone.slice(-10) : phone;
+  return { email, phone, phoneLast10 };
+};
+
+export const deduplicateRegistrationsList = (list: Registration[]): Registration[] => {
+  const seen = new Set<string>();
+  const result: Registration[] = [];
+
+  for (const reg of list) {
+    const eventId = String(reg.event_id || '').toLowerCase();
+    const { email, phoneLast10 } = extractRegistrationIdentifiers(reg);
+
+    let isDuplicate = false;
+    if (email && email !== 'attendee@example.com' && email !== 'attendee@acadeno.in') {
+      const emailKey = `${eventId}::email::${email}`;
+      if (seen.has(emailKey)) {
+        isDuplicate = true;
+      } else {
+        seen.add(emailKey);
+      }
+    }
+
+    if (!isDuplicate && phoneLast10 && phoneLast10.length === 10 && phoneLast10 !== '9846000000' && phoneLast10 !== '9876543210') {
+      const phoneKey = `${eventId}::phone::${phoneLast10}`;
+      if (seen.has(phoneKey)) {
+        isDuplicate = true;
+      } else {
+        seen.add(phoneKey);
+      }
+    }
+
+    if (!isDuplicate) {
+      result.push(reg);
+    }
+  }
+
+  return result;
+};
+
 interface EventContextType {
   currentScreen: ScreenId;
   setScreen: (screen: ScreenId) => void;
@@ -70,6 +135,7 @@ interface EventContextType {
   submitRegistration: (eventId: string, formData: { name: string; email: string; phone: string; responses: Record<string, any>; source?: string }) => Promise<Registration>;
   updateRegistration: (regId: string, updates: Partial<Registration>) => Promise<void>;
   deleteRegistration: (regId: string) => Promise<void>;
+  cleanDuplicateRegistrations: () => Promise<number>;
   inviteUser: (name: string, email: string, role: UserRole, department?: string, password?: string) => Promise<void>;
   updateUserRole: (userId: string, role: UserRole) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
@@ -164,7 +230,9 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const saved = localStorage.getItem('acadeno_registrations');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return deduplicateRegistrationsList(parsed);
+          }
         }
       } catch {
         // ignore storage error
@@ -324,7 +392,8 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (regsRes.error) {
           console.warn('[Cloud Sync Poll - Registrations]:', regsRes.error);
         } else if (Array.isArray(regsRes.data)) {
-          setRegistrations(regsRes.data);
+          const dedupedRemote = deduplicateRegistrationsList(regsRes.data);
+          setRegistrations(dedupedRemote);
         }
 
         if (usersRes.error) {
@@ -841,18 +910,21 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // --- Deduplication Check ---
     // Check if a registration with the same email or phone already exists for this event
-    const cleanEmail = String(formData.email || '').trim().toLowerCase();
-    const cleanPhone = String(formData.phone || '').replace(/[^\d]/g, '');
+    const inputIdentifiers = extractRegistrationIdentifiers(formData);
 
     const existingReg = registrations.find(r => {
       const isSameEvent = r.event_id === finalEventId || r.event_id === eventId;
       if (!isSameEvent) return false;
 
-      const rEmail = String(r.email || r.responses?.email || r.responses?.f_email || '').trim().toLowerCase();
-      const rPhone = String(r.phone || r.responses?.phone || r.responses?.f_phone || '').replace(/[^\d]/g, '');
+      const rIdentifiers = extractRegistrationIdentifiers(r);
 
-      if (cleanEmail && rEmail && cleanEmail === rEmail) return true;
-      if (cleanPhone && cleanPhone.length >= 10 && rPhone && (cleanPhone === rPhone || rPhone.endsWith(cleanPhone.slice(-10)))) return true;
+      if (inputIdentifiers.email && rIdentifiers.email && inputIdentifiers.email === rIdentifiers.email) return true;
+      if (
+        inputIdentifiers.phoneLast10 && 
+        inputIdentifiers.phoneLast10.length === 10 && 
+        rIdentifiers.phoneLast10 && 
+        (inputIdentifiers.phoneLast10 === rIdentifiers.phoneLast10 || rIdentifiers.phoneLast10.endsWith(inputIdentifiers.phoneLast10))
+      ) return true;
       return false;
     });
 
@@ -936,6 +1008,36 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } else {
       showToast('Registration deleted from Neon');
     }
+  };
+
+  const cleanDuplicateRegistrations = async (): Promise<number> => {
+    const deduped = deduplicateRegistrationsList(registrations);
+    const removedCount = registrations.length - deduped.length;
+    
+    if (removedCount > 0) {
+      const dedupedIds = new Set(deduped.map(r => r.id));
+      const toDelete = registrations.filter(r => !dedupedIds.has(r.id));
+      
+      setRegistrations(deduped);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('acadeno_registrations', JSON.stringify(deduped));
+        } catch {
+          // ignore
+        }
+      }
+      
+      // Delete redundant duplicate records from cloud database in background
+      for (const item of toDelete) {
+        if (item.id) {
+          deleteRegistrationFromCloud(item.id).catch(e => console.warn('Cloud duplicate delete notice:', e));
+        }
+      }
+      showToast(`Cleaned ${removedCount} duplicate registration${removedCount > 1 ? 's' : ''}`);
+    } else {
+      showToast('All registrations are unique! No duplicates found.');
+    }
+    return removedCount;
   };
 
   const inviteUser = async (
@@ -1049,6 +1151,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         submitRegistration,
         updateRegistration,
         deleteRegistration,
+        cleanDuplicateRegistrations,
         inviteUser,
         updateUserRole,
         deleteUser,

@@ -305,9 +305,57 @@ app.delete('/api/events/:id', async (req, res) => {
 app.get('/api/registrations', async (_req, res) => {
   try {
     const rows = await prisma.registration.findMany({
-      orderBy: { submitted_at: 'desc' },
+      orderBy: { submitted_at: 'asc' }, // earliest first
     });
-    res.json(rows.map(mapRegistration));
+
+    // Deduplicate in memory before sending
+    const seen = new Set();
+    const uniqueRows = [];
+    const duplicateIds = [];
+
+    for (const r of rows) {
+      const eventId = String(r.event_id || '').toLowerCase();
+      const resp = r.responses || {};
+      const email = String(r.email || resp.email || resp.f_email || '').trim().toLowerCase();
+      const phone = String(r.phone || resp.phone || resp.f_phone || '').replace(/[^\d]/g, '');
+      const phoneSuffix = phone.length >= 10 ? phone.slice(-10) : phone;
+
+      let isDup = false;
+      if (email && email !== 'attendee@example.com' && email !== 'attendee@acadeno.in') {
+        const emailKey = `${eventId}::email::${email}`;
+        if (seen.has(emailKey)) {
+          isDup = true;
+        } else {
+          seen.add(emailKey);
+        }
+      }
+
+      if (!isDup && phoneSuffix && phoneSuffix.length === 10 && phoneSuffix !== '9846000000' && phoneSuffix !== '9876543210') {
+        const phoneKey = `${eventId}::phone::${phoneSuffix}`;
+        if (seen.has(phoneKey)) {
+          isDup = true;
+        } else {
+          seen.add(phoneKey);
+        }
+      }
+
+      if (isDup) {
+        duplicateIds.push(r.id);
+      } else {
+        uniqueRows.push(r);
+      }
+    }
+
+    // Purge duplicate IDs in database in background if found
+    if (duplicateIds.length > 0) {
+      prisma.registration.deleteMany({
+        where: { id: { in: duplicateIds } },
+      }).catch(err => console.warn('Background purge duplicates notice:', err.message));
+    }
+
+    // Sort back to desc (newest first) for UI display
+    uniqueRows.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+    res.json(uniqueRows.map(mapRegistration));
   } catch (error) {
     console.warn('[Neon get registrations error - returning empty]:', error.message);
     res.json([]);

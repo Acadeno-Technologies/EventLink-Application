@@ -37,6 +37,7 @@ export const RegistrationsScreen: React.FC = () => {
     setScreen, 
     updateRegistration, 
     deleteRegistration,
+    cleanDuplicateRegistrations,
     showToast 
   } = useEventStore();
 
@@ -162,6 +163,15 @@ export const RegistrationsScreen: React.FC = () => {
       pageSubtitle={pageSubtext}
       headerAction={
         <div className="flex items-center gap-2">
+          <button
+            onClick={cleanDuplicateRegistrations}
+            className="h-9 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title="Automatically detect & clean duplicate submissions for same email/phone"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Clean Duplicates</span>
+          </button>
+
           <button
             onClick={handleExportCsv}
             className="h-9 px-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
