@@ -515,15 +515,19 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-async function start() {
-  await prisma.$connect();
-  await ensureNeonSeed(prisma);
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`Neon API listening on http://localhost:${port}`);
-  });
+async function initDatabase() {
+  try {
+    await prisma.$connect();
+    await ensureNeonSeed(prisma);
+    console.log('[Neon] Successfully connected to database & verified seeds.');
+  } catch (error) {
+    console.warn('[Neon Warning] Could not connect to Neon DB immediately:', error.message);
+    console.warn('[Neon Warning] Server is still running and will retry upon requests.');
+  }
 }
 
-start().catch((error) => {
-  console.error('Failed to start Neon API:', error);
-  process.exit(1);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Neon API listening on http://localhost:${port}`);
+  initDatabase();
 });
+
