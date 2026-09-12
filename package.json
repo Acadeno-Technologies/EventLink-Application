@@ -7,7 +7,7 @@
     "dev": "concurrently -k \"npm run dev:api\" \"npm run dev:web\"",
     "dev:api": "node server/index.js",
     "dev:web": "vite",
-    "start": "node server/index.js",
+    "start": "npx prisma db push --skip-generate && node server/index.js",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
