@@ -414,10 +414,9 @@ app.put('/api/registrations', async (req, res) => {
     }
 
     const userEmail = String(payload.email || payload.responses?.email || payload.responses?.f_email || '').trim().toLowerCase();
-    const userPhone = String(payload.phone || payload.responses?.phone || payload.responses?.f_phone || '').replace(/[^\d]/g, '');
 
-    // Server-side deduplication: ONLY check if the same person (email or mobile) already registered for this event
-    if (userEmail || userPhone) {
+    // Server-side deduplication: ONLY check if the same EMAIL already registered for this event
+    if (userEmail) {
       const existingRegs = await prisma.registration.findMany({
         where: { event_id: eventUuid },
       });
@@ -427,17 +426,14 @@ app.put('/api/registrations', async (req, res) => {
         if (payload.id && r.id === payload.id) return false;
         const resp = r.responses || {};
         const rEmail = String(r.email || resp.email || resp.f_email || '').trim().toLowerCase();
-        const rPhone = String(r.phone || resp.phone || resp.f_phone || '').replace(/[^\d]/g, '');
-        if (userEmail && rEmail && userEmail === rEmail) return true;
-        if (userPhone && userPhone.length >= 10 && rPhone && (userPhone === rPhone || rPhone.endsWith(userPhone.slice(-10)))) return true;
-        return false;
+        return rEmail && userEmail === rEmail;
       });
 
       if (matchedExisting) {
-        console.log(`[POSTGRES] Duplicate registration attempt rejected for email ${userEmail || payload.email} (Event: ${eventUuid})`);
+        console.log(`[POSTGRES] Duplicate registration attempt rejected for email ${userEmail} (Event: ${eventUuid})`);
         return res.status(409).json({
           error: 'ALREADY_REGISTERED',
-          message: `This email address (${userEmail || payload.email}) is already registered for this event. Each participant can only register once.`,
+          message: `The email "${userEmail}" is already registered for this event. Each participant can only register once with their email.`,
           existingRegistration: mapRegistration(matchedExisting),
         });
       }

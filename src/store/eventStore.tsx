@@ -67,7 +67,7 @@ export const deduplicateRegistrationsList = (list: Registration[]): Registration
 
   for (const reg of list) {
     const eventId = String(reg.event_id || '').toLowerCase();
-    const { email, phoneLast10 } = extractRegistrationIdentifiers(reg);
+    const { email } = extractRegistrationIdentifiers(reg);
 
     let isDuplicate = false;
     if (email && email !== 'attendee@example.com' && email !== 'attendee@acadeno.in') {
@@ -76,15 +76,6 @@ export const deduplicateRegistrationsList = (list: Registration[]): Registration
         isDuplicate = true;
       } else {
         seen.add(emailKey);
-      }
-    }
-
-    if (!isDuplicate && phoneLast10 && phoneLast10.length === 10 && phoneLast10 !== '9846000000' && phoneLast10 !== '9876543210') {
-      const phoneKey = `${eventId}::phone::${phoneLast10}`;
-      if (seen.has(phoneKey)) {
-        isDuplicate = true;
-      } else {
-        seen.add(phoneKey);
       }
     }
 
@@ -954,28 +945,19 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       targetEvt = { ...targetEvt, id: finalEventId };
     }
 
-    // --- Deduplication Check ---
-    // Check if a registration with the same email or phone already exists for this event
-    const inputIdentifiers = extractRegistrationIdentifiers(formData);
+    // --- Deduplication Check (Strictly Email per Event) ---
+    const inputEmail = String(formData.email || '').trim().toLowerCase();
 
-    const existingReg = registrations.find(r => {
+    const existingReg = inputEmail ? registrations.find(r => {
       const isSameEvent = r.event_id === finalEventId || r.event_id === eventId;
       if (!isSameEvent) return false;
 
       const rIdentifiers = extractRegistrationIdentifiers(r);
-
-      if (inputIdentifiers.email && rIdentifiers.email && inputIdentifiers.email === rIdentifiers.email) return true;
-      if (
-        inputIdentifiers.phoneLast10 && 
-        inputIdentifiers.phoneLast10.length === 10 && 
-        rIdentifiers.phoneLast10 && 
-        (inputIdentifiers.phoneLast10 === rIdentifiers.phoneLast10 || rIdentifiers.phoneLast10.endsWith(inputIdentifiers.phoneLast10))
-      ) return true;
-      return false;
-    });
+      return rIdentifiers.email && inputEmail === rIdentifiers.email;
+    }) : null;
 
     if (existingReg) {
-      const err: any = new Error(`The email "${formData.email}" or phone is already registered for this event.`);
+      const err: any = new Error(`The email "${formData.email}" is already registered for this event.`);
       err.code = 'ALREADY_REGISTERED';
       err.existingRegistration = existingReg;
       throw err;
