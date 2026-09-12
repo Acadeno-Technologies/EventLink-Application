@@ -975,10 +975,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
 
     if (existingReg) {
-      // Return existing registration pass immediately without creating a duplicate record
-      setSelectedRegistrationId(existingReg.id);
-      showToast(`Welcome back, ${existingReg.name}! Showing your confirmed pass.`);
-      return existingReg;
+      const err: any = new Error(`The email "${formData.email}" or phone is already registered for this event.`);
+      err.code = 'ALREADY_REGISTERED';
+      err.existingRegistration = existingReg;
+      throw err;
     }
 
     const prefix = targetEvt?.name
@@ -1015,9 +1015,21 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       submitted_at: new Date().toISOString(),
     };
 
-    // Instant local state update for zero-latency UI transition
-    setRegistrations(prev => [newReg, ...prev]);
-    setSelectedRegistrationId(newReg.id);
+    // Await cloud sync for database consistency and duplicate prevention
+    const cloudRes = await syncRegistrationToCloud(newReg, targetEvt);
+    if (cloudRes.error) {
+      const err: any = cloudRes.error;
+      if (err.code === 'ALREADY_REGISTERED' || (err.message && err.message.toLowerCase().includes('already registered'))) {
+        err.code = 'ALREADY_REGISTERED';
+        throw err;
+      }
+      console.warn('[Cloud Sync Notice]:', cloudRes.error);
+    }
+
+    const finalReg = (cloudRes.data && cloudRes.data.id) ? { ...newReg, ...cloudRes.data } : newReg;
+
+    setRegistrations(prev => [finalReg, ...prev.filter(r => r.id !== finalReg.id)]);
+    setSelectedRegistrationId(finalReg.id);
 
     setEvents(prev => prev.map(e => {
       if (e.id === finalEventId || e.id === eventId) {
@@ -1026,23 +1038,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return e;
     }));
 
-    // Background cloud sync for registration with server code update
-    syncRegistrationToCloud(newReg, targetEvt).then(res => {
-      if (res.data && res.data.id) {
-        const serverReg = res.data;
-        setRegistrations(prev => prev.map(r => r.id === newReg.id ? { ...r, ...serverReg } : r));
-        if (typeof window !== 'undefined' && serverReg.registration_code && serverReg.registration_code !== newReg.registration_code) {
-          try {
-            const newUrl = `${window.location.origin}/?code=${encodeURIComponent(serverReg.registration_code)}`;
-            window.history.replaceState({ code: serverReg.registration_code }, '', newUrl);
-          } catch {}
-        }
-      }
-    }).catch(err => {
-      console.warn('[Neon Registration Sync Background Notice]:', err);
-    });
-
-    return newReg;
+    return finalReg;
   };
 
   const updateRegistration = async (regId: string, updates: Partial<Registration>): Promise<void> => {

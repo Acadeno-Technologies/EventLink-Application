@@ -423,7 +423,8 @@ app.put('/api/registrations', async (req, res) => {
       });
 
       const matchedExisting = existingRegs.find(r => {
-        if (payload.id && r.id === payload.id) return true;
+        // If it's an existing record being updated by the same ID (e.g. admin edit), allow it
+        if (payload.id && r.id === payload.id) return false;
         const resp = r.responses || {};
         const rEmail = String(r.email || resp.email || resp.f_email || '').trim().toLowerCase();
         const rPhone = String(r.phone || resp.phone || resp.f_phone || '').replace(/[^\d]/g, '');
@@ -433,7 +434,12 @@ app.put('/api/registrations', async (req, res) => {
       });
 
       if (matchedExisting) {
-        return res.json(mapRegistration(matchedExisting));
+        console.log(`[POSTGRES] Duplicate registration attempt rejected for email ${userEmail || payload.email} (Event: ${eventUuid})`);
+        return res.status(409).json({
+          error: 'ALREADY_REGISTERED',
+          message: `This email address (${userEmail || payload.email}) is already registered for this event. Each participant can only register once.`,
+          existingRegistration: mapRegistration(matchedExisting),
+        });
       }
     }
 

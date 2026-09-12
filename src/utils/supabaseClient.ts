@@ -19,7 +19,10 @@ async function apiRequest<T>(path: string, options?: RequestInit): Promise<{ dat
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { data: null, error: new Error(payload.error || `Neon API ${response.status}`) };
+      const err: any = new Error(payload.message || payload.error || `Neon API ${response.status}`);
+      err.code = payload.error || response.status;
+      err.existingRegistration = payload.existingRegistration;
+      return { data: null, error: err };
     }
 
     return { data: payload as T, error: null };

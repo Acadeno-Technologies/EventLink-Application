@@ -16,6 +16,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
+import { Registration } from '../../types';
 import { RegistrationClosedScreen } from './17_RegistrationClosedScreen';
 import { toTitleCase, toSentenceCase } from '../../utils/textUtils';
 
@@ -43,6 +44,7 @@ export const PublicRegistrationScreen: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [existingDuplicateReg, setExistingDuplicateReg] = useState<Registration | null>(null);
 
   // If initial event is loading from cloud, display smooth loading skeleton instead of flashing fallback
   if (isEventLoading && !selectedEvent) {
@@ -360,9 +362,22 @@ export const PublicRegistrationScreen: React.FC = () => {
       }
       setSelectedRegistrationId(newReg.id);
       setScreen('16_registration_success');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration error:', err);
-      setErrorMessage('Failed to complete registration. Please try again.');
+      const isDuplicate = err?.code === 'ALREADY_REGISTERED' || (err?.message && err.message.toLowerCase().includes('already registered'));
+      if (isDuplicate) {
+        const existing = err?.existingRegistration || eventRegistrations.find((r: any) => {
+          const rEmail = (r.email || r.responses?.email || r.responses?.f_email || '').toLowerCase().trim();
+          return rEmail && rEmail === finalEmail.toLowerCase().trim();
+        });
+        setExistingDuplicateReg(existing || null);
+        setErrorMessage(
+          err?.message || `The email "${finalEmail}" is already registered for this event. Each participant can only register once.`
+        );
+      } else {
+        setExistingDuplicateReg(null);
+        setErrorMessage(err?.message || 'Failed to complete registration. Please try again.');
+      }
       isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
@@ -435,22 +450,60 @@ export const PublicRegistrationScreen: React.FC = () => {
             {evt.short_description || 'Hands-on session on practical AI automation for daily work.'}
           </p>
 
-          {errorMessage && (
+          {/* Duplicate Registration Warning Banner */}
+          {errorMessage && existingDuplicateReg && (
+            <div className="mb-5 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs shadow-md animate-shake">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 shrink-0 text-amber-600 mt-0.5" />
+                <div className="space-y-2 flex-1">
+                  <div>
+                    <h3 className="font-bold text-amber-950 text-sm">Already Registered</h3>
+                    <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                      {errorMessage}
+                    </p>
+                  </div>
+                  {existingDuplicateReg.registration_code && (
+                    <div className="bg-white p-3 rounded-xl border border-amber-200 flex items-center justify-between shadow-2xs mt-2">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Your Ticket Pass</span>
+                        <span className="text-xs font-mono font-extrabold text-blue-700">{existingDuplicateReg.registration_code}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedRegistrationId(existingDuplicateReg.id);
+                          setScreen('16_registration_success');
+                        }}
+                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>View My Pass</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Regular Error Alert */}
+          {errorMessage && !existingDuplicateReg && (
             <div className="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 animate-shake shadow-xs">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
               <span className="font-medium">{errorMessage}</span>
             </div>
           )}
 
+          {/* Submitting Loading Status Banner */}
           {isSubmitting && (
-            <div className="mb-5 p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-2xl text-amber-900 text-xs flex items-center gap-3 shadow-xs animate-pulse">
-              <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin shrink-0" />
-              <div>
-                <p className="font-bold text-amber-950 flex items-center gap-1.5">
-                  <span>⏳ Processing Registration...</span>
+            <div className="mb-5 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border-2 border-blue-400 rounded-2xl text-blue-950 text-xs flex items-center gap-3 shadow-md animate-pulse">
+              <div className="w-6 h-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
+              <div className="space-y-0.5">
+                <p className="font-bold text-blue-950 text-sm flex items-center gap-1.5">
+                  <span>⏳ Securing your registration pass...</span>
                 </p>
-                <p className="text-[11px] text-amber-800 leading-tight mt-0.5">
-                  Generating your confirmed pass. Please do not press submit again or reload the page.
+                <p className="text-xs text-blue-800 leading-tight">
+                  Please wait a moment while we verify your details and generate your ticket. Please do not refresh or press submit again.
                 </p>
               </div>
             </div>
