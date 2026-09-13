@@ -264,9 +264,13 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // Persist events to local storage whenever updated
   useEffect(() => {
-    if (typeof window !== 'undefined' && events.length > 0) {
+    if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('acadeno_events', JSON.stringify(events));
+        if (events && events.length > 0) {
+          localStorage.setItem('acadeno_events', JSON.stringify(events));
+        } else {
+          localStorage.removeItem('acadeno_events');
+        }
       } catch (err) {
         console.warn('Failed to cache events in localStorage:', err);
       }
@@ -377,13 +381,6 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }
             return remote;
           });
-
-          // Also include any locally created events not yet in remote list
-          for (const local of events) {
-            if (!merged.some(m => m.id === local.id || matchesEvent(m, local.slug))) {
-              merged.push(local);
-            }
-          }
 
           if (hasUrlEvent) {
             const query = eventSlugParam || titleParam;
@@ -900,7 +897,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return publishedEvent;
   };
 
-  const updateEvent = async (eventId: string, updates: Partial<Event>): Promise<void> => {
+  const updateEvent = async (eventId: string, updates: Partial<Event>, successMessage?: string): Promise<void> => {
     let updatedEvt: Event | undefined;
     setEvents(prev => prev.map(e => {
       if (e.id === eventId) {
@@ -912,10 +909,10 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (updatedEvt) {
       const { error } = await syncEventToCloud(updatedEvt);
       if (error) {
-        console.error('[Neon Sync Error - Update]:', error);
-        showToast(`⚠️ Neon update failed: ${error.message || 'Database error'}. Updated locally.`);
-      } else {
-        showToast('Event updated in Neon');
+        console.error('[Database Sync Error - Update]:', error);
+        showToast(`⚠️ Database update failed: ${error.message || 'Database error'}. Updated locally.`);
+      } else if (successMessage) {
+        showToast(successMessage);
       }
     }
   };

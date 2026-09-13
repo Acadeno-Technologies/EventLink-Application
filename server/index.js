@@ -279,7 +279,7 @@ app.get('/api/events', async (_req, res) => {
       include: { form: true, theme: true },
       orderBy: { created_at: 'desc' },
     });
-    res.set('Cache-Control', 'public, max-age=5, s-maxage=30, stale-while-revalidate=120');
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json(rows.map(mapEvent));
   } catch (error) {
     console.warn('[Neon get events error - returning cached/empty]:', error.message);
@@ -308,7 +308,7 @@ app.get('/api/events/by-slug/:slug', async (req, res) => {
     });
 
     if (row) {
-      res.set('Cache-Control', 'public, max-age=10, s-maxage=60, stale-while-revalidate=300');
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       return res.json(mapEvent(row));
     }
 
@@ -386,6 +386,7 @@ app.get('/api/registrations', async (_req, res) => {
 
     // Sort back to desc (newest first) for UI display
     uniqueRows.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json(uniqueRows.map(mapRegistration));
   } catch (error) {
     console.warn('[Neon get registrations error - returning empty]:', error.message);
@@ -474,7 +475,13 @@ app.put('/api/registrations', async (req, res) => {
 
     const eventUuid = matchedEvent.id;
 
-    const userEmail = String(payload.email || payload.responses?.email || payload.responses?.f_email || '').trim().toLowerCase();
+    // Reject new registrations if the event is closed
+    if (matchedEvent.status === 'closed' && !payload.id) {
+      return res.status(403).json({
+        error: 'EVENT_CLOSED',
+        message: `Registrations for "${matchedEvent.name}" have been closed by the organizer.`
+      });
+    }
 
     // Server-side deduplication: ONLY check if the same EMAIL already registered for this event
     if (userEmail) {
