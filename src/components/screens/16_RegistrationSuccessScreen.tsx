@@ -334,23 +334,26 @@ export const RegistrationSuccessScreen: React.FC = () => {
             </p>
           </div>
 
-          {/* Compact Horizontal Event Info Row */}
-          <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-2xs flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs font-bold text-[#10244A]">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-[#1769FF]" />
-              <span>{evt.start_date || '2026-09-30'} • {evt.start_time || '10:00 AM'}</span>
+          {/* Event Date & Venue Info Box */}
+          <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-blue-100/90 shadow-2xs space-y-2 text-xs text-[#10244A] text-left">
+            <div className="flex items-center gap-2 font-bold text-slate-800">
+              <Calendar className="w-4 h-4 text-[#1769FF] shrink-0" />
+              <span>{evt.start_date || '2026-09-30'} • {evt.start_time || '10:00 AM'}{evt.end_time ? ` - ${evt.end_time}` : ''}</span>
             </div>
-            <div className="w-px h-4 bg-slate-200 hidden sm:block" />
-            <a
-              href="https://share.google/DUvnFnW6buz6xdoAZ"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
-              title="Click to view location on Google Maps"
-            >
-              <MapPin className="w-4 h-4 text-[#1769FF]" />
-              <span className="truncate">{evt.venue || 'Acadeno Technologies'}</span>
-            </a>
+            <div className="border-t border-slate-100 pt-2">
+              <a
+                href="https://share.google/DUvnFnW6buz6xdoAZ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-2 text-blue-600 hover:text-blue-800 font-medium group transition-colors"
+                title="Click to view location on Google Maps"
+              >
+                <MapPin className="w-4 h-4 text-[#1769FF] shrink-0 mt-0.5" />
+                <span className="leading-snug underline decoration-blue-200 group-hover:decoration-blue-600">
+                  {evt.venue || 'Acadeno Technologies, Kozhikode'}
+                </span>
+              </a>
+            </div>
           </div>
 
         </div>
