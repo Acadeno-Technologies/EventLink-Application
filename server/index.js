@@ -483,6 +483,8 @@ app.put('/api/registrations', async (req, res) => {
       });
     }
 
+    const userEmail = String(payload.email || payload.responses?.email || payload.responses?.f_email || '').trim().toLowerCase();
+
     // Server-side deduplication: ONLY check if the same EMAIL already registered for this event
     if (userEmail) {
       const existingRegs = await prisma.registration.findMany({
