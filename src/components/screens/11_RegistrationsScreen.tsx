@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useEventStore } from '../../store/eventStore';
 import { AdminLayout } from '../layout/AdminLayout';
-import { Registration, RegistrationStatus, AttendanceStatus } from '../../types';
+import { Registration, RegistrationStatus, AttendanceStatus, Event } from '../../types';
 import { exportRegistrationsToExcel, exportRegistrationsToCsv } from '../../utils/exportUtils';
 import { 
   Search, 
@@ -126,6 +126,53 @@ export const RegistrationsScreen: React.FC = () => {
       }
     }
     return (reg.phone && reg.phone !== '+91 9846000000' && reg.phone !== '+91 98460 00000') ? reg.phone : '—';
+  };
+
+  const getSubtitleDisplay = (reg: Registration, matchedEvent?: Event) => {
+    if (reg.responses) {
+      // 1. Search fields from event form_schema (prioritizing custom questions like Qualification, College, Department, etc.)
+      if (matchedEvent?.form_schema) {
+        for (const field of matchedEvent.form_schema) {
+          if (/qualification|degree|stream|course|education|dept|department|college|role|designation|track/i.test(field.label || field.id || '')) {
+            const val = reg.responses[field.id];
+            if (val && typeof val === 'string' && val.trim()) {
+              return val.trim();
+            }
+          }
+        }
+      }
+
+      // 2. Look for any custom field response in form_schema (index >= 3)
+      if (matchedEvent?.form_schema && matchedEvent.form_schema.length > 3) {
+        for (let i = 3; i < matchedEvent.form_schema.length; i++) {
+          const field = matchedEvent.form_schema[i];
+          const val = reg.responses[field.id];
+          if (val && typeof val === 'string' && val.trim()) {
+            return val.trim();
+          }
+        }
+      }
+
+      // 3. Search direct response keys
+      for (const [key, val] of Object.entries(reg.responses)) {
+        if (typeof val === 'string' && val.trim() && !/phone|mobile|email|name|f_name|f_email|f_phone|consent|terms/i.test(key)) {
+          if (/qualification|degree|stream|dept|college|course/i.test(key)) {
+            return val.trim();
+          }
+        }
+      }
+
+      // 4. Any first non-name/email/phone answer (excluding legacy static keys if clean ones exist)
+      for (const [key, val] of Object.entries(reg.responses)) {
+        if (typeof val === 'string' && val.trim() && !/phone|mobile|email|name|f_name|f_email|f_phone|f_track|f_exp|consent/i.test(key) && val.length <= 40) {
+          return val.trim();
+        }
+      }
+
+      if (reg.responses.f_track) return reg.responses.f_track;
+      if (reg.responses.f_dept) return reg.responses.f_dept;
+    }
+    return 'General Attendee';
   };
 
   const handleRowClick = (reg: Registration) => {
@@ -332,7 +379,7 @@ export const RegistrationsScreen: React.FC = () => {
                         {reg.name}
                       </div>
                       <div className="text-[10px] text-slate-400 font-medium truncate max-w-[160px]">
-                        {reg.responses?.f_track || reg.responses?.f_dept || 'General Attendee'}
+                        {getSubtitleDisplay(reg, matchedEvent)}
                       </div>
                     </td>
 

@@ -31,14 +31,7 @@ export const PublicRegistrationScreen: React.FC = () => {
     isEventLoading
   } = useEventStore();
 
-  const [formData, setFormData] = useState<Record<string, any>>({
-    f_name: '',
-    f_phone: '',
-    f_email: '',
-    f_track: selectedEvent?.form_schema?.[3]?.options?.[0] || '',
-    f_exp: selectedEvent?.form_schema?.[4]?.options?.[0] || '',
-    f_notes: '',
-  });
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
   const [consentAgreed, setConsentAgreed] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -434,10 +427,16 @@ export const PublicRegistrationScreen: React.FC = () => {
               <Calendar className="w-4 h-4 shrink-0 text-white/80" />
               <span className="font-medium">{evt.start_date} • {evt.start_time || '10:00 AM'} - {evt.end_time || '1:00 PM'}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 shrink-0 text-white/80" />
-              <span className="font-medium">{evt.venue}</span>
-            </div>
+            <a
+              href="https://share.google/DUvnFnW6buz6xdoAZ"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:underline hover:text-white transition-all cursor-pointer group"
+              title="Click to view location on Google Maps"
+            >
+              <MapPin className="w-4 h-4 shrink-0 text-white/80 group-hover:text-white" />
+              <span className="font-medium underline decoration-white/40 group-hover:decoration-white">{evt.venue}</span>
+            </a>
           </div>
         </div>
 

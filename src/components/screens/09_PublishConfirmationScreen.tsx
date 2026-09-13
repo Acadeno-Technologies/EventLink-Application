@@ -237,9 +237,15 @@ export const PublishConfirmationScreen: React.FC = () => {
                 <div className="text-base sm:text-lg font-bold text-white font-display truncate w-full px-1">
                   {selectedEvent?.name || 'Ai Workshop'}
                 </div>
-                <div className="text-xs text-slate-400 mt-1 truncate w-full px-1">
+                <a
+                  href="https://share.google/DUvnFnW6buz6xdoAZ"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-slate-300 hover:text-white underline decoration-slate-500 hover:decoration-white mt-1 truncate w-full px-1 block transition-colors"
+                  title="Click to view location on Google Maps"
+                >
                   {selectedEvent?.venue || 'Acadeno Office'} • {selectedEvent?.start_date || '2026-09-11'}
-                </div>
+                </a>
 
                 {/* Scan Pill */}
                 <div className="w-full mt-4 py-2.5 px-3.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-2 text-xs text-slate-300 font-medium">

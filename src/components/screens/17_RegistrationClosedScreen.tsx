@@ -6,7 +6,8 @@ import {
   ArrowRight, 
   ArrowLeft,
   ShieldCheck,
-  X
+  X,
+  MapPin
 } from 'lucide-react';
 
 export const RegistrationClosedScreen: React.FC = () => {
@@ -191,12 +192,13 @@ export const RegistrationClosedScreen: React.FC = () => {
           {/* 6. Secondary Navigation Action */}
           <div className="text-center">
             <a
-              href="https://acadeno.com"
+              href="https://share.google/DUvnFnW6buz6xdoAZ"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-semibold text-[#657A9F] hover:text-[#1769FF] hover:underline transition-colors inline-flex items-center gap-1.5"
             >
-              <span>Visit ACADENO Technologies Website</span>
+              <MapPin className="w-3.5 h-3.5 text-[#1769FF]" />
+              <span>View ACADENO Location on Google Maps</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
           </div>

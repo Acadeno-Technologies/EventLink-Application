@@ -341,10 +341,16 @@ export const RegistrationSuccessScreen: React.FC = () => {
               <span>{evt.start_date || '2026-09-30'} • {evt.start_time || '10:00 AM'}</span>
             </div>
             <div className="w-px h-4 bg-slate-200 hidden sm:block" />
-            <div className="flex items-center gap-1.5">
+            <a
+              href="https://share.google/DUvnFnW6buz6xdoAZ"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
+              title="Click to view location on Google Maps"
+            >
               <MapPin className="w-4 h-4 text-[#1769FF]" />
               <span className="truncate">{evt.venue || 'Acadeno Technologies'}</span>
-            </div>
+            </a>
           </div>
 
         </div>
@@ -397,12 +403,13 @@ export const RegistrationSuccessScreen: React.FC = () => {
         {/* 5. Bottom Navigation Link */}
         <div className="pt-3 border-t border-slate-100 no-print text-center">
           <a
-            href="https://acadeno.com"
+            href="https://share.google/DUvnFnW6buz6xdoAZ"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors inline-flex items-center gap-1.5"
           >
-            <span>Visit ACADENO Technologies Website</span>
+            <MapPin className="w-3.5 h-3.5 text-blue-600" />
+            <span>View ACADENO Location on Google Maps</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </a>
         </div>
